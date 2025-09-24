@@ -1,0 +1,53 @@
+{
+  "name": "me",
+  "version": "3.8.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "build-stats": "cross-env ANALYZE=true npm run build",
+    "export": "next export",
+    "build-prod": "run-s clean build export",
+    "clean": "rimraf .next out",
+    "commit": "cz",
+    "postbuild": "next-sitemap",
+    "import-jobs": "node --loader ts-node/esm src/scripts/importJobs.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "axios": "^1.3.4",
+    "formik": "^2.4.3",
+    "lucide-react": "^0.487.0",
+    "next": "^13.2.1",
+    "next-seo": "^5.15.0",
+    "next-sitemap": "^3.1.52",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-range": "^1.10.0",
+    "react-select": "^5.10.1",
+    "tailwind-merge": "^1.10.0",
+    "yup": "^1.2.0"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^13.2.1",
+    "@percy/cli": "^1.20.0",
+    "@semantic-release/changelog": "^6.0.2",
+    "@semantic-release/git": "^10.0.1",
+    "@types/node": "^18.19.127",
+    "@types/react": "^18.0.28",
+    "autoprefixer": "^10.4.13",
+    "cross-env": "^7.0.3",
+    "cssnano": "^5.1.15",
+    "dotenv": "^17.2.2",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.21",
+    "rimraf": "^4.1.2",
+    "semantic-release": "^19.0.5",
+    "tailwindcss": "^3.2.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "author": ""
+}
