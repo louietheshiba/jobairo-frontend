@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import JobAiroLogo from '../Icons/JobAiroLogo';
 import Switcher from '../Switcher';
 import UserMenu from '../UserMenu';
@@ -17,8 +18,14 @@ const HomeHeader = () => {
           </p>
         </div>
 
-        {/* Right Side - User Menu + Dark Mode Switcher */}
+        {/* Right Side - Dashboard Link + User Menu + Dark Mode Switcher */}
         <div className="ml-auto flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="font-poppins text-sm font-semibold text-primary-10 dark:text-white hover:text-primary-15 dark:hover:text-primary-15 transition-colors"
+          >
+            Dashboard
+          </Link>
           <UserMenu />
           <Switcher />
         </div>

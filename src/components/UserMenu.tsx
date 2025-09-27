@@ -119,7 +119,7 @@ const UserMenu = () => {
         );
     }
 
-    // Show Login button
+    // Show Login and Sign-up buttons
     return (
         <button 
             onClick={handleLoginClick}
