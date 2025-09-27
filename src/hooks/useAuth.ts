@@ -20,10 +20,21 @@ export const useAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle session refresh
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Session refreshed');
+        }
+
+        // Handle sign out
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setSession(null);
+        }
       }
     );
 
@@ -32,6 +43,51 @@ export const useAuth = () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // Clear any stored redirect URLs
+    sessionStorage.removeItem('auth_redirect_url');
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { data, error };
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    return { data, error };
+  };
+
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+    return { data, error };
+  };
+
+  const resetPassword = async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    return { data, error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      password: password
+    });
+    return { data, error };
   };
 
   return {
@@ -39,5 +95,10 @@ export const useAuth = () => {
     session,
     loading,
     signOut,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    resetPassword,
+    updatePassword,
   };
 };
