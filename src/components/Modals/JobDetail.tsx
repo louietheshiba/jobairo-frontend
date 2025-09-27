@@ -16,7 +16,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
   const handleApplyNow = () => {
     if (job) {
       applyToJob(job.id);
-      alert('You have applied for the job!');
+      // Open company application page in new tab
+      window.open(`https://example.com/apply/${job.id}`, '_blank');
+      alert('Application opened in new tab!');
     }
     onClose();
   };
@@ -27,6 +29,12 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       alert('Job saved to your favorites!');
     }
     onClose();
+  };
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/jobs/${job?.id}`;
+    navigator.clipboard.writeText(url);
+    alert('Job link copied to clipboard!');
   };
 
   return (
@@ -198,6 +206,38 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
                 ))}
               </ul>
             </div>
+
+            <div className="flex flex-col gap-0.5">
+              <h6 className="text-sm font-medium text-gray-500 dark:text-white">
+                Application Instructions
+              </h6>
+
+              <p className="text-sm font-medium text-secondary dark:text-white">
+                Please submit your resume and cover letter through our application portal. We review applications within 3-5 business days.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Similar Jobs */}
+        <div className="mt-6 px-8">
+          <h3 className="mb-4 text-lg font-semibold text-secondary dark:text-white">
+            Similar Jobs
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Placeholder similar jobs */}
+            <div className="rounded-lg border p-4 dark:border-gray-600">
+              <h4 className="font-medium text-secondary dark:text-white">Senior Software Engineer</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Similar Company • Full Time</p>
+            </div>
+            <div className="rounded-lg border p-4 dark:border-gray-600">
+              <h4 className="font-medium text-secondary dark:text-white">Frontend Developer</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Similar Company • Full Time</p>
+            </div>
+            <div className="rounded-lg border p-4 dark:border-gray-600">
+              <h4 className="font-medium text-secondary dark:text-white">DevOps Engineer</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Similar Company • Full Time</p>
+            </div>
           </div>
         </div>
       </div>
@@ -216,6 +256,13 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
             className="whitespace-nowrap !border-primary-10 !bg-white !py-2 px-5 text-sm !text-primary-10 hover:!bg-green-50 dark:!bg-dark-25 dark:hover:!bg-dark-20"
           >
             Save
+          </Button>
+
+          <Button
+            onClick={handleShare}
+            className="whitespace-nowrap !border-gray-300 !bg-white !py-2 px-5 text-sm !text-gray-700 hover:!bg-gray-50 dark:!border-gray-600 dark:!bg-dark-25 dark:!text-gray-300 dark:hover:!bg-dark-20"
+          >
+            Share
           </Button>
         </div>
       </div>

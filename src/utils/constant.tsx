@@ -92,6 +92,15 @@ export const MARK_JOBS_LIST = [
   { id: 3, label: 'Exclude viewed jobs', value: 'Exclude viewed jobs' },
 ];
 
+export const COMPANY_SIZE_LIST = [
+  { id: 1, label: '1-10 employees', value: '1-10 employees' },
+  { id: 2, label: '11-50 employees', value: '11-50 employees' },
+  { id: 3, label: '51-200 employees', value: '51-200 employees' },
+  { id: 4, label: '201-500 employees', value: '201-500 employees' },
+  { id: 5, label: '501-1000 employees', value: '501-1000 employees' },
+  { id: 6, label: '1000+ employees', value: '1000+ employees' },
+];
+
 export const INITIAL_FILTERS: FiltersType = {
   position: '',
   locations: [],
