@@ -37,7 +37,7 @@ const JobListCard = ({ item, onClick }: JobListCardProps) => {
           {item?.title}
         </h2>
         <span className="font-poppins text-sm font-semibold text-secondary dark:text-white sm:text-base">
-          {item?.salary}
+          {item?.salary_range || 'Salary not specified'}
         </span>
       </div>
 
@@ -45,31 +45,32 @@ const JobListCard = ({ item, onClick }: JobListCardProps) => {
       <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-            {item?.company_name?.charAt(0)}
+            {item?.company?.name?.charAt(0) || '?'}
           </div>
-          <span>{item?.company_name}</span>
+          <span className="font-medium">{item?.company?.name || 'Company not specified'}</span>
         </div>
-        <span className="dot">•</span>
-        <span className="capitalize">{item?.job_type}</span>
-        <span className="dot">•</span>
-        <span>Posted 2 days ago</span>
+        <span className="capitalize">{item?.employment_type || 'Not specified'}</span>
+        <span>{item?.location || 'Location not specified'}</span>
       </div>
 
       {/* Description */}
       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-        {item?.description}
+        {item?.description || 'No description available'}
       </p>
 
       {/* Job Tags */}
       <div className="flex flex-wrap gap-2">
-        <span className={`tag capitalize ${item?.job_type?.toLowerCase()}`}>
-          {item?.job_type}
+        <span className={`tag capitalize ${item?.employment_type?.toLowerCase()}`}>
+          {item?.employment_type}
         </span>
-        {item?.requirements?.slice(0, 2).map((req, index) => (
-          <span key={index} className="tag">
-            {req}
+        <span className={`tag capitalize ${item?.remote_type?.toLowerCase()}`}>
+          {item?.remote_type}
+        </span>
+        {item?.department && (
+          <span className="tag">
+            {item.department}
           </span>
-        ))}
+        )}
       </div>
 
       {/* Hover "Quick Apply" Button */}

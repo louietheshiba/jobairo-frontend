@@ -24,19 +24,23 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
   const handleDelete = (label: string) => {
     const updatedFilters: any = { ...filterData };
 
-    Object.keys(updatedFilters).forEach((key) => {
-      const value = updatedFilters[key];
-
-      if (typeof value === 'string' && value === label) {
-        updatedFilters[key] = '';
-      } else if (Array.isArray(value) && key === 'salaryRange') {
-        updatedFilters.salaryRange = null;
-      } else if (Array.isArray(value)) {
-        updatedFilters[key] = value.filter((item) =>
-          item?.label ? item?.label !== label : item !== label
-        );
-      }
-    });
+    // Handle location filters
+    if (label.startsWith('Location:')) {
+      const locationLabel = label.replace('Location: ', '');
+      updatedFilters.locations = updatedFilters.locations.filter((loc: any) => loc.label !== locationLabel);
+    }
+    // Handle job type filter
+    else if (label.startsWith('Job Type:')) {
+      updatedFilters.jobType = '';
+    }
+    // Handle company size filter
+    else if (label.startsWith('Company Size:')) {
+      updatedFilters.companySize = '';
+    }
+    // Handle salary range filter
+    else if (label.startsWith('Salary:')) {
+      updatedFilters.salaryRange = null;
+    }
 
     setFilters(updatedFilters);
   };
@@ -44,16 +48,13 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
   const renderChips = () => {
     const chips = [
       ...filterData.locations.map(({ label }) => ({ label })),
-      ...filterData.workSchedule.map(({ label }) => ({ label })),
-      ...filterData.markedJobs.map((job) => ({ label: job })),
-      { label: filterData.jobType },
+      { label: filterData.jobType ? `Job Type: ${filterData.jobType}` : null },
+      { label: filterData.companySize ? `Company Size: ${filterData.companySize}` : null },
       {
         label: filterData.salaryRange
-          ? `Salary Range: $${filterData.salaryRange[0]} - $${filterData.salaryRange[1]}`
+          ? `Salary: $${filterData.salaryRange[0]}k - $${filterData.salaryRange[1]}k`
           : null,
       },
-      { label: filterData.education },
-      { label: filterData.experienceLevel },
     ];
 
     return chips.map((chip, index) =>
@@ -70,14 +71,9 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
   const isFilterApplied = () => {
     return (
       filterData.locations.length > 0 ||
-      filterData.workSchedule.length > 0 ||
       filterData.jobType !== '' ||
-      filterData.salaryRange !== null ||
-      filterData.education !== '' ||
-      filterData.experienceLevel !== '' ||
-      filterData.relevance !== 'Relevance' ||
-      filterData.datePosted !== 'Date Posted' ||
-      filterData.markedJobs.length > 0
+      filterData.companySize !== '' ||
+      filterData.salaryRange !== null
     );
   };
 

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/utils/supabase';
+import toast from 'react-hot-toast';
 
 const AuthCallbackPage = () => {
   const router = useRouter();
@@ -17,6 +18,41 @@ const AuthCallbackPage = () => {
         }
 
         if (data.session) {
+          const user = data.session.user;
+
+          // Check if user exists in public.users, if not, insert
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', user.id)
+            .single();
+
+          if (!existingUser) {
+            // Insert into users table
+            await supabase.from('users').insert({
+              id: user.id,
+              full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+            });
+          }
+
+          // Check if profile exists, if not, insert
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!existingProfile) {
+            // Insert into profiles table
+            await supabase.from('profiles').insert({
+              user_id: user.id,
+              avatar_url: user.user_metadata?.avatar_url,
+            });
+          }
+
+          // Show success toast
+          toast.success(`Welcome back, ${user.user_metadata?.full_name || user.user_metadata?.name || 'User'}! 🎉`);
+
           // Successfully authenticated, redirect to intended page or home
           const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/';
           sessionStorage.removeItem('auth_redirect_url');

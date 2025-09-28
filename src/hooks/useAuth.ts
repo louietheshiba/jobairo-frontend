@@ -8,7 +8,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
@@ -18,19 +17,16 @@ export const useAuth = () => {
 
     getSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Handle session refresh
         if (event === 'TOKEN_REFRESHED') {
           console.log('Session refreshed');
         }
 
-        // Handle sign out
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
@@ -43,7 +39,6 @@ export const useAuth = () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    // Clear any stored redirect URLs
     sessionStorage.removeItem('auth_redirect_url');
   };
 
