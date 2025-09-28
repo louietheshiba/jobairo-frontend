@@ -63,7 +63,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setUser(session?.user ?? null);
       }
     );
@@ -92,12 +92,33 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     console.log('Loading profile for user:', user.id);
 
     try {
-      // Load from users table
+      // Load from users table with blocked status
       const { data: userData } = await supabase
         .from('users')
-        .select('full_name')
+        .select('full_name, is_blocked')
         .eq('id', user.id)
         .single();
+
+      // Check if user is blocked
+      if (userData?.is_blocked) {
+        console.log('User is blocked, signing out...');
+        // Sign out the blocked user
+        await supabase.auth.signOut();
+        // Import toast dynamically to avoid SSR issues
+        const { default: toast } = await import('react-hot-toast');
+        toast.error('Your account is blocked. Please contact support.', {
+          duration: 6000,
+          style: {
+            background: '#FEE2E2',
+            color: '#DC2626',
+            border: '1px solid #FECACA',
+          },
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // User is not blocked, continue with normal profile loading
 
       // Load from profiles table
       const { data: profileData } = await supabase

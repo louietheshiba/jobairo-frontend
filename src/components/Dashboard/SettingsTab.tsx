@@ -3,7 +3,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
-import DeleteAccountModal from './DeleteAccountModal';
 
 // Job types options
 const JOB_TYPES = [
@@ -34,8 +33,9 @@ const SettingsTab: React.FC = () => {
     preferred_locations: [] as string[],
   });
   const [saving, setSaving] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // Initialize form data when profile loads
   React.useEffect(() => {
@@ -55,6 +55,25 @@ const SettingsTab: React.FC = () => {
       });
     }
   }, [profile]);
+
+  // Get user's blocked status
+  React.useEffect(() => {
+    const getUserStatus = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('is_blocked')
+          .eq('id', user.id)
+          .single();
+        
+        if (!error && data) {
+          setIsBlocked(data.is_blocked || false);
+        }
+      }
+    };
+    
+    getUserStatus();
+  }, [user]);
 
   const handleJobPreferenceChange = (field: string, value: any) => {
     setJobPreferences(prev => ({
@@ -107,53 +126,37 @@ const SettingsTab: React.FC = () => {
     });
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true);
+  const handleBlockClick = () => {
+    setShowBlockModal(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleBlockConfirm = async () => {
     if (!user) return;
 
-    setDeleting(true);
+    setBlocking(true);
 
     try {
-      console.log('Sending delete request for user:', user.id);
-      const response = await fetch('/api/user/delete', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-        }),
-      });
+      console.log('Toggling block status for user:', user.id);
+      const newBlockStatus = !isBlocked;
+      
+      const { error } = await supabase
+        .from('users')
+        .update({ is_blocked: newBlockStatus })
+        .eq('id', user.id);
 
-      console.log('Delete response status:', response.status);
-
-      let data;
-      try {
-        data = await response.json();
-        console.log('Delete response data:', data);
-      } catch (parseError) {
-        console.error('Failed to parse response JSON:', parseError);
-        throw new Error('Invalid response from server');
+      if (error) {
+        throw new Error(error.message);
       }
 
-      if (!response.ok) {
-        throw new Error(data.error || `Server error: ${response.status}`);
-      }
-
-      toast.success('Account deactivated successfully. Redirecting...');
-      // Sign out and redirect
-      await supabase.auth.signOut();
-      window.location.href = '/auth';
+      setIsBlocked(newBlockStatus);
+      toast.success(newBlockStatus ? 'Account blocked successfully' : 'Account unblocked successfully');
     } catch (error) {
-      console.error('Error deleting account:', error);
+      console.error('Error toggling block status:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      toast.error(`Error deleting account: ${errorMessage}`);
+      toast.error(`Error updating account status: ${errorMessage}`);
     } finally {
-      setDeleting(false);
-      setShowDeleteModal(false);
+      setBlocking(false);
+      setShowBlockModal(false);
     }
   };
 
@@ -301,20 +304,49 @@ const SettingsTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Account Deletion */}
+        {/* Account Management */}
         <div className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6">
-          <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Account</h4>
+          <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Account Management</h4>
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <h5 className="font-medium text-red-600 dark:text-red-400 mb-2">Deactivate Account</h5>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Deactivate your account and clear your data. You can contact support to reactivate if needed.
-            </p>
-            <button
-              onClick={handleDeleteClick}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Deactivate Account
-            </button>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h5 className="font-medium text-gray-900 dark:text-white mb-2">Account Status</h5>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Current status: <span className={`font-medium ${isBlocked ? 'text-red-600' : 'text-green-600'}`}>
+                    {isBlocked ? 'Blocked' : 'Active'}
+                  </span>
+                </p>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                isBlocked 
+                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
+                  : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+              }`}>
+                {isBlocked ? 'BLOCKED' : 'ACTIVE'}
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h5 className={`font-medium mb-2 ${isBlocked ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {isBlocked ? 'Unblock Account' : 'Block Account'}
+              </h5>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {isBlocked 
+                  ? 'Unblock your account to regain full access to the platform.' 
+                  : 'Block your account to temporarily restrict access. You can unblock it later.'
+                }
+              </p>
+              <button
+                onClick={handleBlockClick}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  isBlocked
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
+              >
+                {isBlocked ? 'Unblock Account' : 'Block Account'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -335,12 +367,45 @@ const SettingsTab: React.FC = () => {
         </div>
       </div>
 
-      <DeleteAccountModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteConfirm}
-        loading={deleting}
-      />
+      {/* Block Account Confirmation Modal */}
+      {showBlockModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              {isBlocked ? 'Unblock Account?' : 'Block Account?'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {isBlocked 
+                ? 'Are you sure you want to unblock your account? This will restore full access to the platform.' 
+                : 'Are you sure you want to block your account? This will restrict your access to the platform temporarily.'
+              }
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowBlockModal(false)}
+                disabled={blocking}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBlockConfirm}
+                disabled={blocking}
+                className={`flex-1 px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50 ${
+                  isBlocked
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {blocking 
+                  ? (isBlocked ? 'Unblocking...' : 'Blocking...') 
+                  : (isBlocked ? 'Unblock Account' : 'Block Account')
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
