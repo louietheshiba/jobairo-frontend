@@ -7,6 +7,12 @@ interface UserProfile {
   phone: string;
   location: string;
   avatar_url?: string;
+  job_preferences?: {
+    desired_salary_min?: number;
+    desired_salary_max?: number;
+    job_types?: string[];
+    preferred_locations?: string[];
+  };
 }
 
 interface ProfileContextType {
@@ -37,6 +43,12 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     phone: '',
     location: '',
     avatar_url: '',
+    job_preferences: {
+      desired_salary_min: undefined,
+      desired_salary_max: undefined,
+      job_types: [],
+      preferred_locations: [],
+    },
   });
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +78,12 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         phone: '',
         location: '',
         avatar_url: '',
+        job_preferences: {
+          desired_salary_min: undefined,
+          desired_salary_max: undefined,
+          job_types: [],
+          preferred_locations: [],
+        },
       });
       setLoading(false);
       return;
@@ -84,7 +102,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       // Load from profiles table
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('phone, location, avatar_url')
+        .select('phone, location, avatar_url, job_preferences')
         .eq('user_id', user.id)
         .single();
 
@@ -93,6 +111,12 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         phone: profileData?.phone || '',
         location: profileData?.location || '',
         avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url || '',
+        job_preferences: profileData?.job_preferences || {
+          desired_salary_min: undefined,
+          desired_salary_max: undefined,
+          job_types: [],
+          preferred_locations: [],
+        },
       };
 
       console.log('Setting profile to:', newProfile);
@@ -105,6 +129,12 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         phone: '',
         location: '',
         avatar_url: user.user_metadata?.avatar_url || '',
+        job_preferences: {
+          desired_salary_min: undefined,
+          desired_salary_max: undefined,
+          job_types: [],
+          preferred_locations: [],
+        },
       };
       setProfile(fallbackProfile);
     } finally {
@@ -128,6 +158,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
           full_name: updates.full_name ?? profile.full_name,
           phone: updates.phone ?? profile.phone,
           location: updates.location ?? profile.location,
+          job_preferences: updates.job_preferences ?? profile.job_preferences,
         }),
       });
 
