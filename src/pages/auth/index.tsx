@@ -170,6 +170,18 @@ const AuthPage = () => {
         } else {
           console.log('Email confirmation required - job preferences stored in user metadata');
           setSuccess('Check your email for a verification link!');
+          
+          // Clear the form after successful signup
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+          setJobPreferences({
+            desired_salary_min: '',
+            desired_salary_max: '',
+            job_types: [],
+            preferred_locations: [],
+          });
+          setAcceptTerms(false);
         }
       }
     } catch (error: any) {
