@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Filter } from 'lucide-react';
 
 import type { LiveJobsProps } from '@/types/JobTypes';
 
@@ -16,25 +15,17 @@ const LiveJobs = ({ setFilters, filters, handleChange }: LiveJobsProps) => {
   };
 
   return (
-    <div className="bg-white px-[15px] pb-[30px] pt-[50px]  dark:bg-dark-25 sm:pb-[50px] lg:pt-[100px]">
+    <div className="bg-white px-[15px] pb-[10px] pt-[20px] dark:bg-dark-25 sm:pb-[10px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 sm:gap-10">
         <HomeHeader />
         <SearchBar
           onSearch={handleSearch}
           filters={filters}
           handleChange={handleChange}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          showFilters={showFilters}
         />
 
-        {/* Mobile filter button */}
-        <div className="flex justify-center md:hidden">
-          <Button
-            onClick={() => setShowFilters(true)}
-            className="!flex !w-auto !items-center !gap-2 !bg-primary-10 !text-white"
-          >
-            <Filter size={16} />
-            Filters
-          </Button>
-        </div>
 
         {/* Desktop filters always visible */}
         <div className="hidden md:block">
@@ -42,6 +33,7 @@ const LiveJobs = ({ setFilters, filters, handleChange }: LiveJobsProps) => {
             setFilters={setFilters}
             filters={filters}
             handleChange={handleChange}
+            showFilters={showFilters}
           />
         </div>
 
@@ -62,6 +54,7 @@ const LiveJobs = ({ setFilters, filters, handleChange }: LiveJobsProps) => {
                 setFilters={setFilters}
                 filters={filters}
                 handleChange={handleChange}
+                showFilters={true}
               />
               <div className="mt-4 flex justify-end">
                 <Button

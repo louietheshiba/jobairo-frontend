@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-
-import JobList from '@/components/HomePgae/JobList';
-import LiveJobs from '@/components/HomePgae/LiveJobs';
+import JobList from '@/components/HomePage/JobList';
+import LiveJobs from '@/components/HomePage/LiveJobs';
 import { Meta } from '@/layouts/Meta';
 import { Main } from '@/templates/Main';
 import type { FiltersType, Option } from '@/types/FiltersType';

@@ -1,16 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/context/ProfileContext';
 import useOutsideAlerter from '@/hooks/outSideAlerter';
-import { User, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 const UserMenu = () => {
     const { user, signOut } = useAuth();
+    const { profile } = useProfile();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const router = useRouter();
 
-    console.log('User data in UserMenu:', user);
 
     useOutsideAlerter(dropdownRef, () => {
         setIsDropdownOpen(false);
@@ -22,17 +24,15 @@ const UserMenu = () => {
     };
 
     const handleLoginClick = () => {
-        // Store current page for redirect after login
         sessionStorage.setItem('auth_redirect_url', window.location.pathname);
         router.push('/auth');
     };
 
     if (user) {
-        // Show avatar and dropdown menu
-        const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+        const userName = profile.full_name;
         const initial = userName.charAt(0).toUpperCase();
         const displayName = userName.length > 15 ? `${userName.substring(0, 15)}...` : userName;
-        const avatarUrl = user.user_metadata?.avatar_url;
+        const avatarUrl = profile.avatar_url;
 
         return (
             <div className="relative" ref={dropdownRef}>
@@ -72,38 +72,15 @@ const UserMenu = () => {
                         <div className="py-2">
                             <button
                                 onClick={() => {
-                                    // TODO: Navigate to dashboard
                                     setIsDropdownOpen(false);
                                 }}
                                 className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                             >
                                 <User size={16} />
-                                Dashboard
+                                <Link href='/dashboard'>
+                                    Dashboard
+                                </Link>
                             </button>
-
-                            <button
-                                onClick={() => {
-                                    // TODO: Navigate to settings
-                                    setIsDropdownOpen(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <Settings size={16} />
-                                Settings
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    // TODO: Open help/support
-                                    setIsDropdownOpen(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <HelpCircle size={16} />
-                                Help
-                            </button>
-
-                            <hr className="my-2 border-gray-200 dark:border-gray-700" />
 
                             <button
                                 onClick={handleSignOut}
@@ -121,7 +98,7 @@ const UserMenu = () => {
 
     // Show Login and Sign-up buttons
     return (
-        <button 
+        <button
             onClick={handleLoginClick}
             className="font-poppins text-sm font-semibold text-[#319795] dark:text-[#319795] hover:text-[#246463] dark:hover:text-[#246463] transition-colors sm:text-base"
         >
