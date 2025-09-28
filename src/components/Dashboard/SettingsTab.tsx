@@ -149,7 +149,20 @@ const SettingsTab: React.FC = () => {
       }
 
       setIsBlocked(newBlockStatus);
-      toast.success(newBlockStatus ? 'Account blocked successfully' : 'Account unblocked successfully');
+      
+      if (newBlockStatus) {
+        // User blocked their own account - show message and sign out
+        toast.success('Account blocked successfully. Signing out...');
+        
+        // Wait a moment for the toast to be visible
+        setTimeout(async () => {
+          await supabase.auth.signOut();
+          window.location.href = '/auth';
+        }, 2000);
+      } else {
+        // User unblocked their account
+        toast.success('Account unblocked successfully');
+      }
     } catch (error) {
       console.error('Error toggling block status:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
