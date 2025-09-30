@@ -1,19 +1,8 @@
 import { Bookmark } from 'lucide-react';
 import React from 'react';
 import type { JobListCardProps } from '@/types/JobTypes';
-import LoginPrompt from '@/components/LoginPrompt';
-import { useAuth } from '@/hooks/useAuth';
 
 const JobListCard = ({ item, onClick }: JobListCardProps) => {
-  const { user } = useAuth();
-
-  const handleSaveJob = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (user) {
-      // TODO: Implement save job functionality
-      console.log('Save job:', item?.title);
-    }
-  };
 
   return (
     <div
@@ -37,20 +26,17 @@ const JobListCard = ({ item, onClick }: JobListCardProps) => {
           {item?.title}
         </h2>
         <span className="font-poppins text-sm font-semibold text-secondary dark:text-white sm:text-base">
-          {item?.salary_range || 'Salary not specified'}
+          {item?.salary_range || ''}
         </span>
       </div>
 
       {/* Company Info */}
-      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-            {item?.company?.name?.charAt(0) || '?'}
-          </div>
-          <span className="font-medium">{item?.company?.name || 'Company not specified'}</span>
-        </div>
-        <span className="capitalize">{item?.employment_type || 'Not specified'}</span>
-        <span>{item?.location || 'Location not specified'}</span>
+      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <span className="font-medium">{item?.company?.name || 'Company not specified'}</span>
+        <span className="text-gray-400">•</span>
+        <span className="capitalize">{item?.remote_type || 'Not specified'}</span>
+        <span className="text-gray-400">•</span>
+        <span>Posted {Math.floor((new Date().getTime() - new Date(item?.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
       </div>
 
       {/* Description */}

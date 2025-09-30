@@ -38,7 +38,7 @@ export async function getJob(id: number): Promise<Job | null> {
   return data;
 }
 
-export function saveJob(jobId: number) {
+export function saveJob(jobId: string) {
   const saved = JSON.parse(localStorage.getItem('savedJobs') || '[]');
   if (!saved.includes(jobId)) {
     saved.push(jobId);
@@ -46,7 +46,7 @@ export function saveJob(jobId: number) {
   }
 }
 
-export function hideJob(jobId: number) {
+export function hideJob(jobId: string) {
   const hidden = JSON.parse(localStorage.getItem('hiddenJobs') || '[]');
   if (!hidden.includes(jobId)) {
     hidden.push(jobId);
@@ -54,7 +54,7 @@ export function hideJob(jobId: number) {
   }
 }
 
-export function applyToJob(jobId: number) {
+export function applyToJob(jobId: string) {
   const applied = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
   if (!applied.includes(jobId)) {
     applied.push(jobId);
@@ -62,7 +62,7 @@ export function applyToJob(jobId: number) {
   }
 }
 
-export function reportJob(jobId: number) {
+export function reportJob(jobId: string) {
   const reported = JSON.parse(localStorage.getItem('reportedJobs') || '[]');
   if (!reported.includes(jobId)) {
     reported.push(jobId);

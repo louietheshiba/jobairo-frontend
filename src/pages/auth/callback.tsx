@@ -23,11 +23,11 @@ const AuthCallbackPage = () => {
           // Get job preferences from user metadata (works across different browsers)
           const pendingPreferences = user.user_metadata?.pending_job_preferences;
           console.log('Pending preferences from user metadata:', pendingPreferences);
-          
+
           if (pendingPreferences) {
             try {
               console.log('Found job preferences in user metadata:', pendingPreferences);
-              
+
               // Update the profile with job preferences (profile already exists due to trigger)
               console.log('Updating profile with job preferences...');
               const { error } = await supabase
@@ -36,19 +36,19 @@ const AuthCallbackPage = () => {
                   job_preferences: pendingPreferences,
                 })
                 .eq('user_id', user.id);
-              
+
               if (error) {
                 console.error('Failed to save job preferences:', error);
               } else {
                 console.log('Job preferences saved successfully from user metadata!');
-                
+
                 // Clean up - remove pending preferences from user metadata
                 const { error: updateError } = await supabase.auth.updateUser({
                   data: {
                     pending_job_preferences: null
                   }
                 });
-                
+
                 if (updateError) {
                   console.error('Failed to clean up user metadata:', updateError);
                 } else {

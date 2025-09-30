@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 import useDebounce from '@/hooks/debounce';
 import type { Option } from '@/types/FiltersType';
@@ -9,11 +9,9 @@ interface SearchBarProps {
   onSearch: (query: string) => void;
   filters: any;
   handleChange: (key: string, value: any) => void;
-  onToggleFilters?: () => void;
-  showFilters?: boolean;
 }
 
-const SearchBar = ({ onSearch, filters, handleChange, onToggleFilters, showFilters }: SearchBarProps) => {
+const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Option[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -23,8 +21,8 @@ const SearchBar = ({ onSearch, filters, handleChange, onToggleFilters, showFilte
 
   useEffect(() => {
     if (debouncedQuery.length > 1) {
-      const filtered = SUGGETIONS.filter((s: any) =>
-        s.label && s.label.toLowerCase().includes(debouncedQuery.toLowerCase())
+      const filtered = SUGGETIONS.filter((s) =>
+        s.label && typeof s.label === 'string' && s.label.toLowerCase().includes(debouncedQuery.toLowerCase())
       ).slice(0, 5);
       setSuggestions(filtered);
       setShowSuggestions(true);
@@ -66,22 +64,9 @@ const SearchBar = ({ onSearch, filters, handleChange, onToggleFilters, showFilte
             onFocus={() => setShowSuggestions(!!suggestions.length)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             placeholder="Search for jobs..."
-            className="w-full rounded-full border-2 border-gray-300 bg-white px-6 py-4 pr-20 text-lg shadow-lg focus:border-primary-10 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-primary-10"
+            className="w-full rounded-full border-2 border-gray-300 bg-white px-6 py-4 pr-20 text-lg shadow-lg focus:border-primary-10 focus:outline-none dark:border-dark-15 dark:bg-dark-25 dark:text-white dark:focus:border-primary-10"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {onToggleFilters && (
-              <button
-                type="button"
-                onClick={onToggleFilters}
-                className={`rounded-full p-2 transition-colors ${
-                  showFilters
-                    ? 'bg-primary-10 text-white'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
-                }`}
-              >
-                <Filter size={16} />
-              </button>
-            )}
             <button
               type="submit"
               className="rounded-full bg-primary-10 p-2 text-white hover:bg-primary-15"

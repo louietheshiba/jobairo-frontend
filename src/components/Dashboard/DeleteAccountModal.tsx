@@ -27,23 +27,23 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Deactivate Account
+                Delete Account
               </h3>
             </div>
           </div>
 
           <div className="mb-6">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Are you sure you want to deactivate your account? This will:
+              Are you sure you want to permanently delete your account? This will:
             </p>
             <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-4">
-              <li>• Mark your account as inactive</li>
-              <li>• Clear your profile information</li>
-              <li>• Remove access to saved jobs and applications</li>
+              <li>• Permanently delete your account and all data</li>
+              <li>• Remove all profile information</li>
+              <li>• Delete saved jobs, applications, and preferences</li>
               <li>• Log you out immediately</li>
             </ul>
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-4 font-medium">
-              💡 <strong>Note:</strong> Your account can be reactivated by contacting support if needed.
+            <p className="text-sm text-red-600 dark:text-red-400 mt-4 font-medium">
+              ⚠️ <strong>Warning:</strong> This action cannot be undone.
             </p>
           </div>
 
@@ -63,7 +63,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
               {loading && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {loading ? 'Deleting...' : 'Delete Account'}
+              {loading ? 'Deleting...' : 'Permanently Delete Account'}
             </button>
           </div>
         </div>

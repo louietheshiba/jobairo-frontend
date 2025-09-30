@@ -9,11 +9,11 @@ export interface FiltersType {
   workSchedule: Option[];
   position: string;
   jobType: string;
-  salaryRange: [number, number] | null;
+  company: string;
+  datePosted: string;
   education: string;
   experienceLevel: string;
   relevance: string;
-  datePosted: string;
   markedJobs: string[];
   companySize: string;
 }

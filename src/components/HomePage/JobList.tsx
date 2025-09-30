@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X } from 'lucide-react';
 
 import type { Job, JobListProps } from '@/types/JobTypes';
 
 import JobDetailsModal from '../Modals/JobDetail';
-import { Button } from '../ui/button';
 import JobListCard from '../ui/jobListCard';
 
 const JobList = ({ filters, handleChange }: JobListProps) => {
@@ -12,137 +11,33 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<null | Job>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalJobs, setTotalJobs] = useState(0);
-  const jobsPerPage = 20;
+
+  const fetchJobs = useCallback(async () => {
+    setLoading(true);
+    try {
+      console.log('Fetching jobs from API...');
+      const response = await fetch('/api/jobs');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Jobs API response:', data);
+      console.log('Jobs array:', data.jobs);
+      console.log('Total count:', data.total);
+
+      setJobs(data.jobs || []);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      setLoading(true);
-      try {
-        console.log('Fetching jobs from API...');
-        const offset = (currentPage - 1) * jobsPerPage;
-        const response = await fetch(`/api/jobs?limit=${jobsPerPage}&offset=${offset}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Jobs API response:', data);
-        console.log('Jobs array:', data.jobs);
-        console.log('Total count:', data.total);
-
-        // If no jobs in database, show sample data for demonstration
-        if (!data.jobs || data.jobs.length === 0) {
-          console.log('No jobs in database, showing sample data for demonstration');
-          // Sample jobs for demonstration
-          const sampleJobs: Job[] = [
-            {
-              id: '1',
-              company_id: '1',
-              title: 'Senior Software Engineer',
-              description: 'Design and maintain CI/CD pipelines, infrastructure as code, and monitoring systems.',
-              location: 'Remote, US',
-              employment_type: 'Full-time',
-              remote_type: 'Remote',
-              salary_range: '$120K - $160K',
-              status: 'open',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              company: { id: '1', name: 'Tech Corp', size: 'large' }
-            },
-            {
-              id: '2',
-              company_id: '2',
-              title: 'Frontend Developer',
-              description: 'Build performant, accessible web applications using React, TypeScript, and modern CSS.',
-              location: 'San Francisco, CA',
-              employment_type: 'Full-time',
-              remote_type: 'Hybrid',
-              salary_range: '$90K - $120K',
-              status: 'open',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              company: { id: '2', name: 'Startup Inc', size: 'small' }
-            },
-            {
-              id: '3',
-              company_id: '3',
-              title: 'Data Scientist',
-              description: 'Apply machine learning to personalize recommendations for millions of users.',
-              location: 'New York, NY',
-              employment_type: 'Full-time',
-              remote_type: 'On-site',
-              salary_range: '$110K - $140K',
-              status: 'open',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              company: { id: '3', name: 'Data Co', size: 'medium' }
-            },
-            {
-              id: '4',
-              company_id: '4',
-              title: 'Product Manager',
-              description: 'Lead product strategy and roadmap for our core platform features.',
-              location: 'Remote, Global',
-              employment_type: 'Full-time',
-              remote_type: 'Remote',
-              salary_range: '$130K - $170K',
-              status: 'open',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              company: { id: '4', name: 'Product Ltd', size: 'large' }
-            },
-            {
-              id: '5',
-              company_id: '5',
-              title: 'DevOps Engineer',
-              description: 'Manage cloud infrastructure and deployment pipelines for scalable applications.',
-              location: 'Austin, TX',
-              employment_type: 'Full-time',
-              remote_type: 'Hybrid',
-              salary_range: '$100K - $130K',
-              status: 'open',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              company: { id: '5', name: 'Cloud Systems', size: 'medium' }
-            },
-            {
-              id: '6',
-              company_id: '6',
-              title: 'UX Designer',
-              description: 'Create intuitive user experiences for our mobile and web applications.',
-              location: 'Remote, US',
-              employment_type: 'Contract',
-              remote_type: 'Remote',
-              salary_range: '$85K - $115K',
-              status: 'open',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              company: { id: '6', name: 'Design Studio', size: 'small' }
-            }
-          ];
-
-          // Simulate pagination with sample data
-          const startIndex = offset;
-          const endIndex = startIndex + jobsPerPage;
-          const paginatedJobs = sampleJobs.slice(startIndex, endIndex);
-
-          setJobs(paginatedJobs);
-          setTotalJobs(sampleJobs.length);
-        } else {
-          setJobs(data.jobs || []);
-          setTotalJobs(data.total || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-        setJobs([]);
-        setTotalJobs(0);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchJobs();
-  }, [currentPage]);
+  }, [fetchJobs]);
+
 
   const handleCardClick = (job: Job) => {
     setSelectedJob(job);
@@ -185,7 +80,7 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {totalJobs > 0 ? `${totalJobs} jobs found` : (loading ? 'Loading jobs...' : 'No jobs found')}
+              {jobs.length > 0 ? `${jobs.length} jobs found` : (loading ? 'Loading jobs...' : 'No jobs found')}
             </h2>
             {activeFilters.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -227,64 +122,6 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
               ))}
             </div>
 
-            {/* Pagination */}
-            {totalJobs > jobsPerPage && (
-              <div className="flex flex-col items-center gap-4 mt-12 mb-8">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Showing {((currentPage - 1) * jobsPerPage) + 1}-{Math.min(currentPage * jobsPerPage, totalJobs)} of {totalJobs} jobs
-                </div>
-                <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-2 shadow-lg">
-                  {/* Previous Button */}
-                  <Button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="!px-4 !py-2.5 !bg-gray-50 !text-gray-700 !border !border-gray-200 !rounded-lg hover:!bg-gray-100 hover:!border-gray-300 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:hover:!bg-gray-50 disabled:hover:!border-gray-200 dark:!bg-gray-700 dark:!text-gray-300 dark:!border-gray-600 dark:hover:!bg-gray-600 dark:hover:!border-gray-500 transition-all duration-200"
-                  >
-                    <ChevronLeft size={16} className="mr-1" />
-                    
-                  </Button>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center gap-1 mx-2">
-                    {Array.from({ length: Math.ceil(totalJobs / jobsPerPage) }, (_, i) => i + 1)
-                      .filter(page => {
-                        const totalPages = Math.ceil(totalJobs / jobsPerPage);
-                        // Show first page, last page, current page, and pages around current
-                        return page === 1 ||
-                               page === totalPages ||
-                               (page >= currentPage - 1 && page <= currentPage + 1);
-                      })
-                      .map((page, index, array) => (
-                        <React.Fragment key={page}>
-                          {index > 0 && array[index - 1] !== page - 1 && (
-                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500">...</span>
-                          )}
-                          <button
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              currentPage === page
-                                ? '!bg-primary-10 !text-white !border-primary-10'
-                                : '!bg-white !text-gray-700 !border !border-gray-300 hover:!bg-gray-50 hover:!border-gray-400 dark:!bg-gray-800 dark:!text-gray-300 dark:!border-gray-600 dark:hover:!bg-gray-700 dark:hover:!border-gray-500'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        </React.Fragment>
-                      ))}
-                  </div>
-
-                  {/* Next Button */}
-                  <Button
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    disabled={currentPage >= Math.ceil(totalJobs / jobsPerPage)}
-                    className="!px-4 !py-2.5 !bg-gray-50 !text-gray-700 !border !border-gray-200 !rounded-lg hover:!bg-gray-100 hover:!border-gray-300 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:hover:!bg-gray-50 disabled:hover:!border-gray-200 dark:!bg-gray-700 dark:!text-gray-300 dark:!border-gray-600 dark:hover:!bg-gray-600 dark:hover:!border-gray-500 transition-all duration-200"
-                  >
-                   
-                    <ChevronRight size={16} className="ml-1" />
-                  </Button>
-                </div>
-              </div>
-            )}
           </>
         )}
 

@@ -34,52 +34,10 @@ const AuthPage = () => {
     job_types: [] as string[],
     preferred_locations: [] as string[],
   });
-  
+
   const router = useRouter();
   const { user } = useAuth();
 
-  const toggleJobType = (jobType: string) => {
-    setJobPreferences(prev => ({
-      ...prev,
-      job_types: prev.job_types.includes(jobType)
-        ? prev.job_types.filter(type => type !== jobType)
-        : [...prev.job_types, jobType]
-    }));
-  };
-
-  const saveJobPreferences = async (userId: string) => {
-    try {
-      console.log('saveJobPreferences called with userId:', userId);
-      console.log('Current jobPreferences state:', jobPreferences);
-      
-      const preferencesData = {
-        desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
-        desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
-        job_types: jobPreferences.job_types,
-        preferred_locations: jobPreferences.preferred_locations,
-      };
-      
-      console.log('Formatted preferences data:', preferencesData);
-      
-      // Use upsert to handle both insert and update cases
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: userId,
-          job_preferences: preferencesData,
-        }, {
-          onConflict: 'user_id'
-        });
-      
-      if (error) {
-        console.error('Failed to save job preferences:', error);
-      } else {
-        console.log('Job preferences saved successfully via upsert');
-      }
-    } catch (error) {
-      console.error('Error saving job preferences:', error);
-    }
-  };
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -94,19 +52,62 @@ const AuthPage = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       });
-      
+
       if (error) throw error;
     } catch (error: any) {
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleJobType = (jobType: string) => {
+    setJobPreferences(prev => ({
+      ...prev,
+      job_types: prev.job_types.includes(jobType)
+        ? prev.job_types.filter(type => type !== jobType)
+        : [...prev.job_types, jobType]
+    }));
+  };
+
+  const saveJobPreferences = async (userId: string) => {
+    try {
+      console.log('saveJobPreferences called with userId:', userId);
+      console.log('Current jobPreferences state:', jobPreferences);
+
+      const preferencesData = {
+        desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
+        desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
+        job_types: jobPreferences.job_types,
+        preferred_locations: jobPreferences.preferred_locations,
+      };
+
+      console.log('Formatted preferences data:', preferencesData);
+
+      // Use upsert to handle both insert and update cases
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          job_preferences: preferencesData,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Failed to save job preferences:', error);
+      } else {
+        console.log('Job preferences saved successfully via upsert');
+      }
+    } catch (error) {
+      console.error('Error saving job preferences:', error);
     }
   };
 
@@ -156,9 +157,9 @@ const AuthPage = () => {
           },
         });
         if (error) throw error;
-        
+
         console.log('Job preferences stored in user metadata for email confirmation');
-        
+
         // If user is created immediately (without email confirmation), save job preferences
         if (data.user && data.user.email_confirmed_at) {
           console.log('User confirmed immediately, saving job preferences...');
@@ -170,7 +171,7 @@ const AuthPage = () => {
         } else {
           console.log('Email confirmation required - job preferences stored in user metadata');
           setSuccess('Check your email for a verification link!');
-          
+
           // Clear the form after successful signup
           setEmail('');
           setPassword('');
@@ -216,9 +217,9 @@ const AuthPage = () => {
     return (
       <div className="min-h-screen flex">
         {/* Left Side - Branding */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br  from-[#319795] to-[#246463] text-white flex-col justify-center items-center p-12">
+        <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex-col justify-center items-center p-12">
           <div className="max-w-md text-center">
-            <div className="mb-8">
+            <div className="mb-8 flex justify-center">
               <JobAiroLogo />
             </div>
             <h1 className="text-4xl font-bold mb-4">Welcome Back to JobAiro</h1>
@@ -243,8 +244,8 @@ const AuthPage = () => {
         </div>
 
         {/* Right Side - Reset Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-md w-full space-y-8">
+        <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col p-8 bg-gray-50 dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
+          <div className="max-w-md w-full mx-auto py-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Reset Password
@@ -276,7 +277,7 @@ const AuthPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#319795] focus:border-[#319795] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                   placeholder="Enter your email"
                   required
                 />
@@ -285,16 +286,16 @@ const AuthPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#319795] hover:bg-[#246463] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#319795] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#10b981] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
             </form>
 
-            <div className="text-center">
+            <div className="mt-10 text-center">
               <button
                 onClick={() => setShowForgotPassword(false)}
-                className="text-[#319795] hover:text-[#246463] dark:text-[#319795] font-medium"
+                className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981] font-medium"
               >
                 ← Back to Login
               </button>
@@ -306,9 +307,9 @@ const AuthPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#319795] to-[#246463] text-white flex-col justify-center items-center p-12">
+    <div className="relative min-h-screen overflow-x-hidden">
+      {/* Left Side - Branding - Fixed */}
+      <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex flex-col justify-center items-center p-12">
         <div className="max-w-md text-center">
           <div className="mb-8 mx-auto flex justify-center">
             <JobAiroLogo />
@@ -348,20 +349,21 @@ const AuthPage = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white dark:bg-gray-900">
-        <div className="max-w-md w-full space-y-8">
+      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
+        <div className="max-w-md w-full mx-auto py-8">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8  ">
+          <div className="lg:hidden text-center mb-8">
             <JobAiroLogo />
           </div>
 
-          <div className="text-center">
+          {/* Page Heading - Moved to top */}
+          <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               {isLogin ? 'Sign in to your account' : 'Create your account'}
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {isLogin 
-                ? "Don't have an account? " 
+              {isLogin
+                ? "Don't have an account? "
                 : "Already have an account? "
               }
               <button
@@ -370,12 +372,14 @@ const AuthPage = () => {
                   setError('');
                   setSuccess('');
                 }}
-                className="text-[#319795] hover:text-[#246463] dark:text-[#319795] font-medium"
+                className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981] font-medium"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
             </p>
           </div>
+
+          <div className="space-y-6">
 
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/50 dark:border-red-800">
@@ -393,7 +397,7 @@ const AuthPage = () => {
           <button
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#319795] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-25 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <FcGoogle size={20} />
             Continue with Google
@@ -417,7 +421,7 @@ const AuthPage = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#319710] focus:border-[#319710] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                 placeholder="Enter your email"
                 required
               />
@@ -432,7 +436,7 @@ const AuthPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#319795] focus:border-[#319795] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                 placeholder={isLogin ? "Enter your password" : "Create a password"}
                 required
                 minLength={6}
@@ -449,7 +453,7 @@ const AuthPage = () => {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#319795] focus:border-[#319795] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                   placeholder="Confirm your password"
                   required
                 />
@@ -459,7 +463,7 @@ const AuthPage = () => {
             {!isLogin && (
               <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
                 <h4 className="text-sm font-medium text-gray-900 dark:text-white">Job Preferences (Optional)</h4>
-                
+
                 {/* Salary Range */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -471,14 +475,14 @@ const AuthPage = () => {
                       value={jobPreferences.desired_salary_min}
                       onChange={(e) => setJobPreferences(prev => ({ ...prev, desired_salary_min: e.target.value }))}
                       placeholder="Min"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#319795] focus:border-[#319795] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                     />
                     <input
                       type="number"
                       value={jobPreferences.desired_salary_max}
                       onChange={(e) => setJobPreferences(prev => ({ ...prev, desired_salary_max: e.target.value }))}
                       placeholder="Max"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#319795] focus:border-[#319795] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                     />
                   </div>
                 </div>
@@ -496,7 +500,7 @@ const AuthPage = () => {
                         onClick={() => toggleJobType(jobType)}
                         className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                           jobPreferences.job_types.includes(jobType)
-                            ? 'bg-[#319795] text-white hover:bg-[#246463]'
+                            ? 'bg-[#10b981] text-white hover:bg-[#047857]'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
@@ -519,7 +523,7 @@ const AuthPage = () => {
                       setJobPreferences(prev => ({ ...prev, preferred_locations: locations }));
                     }}
                     placeholder="e.g., New York, Remote, San Francisco"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#319795] focus:border-[#319795] dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Separate multiple locations with commas
@@ -536,7 +540,7 @@ const AuthPage = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-[#319795] focus:ring-[#319795] border-gray-300 rounded"
+                    className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-white">
                     Remember me
@@ -546,7 +550,7 @@ const AuthPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-[#319795] hover:text-[#246463] dark:text-[#319795]"
+                  className="text-sm text-[#10b981] hover:text-[#047857] dark:text-[#10b981]"
                 >
                   Forgot password?
                 </button>
@@ -560,16 +564,16 @@ const AuthPage = () => {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="h-4 w-4 text-[#319795] focus:ring-[#319710] border-gray-300 rounded"
+                  className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
                   required
                 />
                 <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-900 dark:text-white">
                   I accept the{' '}
-                  <a href="/terms" className="text-[#319795] hover:text-[#246463] dark:text-[#319795]">
+                  <a href="/terms" className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981]">
                     Terms and Conditions
                   </a>{' '}
                   and{' '}
-                  <a href="/privacy" className="text-[#319795] hover:text-[#246463] dark:text-[#319795]">
+                  <a href="/privacy" className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981]">
                     Privacy Policy
                   </a>
                 </label>
@@ -579,7 +583,7 @@ const AuthPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#319795] hover:bg-[#246463] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#319795] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#10b981] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading 
                 ? (isLogin ? 'Signing in...' : 'Creating account...') 
@@ -587,6 +591,7 @@ const AuthPage = () => {
               }
             </button>
           </form>
+          </div>
         </div>
       </div>
     </div>
@@ -594,3 +599,5 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+
+

@@ -33,13 +33,13 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
     else if (label.startsWith('Job Type:')) {
       updatedFilters.jobType = '';
     }
-    // Handle company size filter
-    else if (label.startsWith('Company Size:')) {
-      updatedFilters.companySize = '';
+    // Handle company filter
+    else if (label.startsWith('Company:')) {
+      updatedFilters.company = '';
     }
-    // Handle salary range filter
-    else if (label.startsWith('Salary:')) {
-      updatedFilters.salaryRange = null;
+    // Handle date posted filter
+    else if (label.startsWith('Date Posted:')) {
+      updatedFilters.datePosted = '';
     }
 
     setFilters(updatedFilters);
@@ -49,12 +49,8 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
     const chips = [
       ...filterData.locations.map(({ label }) => ({ label })),
       { label: filterData.jobType ? `Job Type: ${filterData.jobType}` : null },
-      { label: filterData.companySize ? `Company Size: ${filterData.companySize}` : null },
-      {
-        label: filterData.salaryRange
-          ? `Salary: $${filterData.salaryRange[0]}k - $${filterData.salaryRange[1]}k`
-          : null,
-      },
+      { label: filterData.company ? `Company: ${filterData.company}` : null },
+      { label: filterData.datePosted && filterData.datePosted !== 'Date Posted' ? `Date Posted: ${filterData.datePosted}` : null },
     ];
 
     return chips.map((chip, index) =>
@@ -72,8 +68,8 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
     return (
       filterData.locations.length > 0 ||
       filterData.jobType !== '' ||
-      filterData.companySize !== '' ||
-      filterData.salaryRange !== null
+      filterData.company !== '' ||
+      (filterData.datePosted && filterData.datePosted !== 'Date Posted')
     );
   };
 

@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
+import DeleteAccountModal from './DeleteAccountModal';
 
 // Job types options
 const JOB_TYPES = [
@@ -23,8 +24,6 @@ const SettingsTab: React.FC = () => {
   const { profile, loading, updateProfile } = useProfile();
   const [formData, setFormData] = useState({
     full_name: '',
-    phone: '',
-    location: '',
   });
   const [jobPreferences, setJobPreferences] = useState({
     desired_salary_min: '',
@@ -33,17 +32,14 @@ const SettingsTab: React.FC = () => {
     preferred_locations: [] as string[],
   });
   const [saving, setSaving] = useState(false);
-  const [showBlockModal, setShowBlockModal] = useState(false);
-  const [blocking, setBlocking] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Initialize form data when profile loads
   React.useEffect(() => {
     if (profile) {
       setFormData({
         full_name: profile.full_name,
-        phone: profile.phone,
-        location: profile.location,
       });
       
       // Initialize job preferences
@@ -56,24 +52,6 @@ const SettingsTab: React.FC = () => {
     }
   }, [profile]);
 
-  // Get user's blocked status
-  React.useEffect(() => {
-    const getUserStatus = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('is_blocked')
-          .eq('id', user.id)
-          .single();
-        
-        if (!error && data) {
-          setIsBlocked(data.is_blocked || false);
-        }
-      }
-    };
-    
-    getUserStatus();
-  }, [user]);
 
   const handleJobPreferenceChange = (field: string, value: any) => {
     setJobPreferences(prev => ({
@@ -98,8 +76,6 @@ const SettingsTab: React.FC = () => {
 
     const success = await updateProfile({
       full_name: formData.full_name,
-      phone: formData.phone,
-      location: formData.location,
       job_preferences: {
         desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
         desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
@@ -121,55 +97,50 @@ const SettingsTab: React.FC = () => {
     // Reset form data to current profile data
     setFormData({
       full_name: profile.full_name,
-      phone: profile.phone,
-      location: profile.location,
     });
   };
 
-  const handleBlockClick = () => {
-    setShowBlockModal(true);
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
   };
 
-  const handleBlockConfirm = async () => {
+  const handleDeleteConfirm = async () => {
     if (!user) return;
 
-    setBlocking(true);
+    setDeleting(true);
 
     try {
-      console.log('Toggling block status for user:', user.id);
-      const newBlockStatus = !isBlocked;
-      
-      const { error } = await supabase
-        .from('users')
-        .update({ is_blocked: newBlockStatus })
-        .eq('id', user.id);
+      const response = await fetch(`/api/user/delete?userId=${user.id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) {
-        throw new Error(error.message);
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        // If JSON parsing fails, use the text as error
+        throw new Error(`Server error: ${responseText || 'Unknown error'}`);
       }
 
-      setIsBlocked(newBlockStatus);
-      
-      if (newBlockStatus) {
-        // User blocked their own account - show message and sign out
-        toast.success('Account blocked successfully. Signing out...');
-        
-        // Wait a moment for the toast to be visible
-        setTimeout(async () => {
-          await supabase.auth.signOut();
-          window.location.href = '/auth';
-        }, 2000);
-      } else {
-        // User unblocked their account
-        toast.success('Account unblocked successfully');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete account');
       }
+
+      toast.success('Account deleted successfully. Signing out...');
+
+      // Wait a moment for the toast to be visible
+      setTimeout(async () => {
+        await supabase.auth.signOut();
+        window.location.href = '/auth';
+      }, 2000);
     } catch (error) {
-      console.error('Error toggling block status:', error);
+      console.error('Error deleting account:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      toast.error(`Error updating account status: ${errorMessage}`);
+      toast.error(`Error deleting account: ${errorMessage}`);
     } finally {
-      setBlocking(false);
-      setShowBlockModal(false);
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -199,7 +170,7 @@ const SettingsTab: React.FC = () => {
                 type="text"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
             <div>
@@ -213,28 +184,6 @@ const SettingsTab: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Phone
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
-              />
             </div>
           </div>
         </div>
@@ -256,7 +205,7 @@ const SettingsTab: React.FC = () => {
                   value={jobPreferences.desired_salary_min}
                   onChange={(e) => handleJobPreferenceChange('desired_salary_min', e.target.value)}
                   placeholder="50000"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <div>
@@ -268,7 +217,7 @@ const SettingsTab: React.FC = () => {
                   value={jobPreferences.desired_salary_max}
                   onChange={(e) => handleJobPreferenceChange('desired_salary_max', e.target.value)}
                   placeholder="100000"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
             </div>
@@ -286,7 +235,7 @@ const SettingsTab: React.FC = () => {
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     jobPreferences.job_types.includes(jobType)
                       ? 'bg-primary-10 text-white hover:bg-primary-15'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[#282828] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {jobType}
@@ -309,7 +258,7 @@ const SettingsTab: React.FC = () => {
                 }));
               }}
               placeholder="e.g., New York, Remote, San Francisco"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Separate multiple locations with commas
@@ -321,45 +270,16 @@ const SettingsTab: React.FC = () => {
         <div className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6">
           <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Account Management</h4>
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h5 className="font-medium text-gray-900 dark:text-white mb-2">Account Status</h5>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Current status: <span className={`font-medium ${isBlocked ? 'text-red-600' : 'text-green-600'}`}>
-                    {isBlocked ? 'Blocked' : 'Active'}
-                  </span>
-                </p>
-              </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                isBlocked 
-                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                  : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-              }`}>
-                {isBlocked ? 'BLOCKED' : 'ACTIVE'}
-              </div>
-            </div>
-            
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h5 className={`font-medium mb-2 ${isBlocked ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {isBlocked ? 'Unblock Account' : 'Block Account'}
-              </h5>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {isBlocked 
-                  ? 'Unblock your account to regain full access to the platform.' 
-                  : 'Block your account to temporarily restrict access. You can unblock it later.'
-                }
-              </p>
-              <button
-                onClick={handleBlockClick}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isBlocked
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-red-600 text-white hover:bg-red-700'
-                }`}
-              >
-                {isBlocked ? 'Unblock Account' : 'Block Account'}
-              </button>
-            </div>
+            <h5 className="font-medium text-red-600 dark:text-red-400 mb-2">Delete Account</h5>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <button
+              onClick={handleDeleteClick}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Delete Account
+            </button>
           </div>
         </div>
 
@@ -380,45 +300,13 @@ const SettingsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Block Account Confirmation Modal */}
-      {showBlockModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {isBlocked ? 'Unblock Account?' : 'Block Account?'}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {isBlocked 
-                ? 'Are you sure you want to unblock your account? This will restore full access to the platform.' 
-                : 'Are you sure you want to block your account? This will restrict your access to the platform temporarily.'
-              }
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowBlockModal(false)}
-                disabled={blocking}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleBlockConfirm}
-                disabled={blocking}
-                className={`flex-1 px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50 ${
-                  isBlocked
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {blocking 
-                  ? (isBlocked ? 'Unblocking...' : 'Blocking...') 
-                  : (isBlocked ? 'Unblock Account' : 'Block Account')
-                }
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Account Confirmation Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        loading={deleting}
+      />
     </div>
   );
 };

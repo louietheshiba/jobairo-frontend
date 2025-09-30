@@ -3,6 +3,7 @@ import { MapPin, Briefcase, Building, Filter } from 'lucide-react';
 
 import type { Option } from '@/types/FiltersType';
 import type { SaveSearchProps } from '@/types/Index';
+import { DATE_POSTED_LIST } from '@/utils/constant';
 
 import { Button } from '../ui/button';
 import { Select } from '../ui/select';
@@ -25,13 +26,6 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
     { id: 1, value: 'full-time', label: 'Full Time' },
     { id: 2, value: 'part-time', label: 'Part Time' },
     { id: 3, value: 'contract', label: 'Contract' },
-  ];
-
-  const companySizeOptions = [
-    { id: 1, value: 'startup', label: 'Startup (1-50)' },
-    { id: 2, value: 'small', label: 'Small (51-200)' },
-    { id: 3, value: 'medium', label: 'Medium (201-1000)' },
-    { id: 4, value: 'large', label: 'Large (1000+)' },
   ];
 
   return (
@@ -80,46 +74,37 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
                 />
               </div>
 
-              {/* Company Size */}
+              {/* Company */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   <Building className="w-4 h-4" />
-                  Company Size
-                </label>
-                <Select
-                  value={companySizeOptions.find(opt => opt.value === filters?.companySize) || null}
-                  onChange={(selected) => {
-                    const value = selected as Option;
-                    handleChange('companySize', value?.value || '');
-                  }}
-                  options={companySizeOptions}
-                  placeholder="Select company size"
-                />
-              </div>
-
-              {/* Salary Range - Simple text input for now */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Salary Range
+                  Company
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. $50k - $80k"
-                  value={filters?.salaryRange?.[0] ? `${filters.salaryRange[0]}k - ${filters.salaryRange[1]}k` : ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value) {
-                      const parts = value.split('-');
-                      const min = parts[0] ? parseInt(parts[0].trim()) || 0 : 0;
-                      const max = parts[1] ? parseInt(parts[1].trim()) || 0 : 0;
-                      handleChange('salaryRange', [min, max]);
-                    } else {
-                      handleChange('salaryRange', null);
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+                  placeholder="e.g. Google, Microsoft"
+                  value={filters?.company || ''}
+                  onChange={(e) => handleChange('company', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-15 rounded-md bg-white dark:bg-dark-25 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
                 />
               </div>
+
+              {/* Date Posted */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Date Posted
+                </label>
+                <Select
+                  value={DATE_POSTED_LIST.find(opt => opt.label === filters?.datePosted) || null}
+                  onChange={(selected) => {
+                    const value = selected as Option;
+                    handleChange('datePosted', value?.label || '');
+                  }}
+                  options={DATE_POSTED_LIST.slice(1)} // Skip the first "Date Posted" option
+                  placeholder="Select date range"
+                />
+              </div>
+
             </div>
           </div>
 
@@ -130,10 +115,10 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
                 // Clear all filters
                 handleChange('locations', []);
                 handleChange('jobType', '');
-                handleChange('companySize', '');
-                handleChange('salaryRange', null);
+                handleChange('company', '');
+                handleChange('datePosted', DATE_POSTED_LIST[0]?.label || '');
               }}
-              className="flex items-center justify-center !border-gray-300 !bg-white !text-gray-700 hover:!bg-gray-50 dark:!border-gray-600 dark:!bg-gray-800 dark:!text-gray-300 dark:hover:!bg-gray-700 !px-4 !py-2 !text-sm"
+              className="flex items-center justify-center !border-gray-300 !bg-white !text-gray-700 hover:!bg-gray-50 dark:!border-dark-15 dark:!bg-dark-25 dark:!text-white dark:hover:!bg-dark-20 !px-4 !py-2 !text-sm"
             >
               Clear All Filters
             </Button>

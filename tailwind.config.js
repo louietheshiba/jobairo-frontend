@@ -13,8 +13,8 @@ export default {
     extend: {
       colors: {
         primary: {
-          10: '#319795',
-          15: '#38A169',
+          10: '#10b981',
+          15: '#047857',
         },
         themeGray: {
           5: '#F5F5F5',
