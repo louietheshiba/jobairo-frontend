@@ -1,10 +1,5 @@
+import { supabase } from '@/utils/supabase';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
@@ -12,9 +7,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { userId, full_name, phone, location } = req.body;
+    const { 
+      userId, 
+      full_name, 
+      phone, 
+      location, 
+      job_preferences
+    } = req.body;
 
-    console.log('Profile update request:', { userId, full_name, phone, location });
+    console.log('Profile update request:', { 
+      userId, 
+      full_name, 
+      phone, 
+      location, 
+      job_preferences: job_preferences ? JSON.stringify(job_preferences, null, 2) : 'undefined'
+    });
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -59,6 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .update({
           phone,
           location,
+          job_preferences,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId)
@@ -78,6 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           user_id: userId,
           phone,
           location,
+          job_preferences,
           updated_at: new Date().toISOString()
         })
         .select();

@@ -20,34 +20,46 @@ const AuthCallbackPage = () => {
         if (data.session) {
           const user = data.session.user;
 
-          // Check if user exists in public.users, if not, insert
-          const { data: existingUser } = await supabase
-            .from('users')
-            .select('id')
-            .eq('id', user.id)
-            .single();
+          // Get job preferences from user metadata (works across different browsers)
+          const pendingPreferences = user.user_metadata?.pending_job_preferences;
+          console.log('Pending preferences from user metadata:', pendingPreferences);
 
-          if (!existingUser) {
-            // Insert into users table
-            await supabase.from('users').insert({
-              id: user.id,
-              full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-            });
-          }
+          if (pendingPreferences) {
+            try {
+              console.log('Found job preferences in user metadata:', pendingPreferences);
 
-          // Check if profile exists, if not, insert
-          const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', user.id)
-            .single();
+              // Update the profile with job preferences (profile already exists due to trigger)
+              console.log('Updating profile with job preferences...');
+              const { error } = await supabase
+                .from('profiles')
+                .update({
+                  job_preferences: pendingPreferences,
+                })
+                .eq('user_id', user.id);
 
-          if (!existingProfile) {
-            // Insert into profiles table
-            await supabase.from('profiles').insert({
-              user_id: user.id,
-              avatar_url: user.user_metadata?.avatar_url,
-            });
+              if (error) {
+                console.error('Failed to save job preferences:', error);
+              } else {
+                console.log('Job preferences saved successfully from user metadata!');
+
+                // Clean up - remove pending preferences from user metadata
+                const { error: updateError } = await supabase.auth.updateUser({
+                  data: {
+                    pending_job_preferences: null
+                  }
+                });
+
+                if (updateError) {
+                  console.error('Failed to clean up user metadata:', updateError);
+                } else {
+                  console.log('Cleaned up pending preferences from user metadata');
+                }
+              }
+            } catch (error) {
+              console.error('Failed to process job preferences:', error);
+            }
+          } else {
+            console.log('No pending job preferences found in user metadata');
           }
 
           // Show success toast

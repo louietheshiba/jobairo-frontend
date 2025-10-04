@@ -1,13 +1,77 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Select } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/utils/supabase';
 import type { Job } from '@/types/JobTypes';
 
 interface AppliedJobsTabProps {
-  jobs: (Job & { appliedDate: string; status: string; notes?: string })[];
   onCardClick: (job: Job) => void;
 }
+const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
+  const { user } = useAuth();
+  const [jobs, setJobs] = useState<(Job & { appliedDate: string; status: string })[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ jobs, onCardClick }) => {
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAppliedJobs = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('applied_jobs')
+          .select('job_id, created_at')
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error fetching applied jobs:', error);
+          return;
+        }
+
+        const jobIds = data.map(s => s.job_id);
+        if (jobIds.length === 0) {
+          setJobs([]);
+          setLoading(false);
+          return;
+        }
+
+        const { data: jobsData, error: jobsError } = await supabase
+          .from('jobs')
+          .select('*')
+          .in('id', jobIds);
+
+        if (jobsError) {
+          console.error('Error fetching jobs:', jobsError);
+          return;
+        }
+
+        const jobsWithDate = jobsData.map(job => {
+          const applied = data.find(s => s.job_id === job.id);
+          return { ...job, appliedDate: applied?.created_at || '', status: 'Applied' };
+        });
+
+        setJobs(jobsWithDate);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppliedJobs();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-10"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading applied jobs...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -18,27 +82,6 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ jobs, onCardClick }) =>
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Select
-            value={{ label: 'All Status', value: 'all' }}
-            onChange={() => { }}
-            options={[
-              { label: 'All Status', value: 'all' },
-              { label: 'Applied', value: 'applied' },
-              { label: 'Viewed', value: 'viewed' },
-              { label: 'Interview', value: 'interview' },
-              { label: 'Rejected', value: 'rejected' },
-              { label: 'Accepted', value: 'accepted' }
-            ]}
-            placeholder="Filter by status"
-          />
-
-          <input
-            type="date"
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
-            placeholder="Filter by date"
-          />
-        </div>
       </div>
 
       {/* Timeline View */}
@@ -64,7 +107,7 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ jobs, onCardClick }) =>
                       {job.title}
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {job.company_name} • {job.salary}
+                      {job.company?.name} • {job.salary_range}
                     </p>
                   </div>
 

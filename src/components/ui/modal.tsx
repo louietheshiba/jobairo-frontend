@@ -41,7 +41,7 @@ const Modal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm">
       <div
         ref={wrapperRef}
-        className={`w-full ${maxWidth} zoomIn rounded-md bg-white shadow-lg ${className}`}
+        className={`w-full ${maxWidth} zoomIn rounded-md bg-white dark:bg-dark-20 shadow-lg ${className}`}
       >
         {isCloseIcon && (
           <button

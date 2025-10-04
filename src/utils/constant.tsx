@@ -106,11 +106,11 @@ export const INITIAL_FILTERS: FiltersType = {
   locations: [],
   workSchedule: [],
   jobType: '',
-  salaryRange: null,
+  company: '',
+  datePosted: DATE_POSTED_LIST[0]?.label || '',
   education: '',
   experienceLevel: '',
   relevance: RELEVANCE_LIST[0]?.label || '',
-  datePosted: DATE_POSTED_LIST[0]?.label || '',
   markedJobs: [],
   companySize: '',
 };

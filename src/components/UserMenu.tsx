@@ -21,6 +21,7 @@ const UserMenu = () => {
     const handleSignOut = async () => {
         await signOut();
         setIsDropdownOpen(false);
+        router.push('/auth');
     };
 
     const handleLoginClick = () => {
@@ -38,7 +39,7 @@ const UserMenu = () => {
             <div className="relative" ref={dropdownRef}>
                 <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg p-2 transition-colors"
+                    className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-[#282828] rounded-lg p-2 transition-colors"
                 >
                     {avatarUrl ? (
                         <img
@@ -47,7 +48,7 @@ const UserMenu = () => {
                             className="h-8 w-8 rounded-full object-cover"
                         />
                     ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#319795] text-white font-medium">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-10 text-white font-medium">
                             {initial}
                         </div>
                     )}
@@ -57,7 +58,7 @@ const UserMenu = () => {
                 </button>
 
                 {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#282828] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
                         {/* User Info */}
                         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -100,7 +101,7 @@ const UserMenu = () => {
     return (
         <button
             onClick={handleLoginClick}
-            className="font-poppins text-sm font-semibold text-[#319795] dark:text-[#319795] hover:text-[#246463] dark:hover:text-[#246463] transition-colors sm:text-base"
+            className="font-poppins text-sm font-semibold text-primary-10 dark:text-primary-10 hover:text-primary-15 dark:hover:text-primary-15 transition-colors sm:text-base"
         >
             Login
         </button>

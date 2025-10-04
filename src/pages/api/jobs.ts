@@ -9,16 +9,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const {
       location,
-      employment_type,
-      remote_type,
-      salary_range,
-      company_size,
-      limit = '20',
+      job_type,
+      company_name,
+      search,
+      limit = '10000',
       offset = '0'
     } = req.query;
 
     console.log('Fetching jobs with filters:', {
-      location, employment_type, remote_type, salary_range, company_size, limit, offset
+      location, job_type,
+      company_name, search, limit, offset
     });
 
     // First get total count without filters for pagination
@@ -32,20 +32,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       countQuery = countQuery.ilike('location', `%${location}%`);
     }
 
-    if (employment_type && employment_type !== 'all') {
-      countQuery = countQuery.eq('employment_type', employment_type);
+    if (company_name && company_name !== 'all') {
+      countQuery = countQuery.eq('company_name', company_name);
     }
 
-    if (remote_type && remote_type !== 'all') {
-      countQuery = countQuery.eq('remote_type', remote_type);
+    if (job_type && job_type !== 'all') {
+      countQuery = countQuery.eq('job_type', job_type);
     }
 
-    if (company_size && company_size !== 'all') {
-      countQuery = countQuery.eq('company.size', company_size);
-    }
-
-    if (salary_range) {
-      countQuery = countQuery.ilike('salary_range', `%${salary_range}%`);
+    if (search) {
+      countQuery = countQuery.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     const { count } = await countQuery;
@@ -65,23 +61,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (location && location !== 'all') {
       query = query.ilike('location', `%${location}%`);
     }
-
-    if (employment_type && employment_type !== 'all') {
-      query = query.eq('employment_type', employment_type);
+    if (company_name && company_name !== 'all') {
+      query = query.eq('company_name', company_name);
     }
 
-    if (remote_type && remote_type !== 'all') {
-      query = query.eq('remote_type', remote_type);
+    if (job_type && job_type !== 'all') {
+      query = query.eq('job_type', job_type);
     }
 
-    if (company_size && company_size !== 'all') {
-      query = query.eq('company.size', company_size);
-    }
-
-    // Salary range filtering (basic implementation)
-    if (salary_range) {
-      // This is a simplified implementation - you might want to parse salary ranges more intelligently
-      query = query.ilike('salary_range', `%${salary_range}%`);
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     const { data: jobs, error } = await query;
@@ -90,9 +79,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Error fetching jobs:', error);
       return res.status(500).json({ error: 'Failed to fetch jobs' });
     }
-
-    console.log(`Fetched ${jobs?.length || 0} jobs`);
-
     return res.status(200).json({
       jobs: jobs || [],
       total: count || 0,

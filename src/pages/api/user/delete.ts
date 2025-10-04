@@ -18,59 +18,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { userId } = req.body;
-    console.log('Request body:', req.body);
-    console.log('UserId extracted:', userId);
+    const userId = req.query.userId as string;
+    console.log('UserId from query:', userId);
 
     if (!userId) {
       console.log('User ID is missing from request');
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    // Soft delete approach: mark user as deleted instead of removing from auth
-    console.log('Performing soft delete for user:', userId);
+    // Permanent delete: remove user from auth and clear data
+    console.log('Performing permanent delete for user:', userId);
 
-    // Update users table to mark as deleted
-    const { error: userUpdateError } = await supabase
-      .from('users')
-      .update({
-        status: 'deleted',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId);
+    // Delete the user from Supabase Auth
+    try {
+      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
 
-    if (userUpdateError) {
-      console.error('Error updating user status:', userUpdateError);
-      // Continue anyway - the logout will still work
-    } else {
-      console.log('User status updated to deleted');
+      if (deleteAuthError) {
+        console.error('Error deleting user from auth:', deleteAuthError);
+        return res.status(500).json({ error: 'Failed to delete user account' });
+      } else {
+        console.log('User deleted from auth successfully');
+      }
+    } catch (authError) {
+      console.error('Exception deleting user from auth:', authError);
+      return res.status(500).json({ error: 'Failed to delete user account' });
     }
 
-    // Clear sensitive profile data
-    const { error: profileUpdateError } = await supabase
+    // Clear profile data (cascade delete should handle this, but ensure)
+    const { error: profileDeleteError } = await supabase
       .from('profiles')
-      .update({
-        phone: null,
-        location: null,
-        job_preferences: null,
-        avatar_url: null,
-        updated_at: new Date().toISOString()
-      })
+      .delete()
       .eq('user_id', userId);
 
-    if (profileUpdateError) {
-      console.error('Error clearing profile data:', profileUpdateError);
-      // Continue anyway
+    if (profileDeleteError) {
+      console.error('Error deleting profile data:', profileDeleteError);
+      // Continue anyway as user is deleted
     } else {
-      console.log('Profile data cleared');
+      console.log('Profile data deleted');
     }
 
-    console.log('Soft delete completed successfully for user:', userId);
+    // Clear users table entry if exists
+    const { error: userDeleteError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId);
+
+    if (userDeleteError) {
+      console.error('Error deleting user record:', userDeleteError);
+      // Continue anyway
+    } else {
+      console.log('User record deleted');
+    }
+
+    console.log('Permanent delete completed successfully for user:', userId);
 
     return res.status(200).json({
       success: true,
-      message: 'Account deactivated successfully',
-      note: 'Your account has been marked as inactive. Contact support to reactivate if needed.'
+      message: 'Account permanently deleted successfully'
     });
 
   } catch (error) {

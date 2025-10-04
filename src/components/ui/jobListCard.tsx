@@ -1,17 +1,54 @@
 import { Bookmark } from 'lucide-react';
-import React from 'react';
-import type { JobListCardProps } from '@/types/JobTypes';
-import LoginPrompt from '@/components/LoginPrompt';
+import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/utils/supabase';
+import type { JobListCardProps } from '@/types/JobTypes';
 
-const JobListCard = ({ item, onClick }: JobListCardProps) => {
+const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobListCardProps) => {
   const { user } = useAuth();
+  const [isSaved, setIsSaved] = useState(initialIsSaved);
 
-  const handleSaveJob = (e: React.MouseEvent) => {
+  useEffect(() => {
+    setIsSaved(initialIsSaved);
+  }, [initialIsSaved]);
+
+  const handleSaveJob = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (user) {
-      // TODO: Implement save job functionality
-      console.log('Save job:', item?.title);
+
+    if (!user) {
+      toast.error('You need to login first');
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        // Unsave
+        const { error } = await supabase
+          .from('saved_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', item.id);
+
+        if (error) throw error;
+
+        setIsSaved(false);
+        toast.success('Job unsaved successfully!');
+      } else {
+        // Save
+        const { error } = await supabase.from('saved_jobs').insert({
+          user_id: user.id,
+          job_id: item.id,
+        });
+
+        if (error) throw error;
+
+        setIsSaved(true);
+        toast.success('Job saved successfully! 🎉');
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      toast.error('Failed to save/unsave job');
     }
   };
 
@@ -23,12 +60,9 @@ const JobListCard = ({ item, onClick }: JobListCardProps) => {
       {/* Bookmark Button */}
       <button
         className="absolute top-4 right-4 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-dark-30"
-        onClick={(e) => {
-          e.stopPropagation();
-          console.log('Save clicked');
-        }}
+        onClick={handleSaveJob}
       >
-        <Bookmark className="w-5 h-5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" />
+        <Bookmark className={`w-5 h-5 ${isSaved ? 'text-primary-10 fill-primary-10' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`} />
       </button>
 
       {/* Job Header */}
@@ -37,20 +71,17 @@ const JobListCard = ({ item, onClick }: JobListCardProps) => {
           {item?.title}
         </h2>
         <span className="font-poppins text-sm font-semibold text-secondary dark:text-white sm:text-base">
-          {item?.salary_range || 'Salary not specified'}
+          {item?.salary_range || ''}
         </span>
       </div>
 
       {/* Company Info */}
-      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-            {item?.company?.name?.charAt(0) || '?'}
-          </div>
-          <span className="font-medium">{item?.company?.name || 'Company not specified'}</span>
-        </div>
-        <span className="capitalize">{item?.employment_type || 'Not specified'}</span>
-        <span>{item?.location || 'Location not specified'}</span>
+      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <span className="font-medium">{item?.company?.name || 'Company not specified'}</span>
+        <span className="text-gray-400">•</span>
+        <span className="capitalize">{item?.remote_type || 'Not specified'}</span>
+        <span className="text-gray-400">•</span>
+        <span>Posted {Math.floor((new Date().getTime() - new Date(item?.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
       </div>
 
       {/* Description */}

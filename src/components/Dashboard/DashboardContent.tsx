@@ -31,11 +31,11 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         )}
 
         {activeTab === 'saved' && (
-          <SavedJobsTab jobs={mockSavedJobs} onCardClick={onCardClick} />
+          <SavedJobsTab onCardClick={onCardClick} />
         )}
 
         {activeTab === 'applied' && (
-          <AppliedJobsTab jobs={mockAppliedJobs} onCardClick={onCardClick} />
+          <AppliedJobsTab onCardClick={onCardClick} />
         )}
 
         {activeTab === 'hidden' && <HiddenJobsTab />}

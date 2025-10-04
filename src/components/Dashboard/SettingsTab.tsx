@@ -1,17 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
 import DeleteAccountModal from './DeleteAccountModal';
 
+// Job types options
+const JOB_TYPES = [
+  'Full-time',
+  'Part-time',
+  'Contract',
+  'Freelance',
+  'Internship',
+  'Remote',
+  'Hybrid',
+  'On-site'
+];
+
+
+
 const SettingsTab: React.FC = () => {
   const { user } = useAuth();
   const { profile, loading, updateProfile } = useProfile();
   const [formData, setFormData] = useState({
     full_name: '',
-    phone: '',
-    location: '',
+  });
+  const [jobPreferences, setJobPreferences] = useState({
+    desired_salary_min: '',
+    desired_salary_max: '',
+    job_types: [] as string[],
+    preferred_locations: [] as string[],
   });
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -22,11 +40,34 @@ const SettingsTab: React.FC = () => {
     if (profile) {
       setFormData({
         full_name: profile.full_name,
-        phone: profile.phone,
-        location: profile.location,
+      });
+      
+      // Initialize job preferences
+      setJobPreferences({
+        desired_salary_min: profile.job_preferences?.desired_salary_min ? profile.job_preferences.desired_salary_min.toString() : '',
+        desired_salary_max: profile.job_preferences?.desired_salary_max ? profile.job_preferences.desired_salary_max.toString() : '',
+        job_types: profile.job_preferences?.job_types || [],
+        preferred_locations: profile.job_preferences?.preferred_locations || [],
       });
     }
   }, [profile]);
+
+
+  const handleJobPreferenceChange = (field: string, value: any) => {
+    setJobPreferences(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const toggleJobType = (jobType: string) => {
+    setJobPreferences(prev => ({
+      ...prev,
+      job_types: prev.job_types.includes(jobType)
+        ? prev.job_types.filter(type => type !== jobType)
+        : [...prev.job_types, jobType]
+    }));
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -35,8 +76,12 @@ const SettingsTab: React.FC = () => {
 
     const success = await updateProfile({
       full_name: formData.full_name,
-      phone: formData.phone,
-      location: formData.location,
+      job_preferences: {
+        desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
+        desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
+        job_types: jobPreferences.job_types,
+        preferred_locations: jobPreferences.preferred_locations,
+      },
     });
 
     if (success) {
@@ -52,8 +97,6 @@ const SettingsTab: React.FC = () => {
     // Reset form data to current profile data
     setFormData({
       full_name: profile.full_name,
-      phone: profile.phone,
-      location: profile.location,
     });
   };
 
@@ -67,36 +110,30 @@ const SettingsTab: React.FC = () => {
     setDeleting(true);
 
     try {
-      console.log('Sending delete request for user:', user.id);
-      const response = await fetch('/api/user/delete', {
+      const response = await fetch(`/api/user/delete?userId=${user.id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-        }),
       });
 
-      console.log('Delete response status:', response.status);
-
+      const responseText = await response.text();
       let data;
       try {
-        data = await response.json();
-        console.log('Delete response data:', data);
+        data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error('Failed to parse response JSON:', parseError);
-        throw new Error('Invalid response from server');
+        // If JSON parsing fails, use the text as error
+        throw new Error(`Server error: ${responseText || 'Unknown error'}`);
       }
 
       if (!response.ok) {
-        throw new Error(data.error || `Server error: ${response.status}`);
+        throw new Error(data.error || 'Failed to delete account');
       }
 
-      toast.success('Account deactivated successfully. Redirecting...');
-      // Sign out and redirect
-      await supabase.auth.signOut();
-      window.location.href = '/auth';
+      toast.success('Account deleted successfully. Signing out...');
+
+      // Wait a moment for the toast to be visible
+      setTimeout(async () => {
+        await supabase.auth.signOut();
+        window.location.href = '/auth';
+      }, 2000);
     } catch (error) {
       console.error('Error deleting account:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -133,7 +170,7 @@ const SettingsTab: React.FC = () => {
                 type="text"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
             <div>
@@ -148,44 +185,100 @@ const SettingsTab: React.FC = () => {
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Phone
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
-              />
-            </div>
           </div>
         </div>
 
-        {/* Account Deletion */}
+        {/* Job Preferences Section */}
         <div className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6">
-          <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Account</h4>
+          <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Job Preferences</h4>
+          
+          {/* Salary Range */}
+          <div className="mb-6">
+            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Desired Salary Range</h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Minimum ($)
+                </label>
+                <input
+                  type="number"
+                  value={jobPreferences.desired_salary_min}
+                  onChange={(e) => handleJobPreferenceChange('desired_salary_min', e.target.value)}
+                  placeholder="50000"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Maximum ($)
+                </label>
+                <input
+                  type="number"
+                  value={jobPreferences.desired_salary_max}
+                  onChange={(e) => handleJobPreferenceChange('desired_salary_max', e.target.value)}
+                  placeholder="100000"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Job Types */}
+          <div className="mb-6">
+            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Preferred Job Types</h5>
+            <div className="flex flex-wrap gap-2">
+              {JOB_TYPES.map((jobType) => (
+                <button
+                  key={jobType}
+                  type="button"
+                  onClick={() => toggleJobType(jobType)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    jobPreferences.job_types.includes(jobType)
+                      ? 'bg-primary-10 text-white hover:bg-primary-15'
+                      : 'bg-gray-100 dark:bg-[#282828] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {jobType}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Preferred Locations */}
+          <div>
+            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Preferred Locations</h5>
+            <input
+              type="text"
+              value={jobPreferences.preferred_locations.join(', ')}
+              onChange={(e) => {
+                const locations = e.target.value.split(',').map(loc => loc.trim()).filter(loc => loc);
+                setJobPreferences(prev => ({
+                  ...prev,
+                  preferred_locations: locations
+                }));
+              }}
+              placeholder="e.g., New York, Remote, San Francisco"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Separate multiple locations with commas
+            </p>
+          </div>
+        </div>
+
+        {/* Account Management */}
+        <div className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6">
+          <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Account Management</h4>
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <h5 className="font-medium text-red-600 dark:text-red-400 mb-2">Deactivate Account</h5>
+            <h5 className="font-medium text-red-600 dark:text-red-400 mb-2">Delete Account</h5>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Deactivate your account and clear your data. You can contact support to reactivate if needed.
+              Permanently delete your account and all associated data. This action cannot be undone.
             </p>
             <button
               onClick={handleDeleteClick}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              Deactivate Account
+              Delete Account
             </button>
           </div>
         </div>
@@ -207,6 +300,7 @@ const SettingsTab: React.FC = () => {
         </div>
       </div>
 
+      {/* Delete Account Confirmation Modal */}
       <DeleteAccountModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
