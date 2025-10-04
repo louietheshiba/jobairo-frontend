@@ -1,61 +1,203 @@
-import { X, ExternalLink, MapPin, Briefcase, Share2, EyeOff, Flag, Check, Copy } from 'lucide-react';
-import React from 'react';
+import { X, ExternalLink, MapPin, Briefcase, Share2, EyeOff, Flag, Check, Copy, Bookmark } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import useCopyToClipboard from '@/hooks/copyToClipboard';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/utils/supabase';
 import type { JobDetailsModalProps } from '@/types/JobTypes';
-import { applyToJob, saveJob, hideJob, reportJob } from '@/utils/jobs';
 import { Button } from '../ui/button';
 import Modal from '../ui/modal';
 
 const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
+  const { user } = useAuth();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
+  const [isSaved, setIsSaved] = useState(false);
+  const [isApplied, setIsApplied] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const hasChecked = useRef(false);
+
+  useEffect(() => {
+    hasChecked.current = false;
+  }, [job]);
+
+  useEffect(() => {
+    if (!user || !job || hasChecked.current) return;
+
+    hasChecked.current = true;
+
+    const checkStatus = async () => {
+      // Check if saved
+      const { data: savedData } = await supabase
+        .from('saved_jobs')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('job_id', job.id)
+        .single();
+      setIsSaved(!!savedData);
+
+      // Check if applied (assuming applied_jobs table)
+      const { data: appliedData } = await supabase
+        .from('applied_jobs')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('job_id', job.id)
+        .single();
+      setIsApplied(!!appliedData);
+
+      // Check if hidden
+      const { data: hiddenData } = await supabase
+        .from('hidden_jobs')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('job_id', job.id)
+        .single();
+      setIsHidden(!!hiddenData);
+
+      // Add to viewed jobs
+      await supabase.from('viewed_jobs').upsert({
+        user_id: user.id,
+        job_id: job.id,
+      });
+    };
+
+    checkStatus();
+  }, [user, job]);
 
   if (!isOpen) return null;
 
   const handleApplyNow = () => {
     if (job) {
-      applyToJob(job.id.toString());
-      window.open(`https://example.com/apply/${job.id}`, '_blank');
-      alert('Application opened in new tab!');
+      if (job.application_url) {
+        window.open(job.application_url, '_blank');
+      } else {
+        toast.error('Application URL not available');
+      }
     }
-    onClose();
   };
 
-  const handleSave = () => {
-    if (job) {
-      saveJob(job.id.toString());
-      alert('Job saved to your favorites!');
+  const handleSave = async () => {
+    if (!user) {
+      toast.error('You need to login first');
+      return;
     }
-    onClose();
+
+    if (!job) return;
+
+    try {
+      if (isSaved) {
+        // Unsave
+        const { error } = await supabase
+          .from('saved_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', job.id);
+
+        if (error) throw error;
+
+        setIsSaved(false);
+        toast.success('Job unsaved successfully');
+      } else {
+        // Save
+        const { error } = await supabase.from('saved_jobs').insert({
+          user_id: user.id,
+          job_id: job.id,
+        });
+
+        if (error) throw error;
+
+        setIsSaved(true);
+        toast.success('Job saved successfully! 🎉');
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      toast.error('Failed to save/unsave job');
+    }
   };
 
-  const handleMarkApplied = () => {
-    if (job) {
-      applyToJob(job.id.toString());
-      alert('Job marked as applied!');
+  const handleMarkApplied = async () => {
+    if (!user) {
+      toast.error('You need to login first');
+      return;
     }
-    onClose();
+
+    if (!job) return;
+
+    try {
+      if (isApplied) {
+        // Unmark
+        const { error } = await supabase
+          .from('applied_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', job.id);
+
+        if (error) throw error;
+
+        setIsApplied(false);
+        toast.success('Application unmarked');
+      } else {
+        // Mark applied
+        const { error } = await supabase.from('applied_jobs').insert({
+          user_id: user.id,
+          job_id: job.id,
+        });
+
+        if (error) throw error;
+
+        setIsApplied(true);
+        toast.success('Job marked as applied! 🎉');
+      }
+    } catch (error) {
+      console.error('Error marking/unmarking applied:', error);
+      toast.error('Failed to update application status');
+    }
   };
 
   const handleShare = () => {
     const url = `${window.location.origin}/jobs/${job?.id}`;
-    navigator.clipboard.writeText(url);
-    alert('Job link copied to clipboard!');
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Job link copied to clipboard!');
+    });
   };
 
-  const handleHide = () => {
-    if (job) {
-      hideJob(job.id.toString());
-      alert('Job hidden from your feed!');
+  const handleHide = async () => {
+    if (!user) {
+      toast.error('You need to login first');
+      return;
     }
-    onClose();
-  };
 
-  const handleReport = () => {
-    if (job) {
-      reportJob(job.id.toString());
-      alert('Job reported. Thank you for your feedback!');
+    if (!job) return;
+
+    try {
+      if (isHidden) {
+        // Unhide
+        const { error } = await supabase
+          .from('hidden_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', job.id);
+
+        if (error) throw error;
+
+        setIsHidden(false);
+        toast.success('Job unhidden');
+      } else {
+        // Hide
+        const { error } = await supabase.from('hidden_jobs').insert({
+          user_id: user.id,
+          job_id: job.id,
+        });
+
+        if (error) throw error;
+
+        setIsHidden(true);
+        toast.success('Job hidden from your feed');
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error hiding/unhiding job:', error);
+      toast.error('Failed to hide/unhide job');
     }
-    onClose();
   };
 
   return (
@@ -82,9 +224,12 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
           </button>
         </div>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-lg text-[#10b981] dark:text-gray-300">
+          <button
+            onClick={() => job?.company?.website && window.open(job.company.website, '_blank')}
+            className="text-lg text-[#10b981] dark:text-gray-300 hover:underline cursor-pointer"
+          >
             {job?.company?.name}
-          </span>
+          </button>
           <ExternalLink size={16} className="text-[#10b981]" />
         </div>
         {/* Meta Tags Row */}
@@ -117,16 +262,22 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
           <Button
             onClick={handleSave}
-            className=" !border-[#10b981] !bg-white !py-2 text-sm !text-[#10b981] w-40 hover:!bg-[#10b981] hover:!text-white dark:!bg-dark-25 dark:!text-[#10b981] dark:hover:!bg-[#10b981] dark:hover:!text-white"
+            className={`!py-2 text-sm w-40 ${isSaved
+              ? '!bg-[#10b981] !border-[#10b981] !text-white hover:!bg-[#047857]'
+              : '!border-[#10b981] !bg-white !text-[#10b981] hover:!bg-[#10b981] hover:!text-white dark:!bg-dark-25 dark:!text-[#10b981] dark:hover:!bg-[#10b981] dark:hover:!text-white'
+            }`}
           >
-            Save
+            {isSaved ? 'Saved' : 'Save'}
           </Button>
 
           <Button
             onClick={handleMarkApplied}
-            className=" !border-[#10b981] !bg-white !py-2 text-sm !text-[#10b981] w-40 hover:!bg-[#10b981] hover:!text-white dark:!bg-dark-25 dark:!text-[#10b981] dark:hover:!bg-[#10b981] dark:hover:!text-white"
+            className={`!py-2 text-sm w-40 ${isApplied
+              ? '!bg-[#10b981] !border-[#10b981] !text-white hover:!bg-[#047857]'
+              : '!border-[#10b981] !bg-white !text-[#10b981] hover:!bg-[#10b981] hover:!text-white dark:!bg-dark-25 dark:!text-[#10b981] dark:hover:!bg-[#10b981] dark:hover:!text-white'
+            }`}
           >
-            Mark Applied
+            {isApplied ? 'Applied' : 'Mark Applied'}
           </Button>
 
 
@@ -144,13 +295,6 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
             className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <EyeOff size={18} />
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <Flag size={18} />
           </button>
         </div>
       </div>

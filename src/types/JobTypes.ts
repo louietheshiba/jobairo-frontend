@@ -39,6 +39,7 @@ export type JobDetailsModalProps = {
 export type JobListCardProps = {
   item: Job;
   onClick: (job: Job) => void;
+  isSaved?: boolean;
 };
 
 export type JobListProps = {

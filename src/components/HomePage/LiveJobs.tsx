@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 import type { LiveJobsProps } from '@/types/JobTypes';
 
-import { Button } from '../ui/button';
 import HomeHeader from './HomeHeader';
 import SaveSearch from './SaveSearch';
 import SearchBar from './SearchBar';

@@ -1,8 +1,56 @@
 import { Bookmark } from 'lucide-react';
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/utils/supabase';
 import type { JobListCardProps } from '@/types/JobTypes';
 
-const JobListCard = ({ item, onClick }: JobListCardProps) => {
+const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobListCardProps) => {
+  const { user } = useAuth();
+  const [isSaved, setIsSaved] = useState(initialIsSaved);
+
+  useEffect(() => {
+    setIsSaved(initialIsSaved);
+  }, [initialIsSaved]);
+
+  const handleSaveJob = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!user) {
+      toast.error('You need to login first');
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        // Unsave
+        const { error } = await supabase
+          .from('saved_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', item.id);
+
+        if (error) throw error;
+
+        setIsSaved(false);
+        toast.success('Job unsaved successfully!');
+      } else {
+        // Save
+        const { error } = await supabase.from('saved_jobs').insert({
+          user_id: user.id,
+          job_id: item.id,
+        });
+
+        if (error) throw error;
+
+        setIsSaved(true);
+        toast.success('Job saved successfully! 🎉');
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      toast.error('Failed to save/unsave job');
+    }
+  };
 
   return (
     <div
@@ -12,12 +60,9 @@ const JobListCard = ({ item, onClick }: JobListCardProps) => {
       {/* Bookmark Button */}
       <button
         className="absolute top-4 right-4 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-dark-30"
-        onClick={(e) => {
-          e.stopPropagation();
-          console.log('Save clicked');
-        }}
+        onClick={handleSaveJob}
       >
-        <Bookmark className="w-5 h-5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" />
+        <Bookmark className={`w-5 h-5 ${isSaved ? 'text-primary-10 fill-primary-10' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`} />
       </button>
 
       {/* Job Header */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 
-import useDebounce from '@/hooks/debounce';
 import type { Option } from '@/types/FiltersType';
 import { SUGGETIONS } from '@/utils/constant';
 
@@ -16,21 +15,41 @@ const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
   const [suggestions, setSuggestions] = useState<Option[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [jobCount, setJobCount] = useState(50000);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [hasSelected, setHasSelected] = useState(false);
+  const [isExactMatch, setIsExactMatch] = useState(false);
 
-  const debouncedQuery = useDebounce(query, 300);
+  // Debounce the query value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
-    if (debouncedQuery.length > 1) {
+    if (debouncedQuery.length > 0) {
       const filtered = SUGGETIONS.filter((s) =>
         s.label && typeof s.label === 'string' && s.label.toLowerCase().includes(debouncedQuery.toLowerCase())
       ).slice(0, 5);
       setSuggestions(filtered);
-      setShowSuggestions(true);
+      const exact = filtered.some(s => s.label === debouncedQuery);
+      setIsExactMatch(exact);
+      if (hasSelected) {
+        setShowSuggestions(false);
+        setHasSelected(false);
+      } else {
+        setShowSuggestions(filtered.length > 0 && !exact);
+      }
+      onSearch(debouncedQuery); // Trigger search on type
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
+      setIsExactMatch(false);
+      onSearch(''); // Clear search if empty
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, onSearch, hasSelected]);
 
   useEffect(() => {
     // Animate job count
@@ -44,6 +63,7 @@ const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
     e.preventDefault();
     onSearch(query);
     setShowSuggestions(false);
+    setSuggestions([]);
   };
 
   const handleSuggestionClick = (suggestion: Option) => {
@@ -51,6 +71,8 @@ const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
     handleChange('position', suggestion.label);
     onSearch(suggestion.label);
     setShowSuggestions(false);
+    setSuggestions([]);
+    setHasSelected(true);
   };
 
   return (
@@ -61,8 +83,8 @@ const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setShowSuggestions(!!suggestions.length)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            onFocus={() => setShowSuggestions(!!suggestions.length && !isExactMatch)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
             placeholder="Search for jobs..."
             className="w-full rounded-full border-2 border-gray-300 bg-white px-6 py-4 pr-20 text-lg shadow-lg focus:border-primary-10 focus:outline-none dark:border-dark-15 dark:bg-dark-25 dark:text-white dark:focus:border-primary-10"
           />
@@ -76,12 +98,12 @@ const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
           </div>
         </div>
 
-        {showSuggestions && (
+        {showSuggestions && suggestions.length > 0 && (
           <div className="absolute top-full z-10 mt-2 w-full rounded-lg border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion.id}
-                onClick={() => handleSuggestionClick(suggestion)}
+                onMouseDown={() => handleSuggestionClick(suggestion)}
                 className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 {suggestion.label}

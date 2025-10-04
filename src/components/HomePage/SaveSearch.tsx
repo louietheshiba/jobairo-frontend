@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Briefcase, Building, Filter } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import type { Option } from '@/types/FiltersType';
 import type { SaveSearchProps } from '@/types/Index';
-import { DATE_POSTED_LIST } from '@/utils/constant';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/utils/supabase';
 
 import { Button } from '../ui/button';
 import { Select } from '../ui/select';
@@ -14,6 +16,8 @@ interface ExtendedSaveSearchProps extends SaveSearchProps {
 }
 
 const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: ExtendedSaveSearchProps) => {
+  const { user } = useAuth();
+  const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
 
   // Simplified filter options that match our database schema
   const locationOptions = [
@@ -28,6 +32,46 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
     { id: 3, value: 'contract', label: 'Contract' },
   ];
 
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await fetch('/api/jobs?limit=10000');
+        const data = await response.json();
+        const companies = data.jobs?.map((job: any) => job.company?.name).filter(Boolean) || [];
+        const uniqueCompanies = [...new Set(companies)].map((name, index) => ({
+          id: index + 1,
+          value: name as string,
+          label: name as string,
+        }));
+        setCompanyOptions(uniqueCompanies);
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+      }
+    };
+    fetchCompanies();
+  }, []);
+
+  const handleSaveSearch = async () => {
+    if (!user) {
+      toast.error('You need to login first');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('saved_searches').insert({
+        user_id: user.id,
+        filters: filters,
+      });
+
+      if (error) throw error;
+
+      toast.success('Search saved successfully! 🎉');
+    } catch (error) {
+      console.error('Error saving search:', error);
+      toast.error('Failed to save search');
+    }
+  };
+
   return (
     <div className="rounded-lg bg-white shadow-sm dark:bg-dark-20">
       {/* Collapsible Filter Section */}
@@ -39,7 +83,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
             </h3>
 
             {/* Main Filters Row */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
               {/* Location */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -80,30 +124,17 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
                   <Building className="w-4 h-4" />
                   Company
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Google, Microsoft"
-                  value={filters?.company || ''}
-                  onChange={(e) => handleChange('company', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-15 rounded-md bg-white dark:bg-dark-25 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-10 focus:border-transparent"
+                <Select
+                  value={companyOptions.find(opt => opt.value === filters?.company) || null}
+                  onChange={(selected) => {
+                    const value = selected as Option;
+                    handleChange('company', value?.value || '');
+                  }}
+                  options={companyOptions}
+                  placeholder="Select company"
                 />
               </div>
 
-              {/* Date Posted */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Date Posted
-                </label>
-                <Select
-                  value={DATE_POSTED_LIST.find(opt => opt.label === filters?.datePosted) || null}
-                  onChange={(selected) => {
-                    const value = selected as Option;
-                    handleChange('datePosted', value?.label || '');
-                  }}
-                  options={DATE_POSTED_LIST.slice(1)} // Skip the first "Date Posted" option
-                  placeholder="Select date range"
-                />
-              </div>
 
             </div>
           </div>
@@ -116,21 +147,25 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
                 handleChange('locations', []);
                 handleChange('jobType', '');
                 handleChange('company', '');
-                handleChange('datePosted', DATE_POSTED_LIST[0]?.label || '');
               }}
               className="flex items-center justify-center !border-gray-300 !bg-white !text-gray-700 hover:!bg-gray-50 dark:!border-dark-15 dark:!bg-dark-25 dark:!text-white dark:hover:!bg-dark-20 !px-4 !py-2 !text-sm"
             >
               Clear All Filters
             </Button>
 
-            <Button className="flex items-center justify-center gap-2 !border-primary-10 !bg-primary-10 !text-white hover:!border-primary-15 hover:!bg-primary-15 !px-4 !py-2 !text-sm">
+            <Button
+              onClick={handleSaveSearch}
+              className="flex items-center justify-center gap-2 !border-primary-10 !bg-primary-10 !text-white hover:!border-primary-15 hover:!bg-primary-15 !px-4 !py-2 !text-sm"
+            >
               Save Search
             </Button>
           </div>
         </div>
       )}
 
-      <AppliedFilters filterData={filters} setFilters={setFilters} />
+      <div className="mt-4">
+        <AppliedFilters filterData={filters} setFilters={setFilters} />
+      </div>
     </div>
   );
 };
