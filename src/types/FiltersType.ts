@@ -16,6 +16,7 @@ export interface FiltersType {
   relevance: string;
   markedJobs: string[];
   companySize: string;
+  salaryRange?: number[] | null;
 }
 
 export interface AppliedFiltersProps {

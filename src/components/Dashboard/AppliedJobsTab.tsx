@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Select } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import type { Job } from '@/types/JobTypes';

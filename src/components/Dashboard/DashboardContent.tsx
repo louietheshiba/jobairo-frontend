@@ -10,24 +10,18 @@ import type { Job } from '@/types/JobTypes';
 
 interface DashboardContentProps {
   activeTab: string;
-  mockRecommendedJobs: Job[];
-  mockAppliedJobs: (Job & { appliedDate: string; status: string; notes?: string })[];
-  mockSavedJobs: (Job & { savedDate: string })[];
   onCardClick: (job: Job) => void;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
   activeTab,
-  mockRecommendedJobs,
-  mockAppliedJobs,
-  mockSavedJobs,
   onCardClick,
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm dark:bg-dark-20">
       <div className="p-6">
         {activeTab === 'relevant' && (
-          <RelevantJobsTab jobs={mockRecommendedJobs} onCardClick={onCardClick} />
+          <RelevantJobsTab onCardClick={onCardClick} />
         )}
 
         {activeTab === 'saved' && (

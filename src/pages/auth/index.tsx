@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import { FcGoogle } from 'react-icons/fc';
 import JobAiroLogo from '@/components/Icons/JobAiroLogo';
+import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 
 // Job types options
 const JOB_TYPES = [
@@ -244,7 +245,7 @@ const AuthPage = () => {
         </div>
 
         {/* Right Side - Reset Form */}
-        <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col p-8 bg-gray-50 dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
+        <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col justify-center p-8 bg-gray-50 dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
           <div className="max-w-md w-full mx-auto py-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -309,47 +310,49 @@ const AuthPage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Left Side - Branding - Fixed */}
-      <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex flex-col justify-center items-center p-12">
-        <div className="max-w-md text-center">
-          <div className="mb-8 mx-auto flex justify-center">
-            <JobAiroLogo />
-          </div>
-          <h1 className="text-4xl font-bold mb-4">
-            {isLogin ? 'Welcome Back to JobAiro' : 'Join JobAiro Today'}
-          </h1>
-          <p className="text-xl opacity-90">
-            {isLogin 
-              ? 'Continue your job search journey with us' 
-              : 'Start your career journey with thousands of opportunities'
-            }
-          </p>
-          <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold">50K+</div>
-              <div className="text-sm opacity-75">Active Jobs</div>
+      <div className="hidden lg:flex lg:fixed lg:inset-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white">
+        <div className="flex flex-col justify-center items-center w-full p-8 md:p-12">
+          <div className="max-w-md text-center w-full">
+            <div className="mb-8 flex justify-center">
+              <JobAiroLogo />
             </div>
-            <div>
-              <div className="text-2xl font-bold">10K+</div>
-              <div className="text-sm opacity-75">Companies</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">1M+</div>
-              <div className="text-sm opacity-75">Job Seekers</div>
-            </div>
-          </div>
-          
-          {/* Testimonial */}
-          <div className="mt-12 p-6 bg-white/10 rounded-lg backdrop-blur-sm">
-            <p className="text-sm italic mb-3">
-              "JobAiro helped me find my dream job in just 2 weeks. The platform is incredibly user-friendly!"
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              {isLogin ? 'Welcome Back to JobAiro' : 'Join JobAiro Today'}
+            </h1>
+            <p className="text-lg md:text-xl opacity-90">
+              {isLogin
+                ? 'Continue your job search journey with us'
+                : 'Start your career journey with thousands of opportunities'
+              }
             </p>
-            <p className="text-xs font-medium">- Sarah Chen, Software Engineer</p>
+            <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold">50K+</div>
+                <div className="text-sm opacity-75">Active Jobs</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">10K+</div>
+                <div className="text-sm opacity-75">Companies</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">1M+</div>
+                <div className="text-sm opacity-75">Job Seekers</div>
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <div className="mt-12 p-6 bg-white/10 rounded-lg backdrop-blur-sm">
+              <p className="text-sm italic mb-3">
+                "JobAiro helped me find my dream job in just 2 weeks. The platform is incredibly user-friendly!"
+              </p>
+              <p className="text-xs font-medium">- Sarah Chen, Software Engineer</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
+      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col justify-center p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
         <div className="max-w-md w-full mx-auto py-8">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
@@ -515,18 +518,14 @@ const AuthPage = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Preferred Locations
                   </label>
-                  <input
-                    type="text"
-                    value={jobPreferences.preferred_locations.join(', ')}
-                    onChange={(e) => {
-                      const locations = e.target.value.split(',').map(loc => loc.trim()).filter(loc => loc);
-                      setJobPreferences(prev => ({ ...prev, preferred_locations: locations }));
-                    }}
-                    placeholder="e.g., New York, Remote, San Francisco"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                  <LocationAutocomplete
+                    value={jobPreferences.preferred_locations}
+                    onChange={(locations) => setJobPreferences(prev => ({ ...prev, preferred_locations: locations }))}
+                    placeholder="Search for cities (e.g., New York, San Francisco)"
+                    className="text-sm"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Separate multiple locations with commas
+                    Select multiple locations from the dropdown
                   </p>
                 </div>
               </div>

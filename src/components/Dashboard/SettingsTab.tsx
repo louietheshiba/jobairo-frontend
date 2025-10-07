@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
 import DeleteAccountModal from './DeleteAccountModal';
+import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 
 // Job types options
 const JOB_TYPES = [
@@ -85,6 +86,8 @@ const SettingsTab: React.FC = () => {
     });
 
     if (success) {
+      // Clear relevant jobs cache so recommendations refresh with new preferences
+      localStorage.removeItem('lastRelevantJobsFetch');
       toast.success('Profile updated successfully! 🎉');
     } else {
       toast.error('Error saving profile. Please try again.');
@@ -132,7 +135,7 @@ const SettingsTab: React.FC = () => {
       // Wait a moment for the toast to be visible
       setTimeout(async () => {
         await supabase.auth.signOut();
-        window.location.href = '/auth';
+        window.location.href = '/account-deleted';
       }, 2000);
     } catch (error) {
       console.error('Error deleting account:', error);
@@ -247,21 +250,13 @@ const SettingsTab: React.FC = () => {
           {/* Preferred Locations */}
           <div>
             <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Preferred Locations</h5>
-            <input
-              type="text"
-              value={jobPreferences.preferred_locations.join(', ')}
-              onChange={(e) => {
-                const locations = e.target.value.split(',').map(loc => loc.trim()).filter(loc => loc);
-                setJobPreferences(prev => ({
-                  ...prev,
-                  preferred_locations: locations
-                }));
-              }}
-              placeholder="e.g., New York, Remote, San Francisco"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            <LocationAutocomplete
+              value={jobPreferences.preferred_locations}
+              onChange={(locations) => setJobPreferences(prev => ({ ...prev, preferred_locations: locations }))}
+              placeholder="Search for cities (e.g., New York, San Francisco)"
             />
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Separate multiple locations with commas
+              Select multiple locations from the dropdown
             </p>
           </div>
         </div>

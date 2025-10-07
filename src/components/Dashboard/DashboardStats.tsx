@@ -13,7 +13,7 @@ const DashboardStats: React.FC = () => {
     const fetchStats = async () => {
       try {
         const [viewedRes, savedRes, appliedRes] = await Promise.all([
-          supabase.from('viewed_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
+          supabase.from('job_views').select('id', { count: 'exact' }).eq('user_id', user.id),
           supabase.from('saved_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
           supabase.from('applied_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
         ]);

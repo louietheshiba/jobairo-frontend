@@ -166,3 +166,11 @@ CREATE POLICY "Users can manage own reported jobs" ON public.reported_jobs FOR A
 
 -- Allow anyone to view site content
 CREATE POLICY "Anyone can view site content" ON public.site_content FOR SELECT USING (true);
+
+ALTER TABLE public.jobs ADD COLUMN experience_level text;
+ALTER TABLE public.jobs ADD COLUMN job_category text;
+ALTER TABLE public.jobs ADD COLUMN required_skills text;
+ALTER TABLE public.jobs ADD COLUMN benefits text;
+ALTER TABLE public.jobs ADD COLUMN visa_sponsorship text;
+ALTER TABLE public.jobs ADD COLUMN equity_offered text;
+ALTER TABLE public.jobs ADD COLUMN salary text;

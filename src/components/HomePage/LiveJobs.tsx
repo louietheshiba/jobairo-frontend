@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import type { LiveJobsProps } from '@/types/JobTypes';
 
@@ -17,7 +17,6 @@ const LiveJobs = ({ setFilters, filters, handleChange }: LiveJobsProps) => {
         <HomeHeader />
         <SearchBar
           onSearch={handleSearch}
-          filters={filters}
           handleChange={handleChange}
         />
 

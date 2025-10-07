@@ -62,8 +62,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
       });
 
       if (error) throw error;
-      
+
       setSuccess('Check your email for a verification link!');
+      onSuccess();
     } catch (error: any) {
       setError(error.message);
     } finally {

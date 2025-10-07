@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import JobAiroLogo from '../Icons/JobAiroLogo';
 import Switcher from '../Switcher';
 import UserMenu from '../UserMenu';

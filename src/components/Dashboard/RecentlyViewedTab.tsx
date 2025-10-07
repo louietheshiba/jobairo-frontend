@@ -3,10 +3,72 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
 import type { Job } from '@/types/JobTypes';
+import JobListCard from '@/components/ui/jobListCard';
 const RecentlyViewedTab: React.FC = () => {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<(Job & { viewedDate: string })[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleSaveJob = async (jobId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from('saved_jobs').insert({
+        user_id: user.id,
+        job_id: jobId,
+      });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key error
+        throw error;
+      }
+
+      toast.success('Job saved successfully! 🎉');
+    } catch (error) {
+      console.error('Error saving job:', error);
+      toast.error('Failed to save job');
+    }
+  };
+
+  const handleHideJob = async (jobId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from('hidden_jobs').insert({
+        user_id: user.id,
+        job_id: jobId,
+      });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key error
+        throw error;
+      }
+
+      // Remove from the list
+      setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
+      toast.success('Job hidden from your view');
+    } catch (error) {
+      console.error('Error hiding job:', error);
+      toast.error('Failed to hide job');
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('job_views')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setJobs([]);
+      toast.success('View history cleared');
+    } catch (error) {
+      console.error('Error clearing history:', error);
+      toast.error('Failed to clear history');
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -15,10 +77,10 @@ const RecentlyViewedTab: React.FC = () => {
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('viewed_jobs')
-          .select('job_id, created_at')
+          .from('job_views')
+          .select('job_id, viewed_at')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('viewed_at', { ascending: false })
           .limit(50);
 
         if (error) {
@@ -45,7 +107,7 @@ const RecentlyViewedTab: React.FC = () => {
 
         const jobsWithDate = jobsData.map(job => {
           const viewed = data.find(s => s.job_id === job.id);
-          return { ...job, viewedDate: viewed?.created_at || '' };
+          return { ...job, viewedDate: viewed?.viewed_at || '' };
         });
 
         setJobs(jobsWithDate);
@@ -81,7 +143,10 @@ const RecentlyViewedTab: React.FC = () => {
         </div>
         {jobs.length > 0 && (
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+            <button
+              onClick={handleClearHistory}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
               Clear History
             </button>
           </div>
@@ -94,26 +159,30 @@ const RecentlyViewedTab: React.FC = () => {
           <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Jobs you view will appear here</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {jobs.map((job) => (
-            <div key={job.id} className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-4 opacity-60 hover:opacity-100 transition-opacity">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">{job.title}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{job.company?.name} • {job.employment_type} • {job.salary_range}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Viewed {Math.floor((new Date().getTime() - new Date(job.viewedDate).getTime()) / (1000 * 60 * 60))} hours ago
-                  </p>
-                  <div className="flex gap-1 mt-1">
-                    <button className="px-2 py-1 bg-primary-10 text-white rounded text-xs hover:bg-primary-15 transition-colors">
-                      Save
-                    </button>
-                    <button className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                      Hide
-                    </button>
-                  </div>
+            <div key={job.id} className="relative">
+              <JobListCard
+                item={job}
+                onClick={() => {}} // Could open modal if needed
+              />
+              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                  Viewed {Math.floor((new Date().getTime() - new Date(job.viewedDate).getTime()) / (1000 * 60 * 60))} hours ago
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handleSaveJob(job.id)}
+                    className="flex-1 px-2 py-1 bg-primary-10 text-white rounded text-xs hover:bg-primary-15 transition-colors"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => handleHideJob(job.id)}
+                    className="flex-1 px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Hide
+                  </button>
                 </div>
               </div>
             </div>

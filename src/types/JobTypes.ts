@@ -19,6 +19,13 @@ export type Job = {
   status: string;
   created_at: string;
   updated_at: string;
+  experience_level?: string;
+  job_category?: string;
+  required_skills?: string;
+  benefits?: string;
+  visa_sponsorship?: string;
+  equity_offered?: string;
+  salary?: string;
   // Joined company data
   company?: {
     id: string;
@@ -40,6 +47,7 @@ export type JobListCardProps = {
   item: Job;
   onClick: (job: Job) => void;
   isSaved?: boolean;
+  onSave?: (jobId: string, isSaved: boolean) => void;
 };
 
 export type JobListProps = {

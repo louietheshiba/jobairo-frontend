@@ -6,11 +6,10 @@ import { SUGGETIONS } from '@/utils/constant';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
-  filters: any;
   handleChange: (key: string, value: any) => void;
 }
 
-const SearchBar = ({ onSearch, filters, handleChange }: SearchBarProps) => {
+const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Option[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);

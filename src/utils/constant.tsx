@@ -113,6 +113,7 @@ export const INITIAL_FILTERS: FiltersType = {
   relevance: RELEVANCE_LIST[0]?.label || '',
   markedJobs: [],
   companySize: '',
+  salaryRange: null,
 };
 
 export const SUGGETIONS = [

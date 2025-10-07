@@ -24,11 +24,6 @@ const UserMenu = () => {
         router.push('/auth');
     };
 
-    const handleLoginClick = () => {
-        sessionStorage.setItem('auth_redirect_url', window.location.pathname);
-        router.push('/auth');
-    };
-
     if (user) {
         const userName = profile.full_name;
         const initial = userName.charAt(0).toUpperCase();
@@ -71,17 +66,17 @@ const UserMenu = () => {
 
                         {/* Menu Items */}
                         <div className="py-2">
-                            <button
-                                onClick={() => {
-                                    setIsDropdownOpen(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <User size={16} />
-                                <Link href='/dashboard'>
+                            <Link href='/dashboard'>
+                                <button
+                                    onClick={() => {
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <User size={16} />
                                     Dashboard
-                                </Link>
-                            </button>
+                                </button>
+                            </Link>
 
                             <button
                                 onClick={handleSignOut}
@@ -99,12 +94,13 @@ const UserMenu = () => {
 
     // Show Login and Sign-up buttons
     return (
-        <button
-            onClick={handleLoginClick}
-            className="font-poppins text-sm font-semibold text-primary-10 dark:text-primary-10 hover:text-primary-15 dark:hover:text-primary-15 transition-colors sm:text-base"
-        >
-            Login
-        </button>
+        <Link href="/auth">
+            <button
+                className="font-poppins text-sm font-semibold text-primary-10 dark:text-primary-10 hover:text-primary-15 dark:hover:text-primary-15 transition-colors sm:text-base"
+            >
+                Sign Up/Login
+            </button>
+        </Link>
     );
 };
 

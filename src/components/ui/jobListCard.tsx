@@ -1,13 +1,14 @@
 import { Bookmark } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import type { JobListCardProps } from '@/types/JobTypes';
 
-const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobListCardProps) => {
+const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }: JobListCardProps) => {
   const { user } = useAuth();
   const [isSaved, setIsSaved] = useState(initialIsSaved);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setIsSaved(initialIsSaved);
@@ -21,6 +22,10 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobList
       return;
     }
 
+    if (isSaving) return;
+
+    setIsSaving(true);
+
     try {
       if (isSaved) {
         // Unsave
@@ -33,6 +38,7 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobList
         if (error) throw error;
 
         setIsSaved(false);
+        onSave?.(item.id, false);
         toast.success('Job unsaved successfully!');
       } else {
         // Save
@@ -44,32 +50,38 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobList
         if (error) throw error;
 
         setIsSaved(true);
+        onSave?.(item.id, true);
         toast.success('Job saved successfully! 🎉');
       }
     } catch (error) {
       console.error('Error saving/unsaving job:', error);
       toast.error('Failed to save/unsave job');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <div
       onClick={() => onClick(item)}
-      className="group relative flex min-h-[220px] flex-col gap-3 rounded-lg bg-white p-[20px] shadow-sm transition-all duration-300 hover:shadow-lg cursor-pointer dark:bg-dark-25"
+      className="group relative flex min-h-[220px] flex-col gap-3 rounded-lg bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-lg cursor-pointer dark:bg-dark-25"
     >
-      {/* Bookmark Button */}
-      <button
-        className="absolute top-4 right-4 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-dark-30"
-        onClick={handleSaveJob}
-      >
-        <Bookmark className={`w-5 h-5 ${isSaved ? 'text-primary-10 fill-primary-10' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`} />
-      </button>
-
-      {/* Job Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-poppins text-lg font-semibold text-secondary dark:text-white">
+      {/* Header with Title and Bookmark */}
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-poppins text-lg font-semibold text-secondary dark:text-white flex-1 pr-2">
           {item?.title}
         </h2>
+        <button
+          className="flex-shrink-0 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-dark-30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          onClick={handleSaveJob}
+          disabled={isSaving}
+        >
+          <Bookmark className={`w-5 h-5 ${isSaved ? 'text-primary-10 fill-primary-10' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`} />
+        </button>
+      </div>
+
+      {/* Salary Range */}
+      <div className="flex justify-end">
         <span className="font-poppins text-sm font-semibold text-secondary dark:text-white sm:text-base">
           {item?.salary_range || ''}
         </span>
@@ -104,19 +116,17 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false }: JobList
         )}
       </div>
 
-      {/* Hover "Quick Apply" Button */}
-      <div className="absolute bottom-0 left-0 w-full px-[20px] pb-[20px]">
-        <div className="w-full opacity-0 translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-          <button
-            className="w-full rounded-md border border-primary-10 bg-primary-10 py-2 font-poppins text-sm font-medium text-white duration-300 hover:border-primary-15 hover:bg-primary-15"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick(item); // Open modal
-            }}
-          >
-            Quick Apply
-          </button>
-        </div>
+      {/* Quick Apply Button - Hidden by default, shows on card hover */}
+      <div className="mt-auto pt-4">
+        <button
+          className="w-full rounded-md border border-primary-10 bg-primary-10 py-2 font-poppins text-sm font-medium text-white duration-300 hover:border-primary-15 hover:bg-primary-15 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(item); // Open modal
+          }}
+        >
+          Quick Apply
+        </button>
       </div>
     </div>
   );

@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Briefcase, Building, Filter } from 'lucide-react';
+import { MapPin, Briefcase, Building } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import type { Option } from '@/types/FiltersType';
 import type { SaveSearchProps } from '@/types/Index';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
+import {
+  EDUCATION_LIST,
+  EXPERIENCE_LEVEL_LIST,
+  JOB_TYPE_LIST,
+} from '@/utils/constant';
+
+import { DropDownButton } from '../ui/dropDownbutton';
+import { DropDownRangebutton } from '../ui/dropDownRangebutton';
 
 import { Button } from '../ui/button';
 import { Select } from '../ui/select';
@@ -18,6 +26,7 @@ interface ExtendedSaveSearchProps extends SaveSearchProps {
 const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: ExtendedSaveSearchProps) => {
   const { user } = useAuth();
   const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Simplified filter options that match our database schema
   const locationOptions = [
@@ -26,11 +35,6 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
     { id: 3, value: 'onsite', label: 'On-site' },
   ];
 
-  const employmentTypeOptions = [
-    { id: 1, value: 'full-time', label: 'Full Time' },
-    { id: 2, value: 'part-time', label: 'Part Time' },
-    { id: 3, value: 'contract', label: 'Contract' },
-  ];
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -57,6 +61,10 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
       return;
     }
 
+    if (isSaving) return;
+
+    setIsSaving(true);
+
     try {
       const { error } = await supabase.from('saved_searches').insert({
         user_id: user.id,
@@ -69,6 +77,8 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
     } catch (error) {
       console.error('Error saving search:', error);
       toast.error('Failed to save search');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -108,12 +118,12 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
                   Job Type
                 </label>
                 <Select
-                  value={employmentTypeOptions.find(opt => opt.value === filters?.jobType) || null}
+                  value={JOB_TYPE_LIST.find(opt => opt.value === filters?.jobType) || null}
                   onChange={(selected) => {
                     const value = selected as Option;
                     handleChange('jobType', value?.value || '');
                   }}
-                  options={employmentTypeOptions}
+                  options={JOB_TYPE_LIST}
                   placeholder="Select job type"
                 />
               </div>
@@ -138,6 +148,47 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
 
             </div>
           </div>
+          
+
+          <div className="grid grid-cols-2 items-center justify-center gap-1.5 md:flex mb-10">
+
+
+            <DropDownRangebutton
+              id="salaryRange"
+              className="!w-full !bg-primary-10 !text-white"
+              onApply={(range) => {
+                handleChange('salaryRange', range);
+              }}
+              selectedRange={filters?.salaryRange || null}
+            >
+              Salary Range
+            </DropDownRangebutton>
+
+            <DropDownButton
+              id="education"
+              className="!w-full !bg-primary-10 !text-white"
+              options={EDUCATION_LIST}
+              value={filters?.education}
+              onChange={(val) => {
+                handleChange('education', `${val}`);
+              }}
+            >
+              Education
+            </DropDownButton>
+
+            <DropDownButton
+              id="experienceLevel"
+              className="!w-full !bg-primary-10 !text-white"
+              options={EXPERIENCE_LEVEL_LIST}
+              value={filters?.experienceLevel}
+              onChange={(val) => {
+                handleChange('experienceLevel', `${val}`);
+              }}
+            >
+              Experience Level
+            </DropDownButton>
+          </div>
+
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
@@ -155,9 +206,10 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
 
             <Button
               onClick={handleSaveSearch}
-              className="flex items-center justify-center gap-2 !border-primary-10 !bg-primary-10 !text-white hover:!border-primary-15 hover:!bg-primary-15 !px-4 !py-2 !text-sm"
+              disabled={isSaving}
+              className="flex items-center justify-center gap-2 !border-primary-10 !bg-primary-10 !text-white hover:!border-primary-15 hover:!bg-primary-15 !px-4 !py-2 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Search
+              {isSaving ? 'Saving...' : 'Save Search'}
             </Button>
           </div>
         </div>

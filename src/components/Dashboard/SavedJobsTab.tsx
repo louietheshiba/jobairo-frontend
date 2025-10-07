@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import JobListCard from '@/components/ui/jobListCard';
-import { Select } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import type { Job } from '@/types/JobTypes';
-import type { Option } from '@/types/FiltersType';
 
 interface SavedJobsTabProps {
   onCardClick: (job: Job) => void;
@@ -14,7 +12,6 @@ const SavedJobsTab: React.FC<SavedJobsTabProps> = ({ onCardClick }) => {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<(Job & { savedDate: string })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
