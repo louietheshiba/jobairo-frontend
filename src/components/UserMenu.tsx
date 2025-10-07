@@ -94,13 +94,12 @@ const UserMenu = () => {
 
     // Show Login and Sign-up buttons
     return (
-        <Link href="/auth">
-            <button
-                className="font-poppins text-sm font-semibold text-primary-10 dark:text-primary-10 hover:text-primary-15 dark:hover:text-primary-15 transition-colors sm:text-base"
-            >
-                Sign Up/Login
-            </button>
-        </Link>
+        <button
+            onClick={() => router.push('/auth')}
+            className="font-poppins text-sm font-semibold text-primary-10 dark:text-primary-10 hover:text-primary-15 dark:hover:text-primary-15 transition-colors sm:text-base"
+        >
+            Sign Up/Login
+        </button>
     );
 };
 

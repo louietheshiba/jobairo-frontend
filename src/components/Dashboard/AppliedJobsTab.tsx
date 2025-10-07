@@ -11,53 +11,65 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
   const [jobs, setJobs] = useState<(Job & { appliedDate: string; status: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAppliedJobs = async () => {
     if (!user) return;
 
-    const fetchAppliedJobs = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('applied_jobs')
-          .select('job_id, created_at')
-          .eq('user_id', user.id);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('applied_jobs')
+        .select('job_id, created_at')
+        .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error fetching applied jobs:', error);
-          return;
-        }
-
-        const jobIds = data.map(s => s.job_id);
-        if (jobIds.length === 0) {
-          setJobs([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: jobsData, error: jobsError } = await supabase
-          .from('jobs')
-          .select('*')
-          .in('id', jobIds);
-
-        if (jobsError) {
-          console.error('Error fetching jobs:', jobsError);
-          return;
-        }
-
-        const jobsWithDate = jobsData.map(job => {
-          const applied = data.find(s => s.job_id === job.id);
-          return { ...job, appliedDate: applied?.created_at || '', status: 'Applied' };
-        });
-
-        setJobs(jobsWithDate);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching applied jobs:', error);
+        return;
       }
+
+      const jobIds = data.map(s => s.job_id);
+      if (jobIds.length === 0) {
+        setJobs([]);
+        return;
+      }
+
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('*')
+        .in('id', jobIds);
+
+      if (jobsError) {
+        console.error('Error fetching jobs:', jobsError);
+        return;
+      }
+
+      const jobsWithDate = jobsData.map(job => {
+        const applied = data.find(s => s.job_id === job.id);
+        return { ...job, appliedDate: applied?.created_at || '', status: 'Applied' };
+      });
+
+      setJobs(jobsWithDate);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppliedJobs();
+  }, [user]);
+
+  useEffect(() => {
+    // Listen for stats refresh events to update the list when jobs are applied/unapplied
+    const handleRefresh = () => {
+      fetchAppliedJobs();
     };
 
-    fetchAppliedJobs();
+    window.addEventListener('statsRefresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('statsRefresh', handleRefresh);
+    };
   }, [user]);
 
   if (loading) {

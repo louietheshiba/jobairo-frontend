@@ -59,6 +59,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         job_id: job.id,
         viewed_at: new Date().toISOString(),
       });
+
+      // Trigger stats refresh
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
     };
 
     checkStatus();
@@ -97,6 +100,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsSaved(false);
         toast.success('Job unsaved successfully');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       } else {
         // Save
         const { error } = await supabase.from('saved_jobs').insert({
@@ -108,6 +113,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsSaved(true);
         toast.success('Job saved successfully! 🎉');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       }
     } catch (error) {
       console.error('Error saving/unsaving job:', error);
@@ -136,6 +143,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsApplied(false);
         toast.success('Application unmarked');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       } else {
         // Mark applied
         const { error } = await supabase.from('applied_jobs').insert({
@@ -147,6 +156,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsApplied(true);
         toast.success('Job marked as applied! 🎉');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       }
     } catch (error) {
       console.error('Error marking/unmarking applied:', error);
@@ -182,6 +193,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsHidden(false);
         toast.success('Job unhidden');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       } else {
         // Hide
         const { error } = await supabase.from('hidden_jobs').insert({
@@ -193,6 +206,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsHidden(true);
         toast.success('Job hidden from your feed');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
         onClose();
       }
     } catch (error) {

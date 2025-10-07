@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Eye as ViewIcon, Heart as SaveIcon, FileText as ApplyIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
@@ -7,29 +7,45 @@ const DashboardStats: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({ viewed: 0, saved: 0, applied: 0 });
 
-  useEffect(() => {
+  const fetchStats = useCallback(async () => {
     if (!user) return;
 
-    const fetchStats = async () => {
-      try {
-        const [viewedRes, savedRes, appliedRes] = await Promise.all([
-          supabase.from('job_views').select('id', { count: 'exact' }).eq('user_id', user.id),
-          supabase.from('saved_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
-          supabase.from('applied_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
-        ]);
+    try {
+      const [viewedRes, savedRes, appliedRes] = await Promise.all([
+        supabase.from('job_views').select('id', { count: 'exact' }).eq('user_id', user.id),
+        supabase.from('saved_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
+        supabase.from('applied_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
+      ]);
 
-        setStats({
-          viewed: viewedRes.count || 0,
-          saved: savedRes.count || 0,
-          applied: appliedRes.count || 0,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
+      setStats({
+        viewed: viewedRes.count || 0,
+        saved: savedRes.count || 0,
+        applied: appliedRes.count || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Initial fetch
+    fetchStats();
+
+    // Set up periodic refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+
+    // Listen for custom refresh event
+    const handleRefresh = () => {
+      fetchStats();
     };
 
-    fetchStats();
-  }, [user]);
+    window.addEventListener('statsRefresh', handleRefresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('statsRefresh', handleRefresh);
+    };
+  }, [fetchStats]);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-dark-20 hover:shadow-md transition-all duration-200 cursor-pointer">

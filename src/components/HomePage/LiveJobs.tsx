@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import type { LiveJobsProps } from '@/types/JobTypes';
 
@@ -7,9 +7,9 @@ import SaveSearch from './SaveSearch';
 import SearchBar from './SearchBar';
 
 const LiveJobs = ({ setFilters, filters, handleChange }: LiveJobsProps) => {
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     handleChange('position', query);
-  };
+  }, [handleChange]);
 
   return (
     <div className="bg-white px-[15px] pb-[10px] pt-[20px] dark:bg-dark-25 sm:pb-[10px]">

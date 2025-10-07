@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import JobList from '@/components/HomePage/JobList';
 import LiveJobs from '@/components/HomePage/LiveJobs';
 import { Meta } from '@/layouts/Meta';
@@ -9,7 +9,7 @@ import { INITIAL_FILTERS } from '@/utils/constant';
 const HomePage = () => {
   const [filters, setFilters] = useState<FiltersType>(INITIAL_FILTERS);
 
-  const handleChange = (
+  const handleChange = useCallback((
     key: string,
     selected: Option[] | Option | string | string[] | number[] | null
   ) => {
@@ -17,7 +17,7 @@ const HomePage = () => {
       ...prev,
       [key]: selected,
     }));
-  };
+  }, []);
 
   return (
     <Main meta={<Meta title="Job Airo" description="Job Airo" />}>

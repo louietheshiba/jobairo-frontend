@@ -23,6 +23,8 @@ const RecentlyViewedTab: React.FC = () => {
       }
 
       toast.success('Job saved successfully! 🎉');
+      // Trigger stats refresh
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
     } catch (error) {
       console.error('Error saving job:', error);
       toast.error('Failed to save job');
@@ -42,9 +44,11 @@ const RecentlyViewedTab: React.FC = () => {
         throw error;
       }
 
-      // Remove from the list
+      // Remove from the list immediately for better UX
       setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
       toast.success('Job hidden from your view');
+      // Trigger stats refresh for consistency
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
     } catch (error) {
       console.error('Error hiding job:', error);
       toast.error('Failed to hide job');
@@ -70,55 +74,67 @@ const RecentlyViewedTab: React.FC = () => {
     }
   };
 
-  useEffect(() => {
+  const fetchViewedJobs = async () => {
     if (!user) return;
 
-    const fetchViewedJobs = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('job_views')
-          .select('job_id, viewed_at')
-          .eq('user_id', user.id)
-          .order('viewed_at', { ascending: false })
-          .limit(50);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('job_views')
+        .select('job_id, viewed_at')
+        .eq('user_id', user.id)
+        .order('viewed_at', { ascending: false })
+        .limit(50);
 
-        if (error) {
-          console.error('Error fetching viewed jobs:', error);
-          return;
-        }
-
-        const jobIds = data.map(s => s.job_id);
-        if (jobIds.length === 0) {
-          setJobs([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: jobsData, error: jobsError } = await supabase
-          .from('jobs')
-          .select('*')
-          .in('id', jobIds);
-
-        if (jobsError) {
-          console.error('Error fetching jobs:', jobsError);
-          return;
-        }
-
-        const jobsWithDate = jobsData.map(job => {
-          const viewed = data.find(s => s.job_id === job.id);
-          return { ...job, viewedDate: viewed?.viewed_at || '' };
-        });
-
-        setJobs(jobsWithDate);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching viewed jobs:', error);
+        return;
       }
+
+      const jobIds = data.map(s => s.job_id);
+      if (jobIds.length === 0) {
+        setJobs([]);
+        return;
+      }
+
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('*')
+        .in('id', jobIds);
+
+      if (jobsError) {
+        console.error('Error fetching jobs:', jobsError);
+        return;
+      }
+
+      const jobsWithDate = jobsData.map(job => {
+        const viewed = data.find(s => s.job_id === job.id);
+        return { ...job, viewedDate: viewed?.viewed_at || '' };
+      });
+
+      setJobs(jobsWithDate);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchViewedJobs();
+  }, [user]);
+
+  useEffect(() => {
+    // Listen for stats refresh events to update the list when jobs are hidden
+    const handleRefresh = () => {
+      fetchViewedJobs();
     };
 
-    fetchViewedJobs();
+    window.addEventListener('statsRefresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('statsRefresh', handleRefresh);
+    };
   }, [user]);
 
   if (loading) {

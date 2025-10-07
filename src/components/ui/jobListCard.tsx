@@ -40,6 +40,8 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
         setIsSaved(false);
         onSave?.(item.id, false);
         toast.success('Job unsaved successfully!');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       } else {
         // Save
         const { error } = await supabase.from('saved_jobs').insert({
@@ -52,6 +54,8 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
         setIsSaved(true);
         onSave?.(item.id, true);
         toast.success('Job saved successfully! 🎉');
+        // Trigger stats refresh
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
       }
     } catch (error) {
       console.error('Error saving/unsaving job:', error);

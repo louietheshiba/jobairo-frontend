@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 
 import type { Option } from '@/types/FiltersType';
@@ -17,6 +17,12 @@ const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [hasSelected, setHasSelected] = useState(false);
   const [isExactMatch, setIsExactMatch] = useState(false);
+  const onSearchRef = useRef(onSearch);
+
+  // Update ref when onSearch changes
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   // Debounce the query value
   useEffect(() => {
@@ -41,14 +47,14 @@ const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
       } else {
         setShowSuggestions(filtered.length > 0 && !exact);
       }
-      onSearch(debouncedQuery); // Trigger search on type
+      onSearchRef.current(debouncedQuery); // Trigger search on type
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
       setIsExactMatch(false);
-      onSearch(''); // Clear search if empty
+      onSearchRef.current(''); // Clear search if empty
     }
-  }, [debouncedQuery, onSearch, hasSelected]);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     // Animate job count
@@ -60,7 +66,7 @@ const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(query);
+    onSearchRef.current(query);
     setShowSuggestions(false);
     setSuggestions([]);
   };
@@ -68,7 +74,7 @@ const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
   const handleSuggestionClick = (suggestion: Option) => {
     setQuery(suggestion.label);
     handleChange('position', suggestion.label);
-    onSearch(suggestion.label);
+    onSearchRef.current(suggestion.label);
     setShowSuggestions(false);
     setSuggestions([]);
     setHasSelected(true);
