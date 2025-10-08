@@ -1,7 +1,6 @@
 {
   "name": "me",
   "version": "3.8.0",
-  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
