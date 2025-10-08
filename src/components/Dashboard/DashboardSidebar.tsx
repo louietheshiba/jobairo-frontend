@@ -17,7 +17,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
 
   const handleLogout = async () => {
     await signOut();
-    window.location.href = '/';
+    window.location.href = '/auth';
   };
 
   return (

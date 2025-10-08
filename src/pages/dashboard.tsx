@@ -35,12 +35,12 @@ const Dashboard = () => {
         <Container>
 
           <Meta title="Dashboard - Job Airo" description="Job Airo Dashboard" />
-          <div className="min-h-screen bg-gray-50 dark:bg-dark-25 font-poppins">
+          <div className="min-h-screen font-poppins">
             <div className="flex min-h-screen">
               <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
               {/* Main Content */}
-              <div className="flex-1 ml-64 p-8 overflow-y-auto min-h-screen">
+              <div className="flex-1 ml-64 p-8 overflow-y-auto min-h-screen bg-gray-50 dark:bg-dark-25">
                 <div className="max-w-6xl mx-auto">
                   <DashboardStats />
 
