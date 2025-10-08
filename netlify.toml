@@ -6,3 +6,4 @@
   NODE_VERSION = "18"
   NPM_VERSION = "9"
   NPM_FLAGS = "--production=false"
+  SITE_URL = "https://silly-gecko-252651.netlify.app"

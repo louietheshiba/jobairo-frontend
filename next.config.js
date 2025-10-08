@@ -1,9 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import bundleAnalyzer from '@next/bundle-analyzer';
+const bundleAnalyzer = require('@next/bundle-analyzer');
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
-export default withBundleAnalyzer({
+module.exports = withBundleAnalyzer({
   eslint: {
     dirs: ['.'],
   },
