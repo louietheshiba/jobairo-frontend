@@ -5,7 +5,7 @@ import UserMenu from '../UserMenu';
 
 const HomeHeader = () => {
   return (
-    <div className="grid w-full grid-cols-3 items-center px-4 py-6 sm:px-6 lg:px-8">
+    <div className="grid w-full grid-cols-1 gap-8 sm:gap-0 sm:grid-cols-3 items-center px-4 py-6 sm:px-6 lg:px-8">
       {/* Spacer for left side */}
       <div></div>
 
