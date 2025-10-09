@@ -38,12 +38,12 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     control: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: 'var(--tw-bg-opacity) 1',
-      borderColor: state.isFocused ? '#10b981' : '#d1d5db',
+      borderColor: state.isFocused ? '#00d4aa' : '#d1d5db',
       borderWidth: '1px',
       borderRadius: '0.5rem',
-      boxShadow: state.isFocused ? '0 0 0 1px #10b981' : 'none',
+      boxShadow: state.isFocused ? '0 0 0 1px #00d4aa' : 'none',
       '&:hover': {
-        borderColor: state.isFocused ? '#10b981' : '#9ca3af',
+        borderColor: state.isFocused ? '#00d4aa' : '#9ca3af',
       },
       minHeight: '2.5rem',
       fontSize: '0.875rem',
@@ -66,7 +66,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     }),
     multiValue: (provided: any) => ({
       ...provided,
-      backgroundColor: '#10b981',
+      backgroundColor: '#00d4aa',
       borderRadius: '0.25rem',
       padding: '0.125rem 0.25rem',
     }),
@@ -80,7 +80,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       ...provided,
       color: 'white',
       ':hover': {
-        backgroundColor: '#047857',
+        backgroundColor: '#00b894',
         color: 'white',
       },
     }),
@@ -98,13 +98,13 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     }),
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#10b981' : state.isFocused ? '#f3f4f6' : 'white',
+      backgroundColor: state.isSelected ? '#00d4aa' : state.isFocused ? '#f3f4f6' : 'white',
       color: state.isSelected ? 'white' : 'inherit',
       fontSize: '0.875rem',
       padding: '0.5rem 0.75rem',
       cursor: 'pointer',
       ':active': {
-        backgroundColor: state.isSelected ? '#10b981' : '#e5e7eb',
+        backgroundColor: state.isSelected ? '#00d4aa' : '#e5e7eb',
       },
     }),
     noOptionsMessage: (provided: any) => ({
@@ -146,7 +146,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
           ...theme,
           colors: {
             ...theme.colors,
-            primary: '#10b981',
+            primary: '#00d4aa',
             primary75: '#34d399',
             primary50: '#6ee7b7',
             primary25: '#d1fae5',

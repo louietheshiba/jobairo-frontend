@@ -10,7 +10,7 @@ const AuthCallbackPage = () => {
     const handleAuthCallback = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Auth callback error:', error);
           router.push('/?error=auth_callback_failed');

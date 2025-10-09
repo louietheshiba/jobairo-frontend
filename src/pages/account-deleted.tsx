@@ -5,7 +5,7 @@ const AccountDeletedPage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Left Side - Branding - Fixed */}
-      <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex flex-col justify-center items-center p-12">
+      <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#00d4aa] to-[#00b894] text-white flex flex-col justify-center items-center p-12">
         <div className="max-w-md text-center">
           <div className="mb-8 mx-auto flex justify-center">
             <JobAiroLogo />
@@ -62,7 +62,7 @@ const AccountDeletedPage = () => {
                 We're sad to see you go. If you have any questions or suggestions, please email us at{' '}
                 <a
                   href="mailto:support@jobairo.com"
-                  className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981] font-medium"
+                  className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981] font-medium"
                 >
                   support@jobairo.com
                 </a>
@@ -73,7 +73,7 @@ const AccountDeletedPage = () => {
             <div className="text-center pt-8">
               <a
                 href="/"
-                className="inline-flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#10b981] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981]"
+                className="inline-flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa]"
               >
                 Return to Home
               </a>

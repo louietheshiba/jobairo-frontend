@@ -15,7 +15,6 @@ import {
 import { DropDownButton } from '../ui/dropDownbutton';
 import { DropDownRangebutton } from '../ui/dropDownRangebutton';
 
-import { Button } from '../ui/button';
 import { Select } from '../ui/select';
 import AppliedFilters from './AppliedFilters';
 
@@ -82,140 +81,145 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
     }
   };
 
-  return (
-    <div className="rounded-lg bg-white shadow-sm dark:bg-dark-20">
-      {/* Collapsible Filter Section */}
-      {showFilters && (
-        <div className="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Filter Jobs
-            </h3>
+ return (
+  <div className="rounded-lg bg-white shadow-sm dark:bg-dark-20">
+    {/* Collapsible Filter Section */}
+    {showFilters && (
+      <div className="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Filter Jobs
+          </h3>
 
-            {/* Main Filters Row */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
-              {/* Location */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <MapPin className="w-[18px] h-[18px] text-[#00d4aa]" />
-                  Location
-                </label>
-                <Select
-                  value={filters?.locations?.[0] || null}
-                  onChange={(selected) => {
-                    const value = selected as Option;
-                    handleChange('locations', value ? [value] : []);
-                  }}
-                  options={locationOptions}
-                  placeholder="Select location type"
-                />
-              </div>
+          {/* Main Filters Row */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
+            {/* Location */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <MapPin className="w-[18px] h-[18px] text-[#00d4aa]" />
+                Location
+              </label>
+              <Select
+                value={filters?.locations?.[0] || null}
+                onChange={(selected) => {
+                  const value = selected as Option;
+                  handleChange('locations', value ? [value] : []);
+                }}
+                options={locationOptions}
+                placeholder="Select location type"
+              />
+            </div>
 
-              {/* Employment Type */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <Briefcase className="w-[18px] h-[18px] text-[#00d4aa]" />
-                  Job Type
-                </label>
-                <Select
-                  value={JOB_TYPE_LIST.find(opt => opt.value === filters?.jobType) || null}
-                  onChange={(selected) => {
-                    const value = selected as Option;
-                    handleChange('jobType', value?.value || '');
-                  }}
-                  options={JOB_TYPE_LIST}
-                  placeholder="Select job type"
-                />
-              </div>
+            {/* Employment Type */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Briefcase className="w-[18px] h-[18px] text-[#00d4aa]" />
+                Job Type
+              </label>
+              <Select
+                value={
+                  JOB_TYPE_LIST.find(
+                    (opt) => opt.value === filters?.jobType
+                  ) || null
+                }
+                onChange={(selected) => {
+                  const value = selected as Option;
+                  handleChange('jobType', value?.value || '');
+                }}
+                options={JOB_TYPE_LIST}
+                placeholder="Select job type"
+              />
+            </div>
 
-              {/* Company */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <Users className="w-[18px] h-[18px] text-[#00d4aa]" />
-                  Company
-                </label>
-                <Select
-                  value={companyOptions.find(opt => opt.value === filters?.company) || null}
-                  onChange={(selected) => {
-                    const value = selected as Option;
-                    handleChange('company', value?.value || '');
-                  }}
-                  options={companyOptions}
-                  placeholder="Select company"
-                />
-              </div>
-
-
+            {/* Company */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Users className="w-[18px] h-[18px] text-[#00d4aa]" />
+                Company
+              </label>
+              <Select
+                value={
+                  companyOptions.find(
+                    (opt) => opt.value === filters?.company
+                  ) || null
+                }
+                onChange={(selected) => {
+                  const value = selected as Option;
+                  handleChange('company', value?.value || '');
+                }}
+                options={companyOptions}
+                placeholder="Select company"
+              />
             </div>
           </div>
-          
-
-          <div className="flex items-center gap-3 mb-4">
-            <DropDownRangebutton
-              id="salaryRange"
-              className="w-50 bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-1.5 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
-              onApply={(range) => {
-                handleChange('salaryRange', range);
-              }}
-              selectedRange={filters?.salaryRange || null}
-            >
-              Salary Range
-            </DropDownRangebutton>
-
-            <DropDownButton
-              id="education"
-              className="w-[30%] bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-1.5 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
-              options={EDUCATION_LIST}
-              value={filters?.education}
-              onChange={(val) => {
-                handleChange('education', `${val}`);
-              }}
-            >
-              Education
-            </DropDownButton>
-
-            <DropDownButton
-              id="experienceLevel"
-              className="w-[30%] bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-1.5 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
-              options={EXPERIENCE_LEVEL_LIST}
-              value={filters?.experienceLevel}
-              onChange={(val) => {
-                handleChange('experienceLevel', `${val}`);
-              }}
-            >
-              Experience Level
-            </DropDownButton>
-
-<Button
-              onClick={handleSaveSearch}
-              disabled={isSaving}
-              
-              className=" w-52 bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? 'Saving...' : 'Save Search'}
-            </Button>
-            <Button
-              onClick={() => {
-                // Clear all filters
-                handleChange('locations', []);
-                handleChange('jobType', '');
-                handleChange('company', '');
-              }}
-              className="w-52 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3  text-sm dark:bg-dark-25 dark:border-dark-15 dark:text-white dark:hover:bg-dark-20"
-            >
-              Clear All Filters
-            </Button>
-
-            
-          </div>
         </div>
-      )}
 
-      <div className="mt-2">
-        <AppliedFilters filterData={filters} setFilters={setFilters} />
+<div className='flex gap-6'>
+    <DropDownRangebutton
+    id="salaryRange"
+    className="w-52 bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
+    onApply={(range) => {
+      handleChange('salaryRange', range);
+    }}
+    selectedRange={filters?.salaryRange || null}
+  >
+    Salary Range
+  </DropDownRangebutton>
+    <DropDownButton
+    id="education"
+    className="w-full bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
+    options={EDUCATION_LIST}
+    value={filters?.education}
+    onChange={(val) => {
+      handleChange('education', `${val}`);
+    }}
+  >
+    Education
+  </DropDownButton>
+    <DropDownButton
+    id="experienceLevel"
+    className="w-full bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
+    options={EXPERIENCE_LEVEL_LIST}
+    value={filters?.experienceLevel}
+    onChange={(val) => {
+      handleChange('experienceLevel', `${val}`);
+    }}
+  >
+    Experience Level
+  </DropDownButton>
+    <button
+    onClick={handleSaveSearch}
+    disabled={isSaving}
+    className=" bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    {isSaving ? 'Saving...' : 'Save Search'}
+  </button>
+    <button
+    onClick={() => {
+      handleChange('locations', []);
+      handleChange('jobType', '');
+      handleChange('company', '');
+      handleChange('salaryRange', null);
+      handleChange('education', '');
+      handleChange('experienceLevel', '');
+    }}
+    className=" bg-white from-[#00d4aa] to-[#00b894] border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+
+  >
+    Clear All Filters
+  </button>
+  </div>
+  
+
       </div>
+    )}
+
+    <div className="mt-2">
+      <AppliedFilters filterData={filters} setFilters={setFilters} />
     </div>
-  );
+  </div>
+);
+
 };
 
 export default SaveSearch;

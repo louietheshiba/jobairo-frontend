@@ -17,7 +17,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
 
   const handleLogout = async () => {
     await signOut();
-    window.location.href = '/auth';
+    window.location.href = '/auth/login';
   };
 
   return (
@@ -42,7 +42,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
       </div>
 
       <nav className="mt-6">
-        <div className="px-3">
+        <div className="px-3 pb-10">
           <button
             onClick={() => onTabChange('relevant')}
             className={`w-full flex items-center px-3 py-2 text-left rounded-lg transition-colors ${activeTab === 'relevant'

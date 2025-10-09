@@ -6,7 +6,7 @@
 @tailwind utilities;
 
 body {
-  @apply font-poppins;
+  @apply font-poppins bg-white dark:bg-black;
 }
 
 /* Animations */

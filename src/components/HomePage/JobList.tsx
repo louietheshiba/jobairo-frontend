@@ -267,7 +267,7 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
                 {activeFilters.map((filter, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 rounded-full bg-primary-10 px-3 py-1 text-sm text-white"
+                    className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#00d4aa] to-[#00b894] px-3 py-1 text-sm text-white shadow-[0_2px_8px_rgba(0,212,170,0.2)]"
                   >
                     {filter.label}
                     <button

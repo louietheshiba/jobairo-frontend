@@ -189,7 +189,7 @@ const RecentlyViewedTab: React.FC = () => {
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleSaveJob(job.id)}
-                    className="flex-1 px-2 py-1 bg-primary-10 text-white rounded text-xs hover:bg-primary-15 transition-colors"
+                    className="flex-1 px-2 py-1 bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white rounded-[10px] text-xs shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300"
                   >
                     Save
                   </button>

@@ -40,7 +40,7 @@ const Dashboard = () => {
               <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
               {/* Main Content */}
-              <div className="flex-1 ml-64 p-8 overflow-y-auto min-h-screen bg-gray-50 dark:bg-dark-25">
+              <div className="flex-1 ml-64 p-8 overflow-y-auto min-h-screen bg-gray-50 dark:bg-black">
                 <div className="max-w-6xl mx-auto">
                   <DashboardStats />
 

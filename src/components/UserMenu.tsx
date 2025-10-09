@@ -21,7 +21,7 @@ const UserMenu = () => {
     const handleSignOut = async () => {
         await signOut();
         setIsDropdownOpen(false);
-        router.push('/auth');
+        router.push('/auth/login');
         
     };
 
@@ -96,8 +96,8 @@ const UserMenu = () => {
     // Show Login and Sign-up buttons
     return (
         <button
-            onClick={() => router.push('/auth')}
-            className="bg-[#00d4aa] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 sm:text-base"
+            onClick={() => router.push('/auth/login')}
+            className="bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 transition-all duration-300 sm:text-base"
         >
             Sign Up/Login
         </button>

@@ -57,7 +57,7 @@ const AuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/login/callback`
         }
       });
 
@@ -216,91 +216,64 @@ const AuthPage = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen flex">
-        {/* Left Side - Branding */}
-        <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex-col justify-center items-center p-12">
-          <div className="max-w-md text-center">
-            <div className="mb-8 flex justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#00d4aa] to-[#00b894] flex flex-col justify-center items-center p-8">
+        <div className="max-w-md w-full bg-white dark:bg-dark-20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8">
+          <div className="text-center mb-8">
+            <div className="mb-6 flex justify-center">
               <JobAiroLogo />
             </div>
-            <h1 className="text-4xl font-bold mb-4">Welcome Back to JobAiro</h1>
-            <p className="text-xl opacity-90">
-              Reset your password to continue your job search journey
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Reset Password
+            </h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Enter your email to receive a reset link
             </p>
-            <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold">50K+</div>
-                <div className="text-sm opacity-75">Active Jobs</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">10K+</div>
-                <div className="text-sm opacity-75">Companies</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">1M+</div>
-                <div className="text-sm opacity-75">Job Seekers</div>
-              </div>
-            </div>
           </div>
-        </div>
 
-        {/* Right Side - Reset Form */}
-        <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col justify-center p-8 bg-gray-50 dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
-          <div className="max-w-md w-full mx-auto py-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Reset Password
-              </h2>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Enter your email to receive a reset link
-              </p>
+          {error && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/50 dark:border-red-800 mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md dark:bg-green-900/50 dark:border-green-800 mb-4">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleForgotPassword} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                placeholder="Enter your email"
+                required
+              />
             </div>
 
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/50 dark:border-red-800">
-                {error}
-              </div>
-            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
+            </button>
+          </form>
 
-            {success && (
-              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md dark:bg-green-900/50 dark:border-green-800">
-                {success}
-              </div>
-            )}
-
-            <form onSubmit={handleForgotPassword} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#10b981] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Sending...' : 'Send Reset Link'}
-              </button>
-            </form>
-
-            <div className="mt-10 text-center">
-              <button
-                onClick={() => setShowForgotPassword(false)}
-                className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981] font-medium"
-              >
-                ← Back to Login
-              </button>
-            </div>
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => setShowForgotPassword(false)}
+              className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#00d4aa] font-medium"
+            >
+              ← Back to Login
+            </button>
           </div>
         </div>
       </div>
@@ -310,7 +283,7 @@ const AuthPage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Left Side - Branding - Fixed */}
-      <div className="hidden lg:flex lg:fixed lg:inset-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white">
+      <div className="hidden lg:flex lg:fixed lg:inset-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#00d4aa] to-[#00b894] text-white">
         <div className="flex flex-col justify-center items-center w-full p-8 md:p-12">
           <div className="max-w-md text-center w-full">
             <div className="mb-8 flex justify-center">
@@ -375,7 +348,7 @@ const AuthPage = () => {
                   setError('');
                   setSuccess('');
                 }}
-                className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981] font-medium"
+                className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#00d4aa] font-medium"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
@@ -400,7 +373,7 @@ const AuthPage = () => {
           <button
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-25 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-25 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <FcGoogle size={20} />
             Continue with Google
@@ -424,7 +397,7 @@ const AuthPage = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                 placeholder="Enter your email"
                 required
               />
@@ -439,7 +412,7 @@ const AuthPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                 placeholder={isLogin ? "Enter your password" : "Create a password"}
                 required
                 minLength={6}
@@ -456,7 +429,7 @@ const AuthPage = () => {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                   placeholder="Confirm your password"
                   required
                 />
@@ -478,14 +451,14 @@ const AuthPage = () => {
                       value={jobPreferences.desired_salary_min}
                       onChange={(e) => setJobPreferences(prev => ({ ...prev, desired_salary_min: e.target.value }))}
                       placeholder="Min"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                     />
                     <input
                       type="number"
                       value={jobPreferences.desired_salary_max}
                       onChange={(e) => setJobPreferences(prev => ({ ...prev, desired_salary_max: e.target.value }))}
                       placeholder="Max"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#10b981] focus:border-[#10b981] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
                     />
                   </div>
                 </div>
@@ -501,9 +474,9 @@ const AuthPage = () => {
                         key={jobType}
                         type="button"
                         onClick={() => toggleJobType(jobType)}
-                        className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        className={`px-2 py-1 rounded-[10px] text-xs font-medium transition-all duration-300 ${
                           jobPreferences.job_types.includes(jobType)
-                            ? 'bg-[#10b981] text-white hover:bg-[#047857]'
+                            ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white shadow-[0_2px_8px_rgba(0,212,170,0.3)] hover:shadow-[0_4px_12px_rgba(0,212,170,0.4)] hover:-translate-y-0.5'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
@@ -539,7 +512,7 @@ const AuthPage = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
+                    className="h-4 w-4 text-[#00d4aa] focus:ring-[#00d4aa] border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-white">
                     Remember me
@@ -549,7 +522,7 @@ const AuthPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-[#10b981] hover:text-[#047857] dark:text-[#10b981]"
+                  className="text-sm text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981]"
                 >
                   Forgot password?
                 </button>
@@ -563,16 +536,16 @@ const AuthPage = () => {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
+                  className="h-4 w-4 text-[#00d4aa] focus:ring-[#00d4aa] border-gray-300 rounded"
                   required
                 />
                 <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-900 dark:text-white">
                   I accept the{' '}
-                  <a href="/terms" className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981]">
+                  <a href="/terms" className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981]">
                     Terms and Conditions
                   </a>{' '}
                   and{' '}
-                  <a href="/privacy" className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981]">
+                  <a href="/privacy" className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981]">
                     Privacy Policy
                   </a>
                 </label>
@@ -582,7 +555,7 @@ const AuthPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#10b981] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {loading 
                 ? (isLogin ? 'Signing in...' : 'Creating account...') 

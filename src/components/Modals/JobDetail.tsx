@@ -5,7 +5,6 @@ import useCopyToClipboard from '@/hooks/copyToClipboard';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import type { JobDetailsModalProps } from '@/types/JobTypes';
-import { Button } from '../ui/button';
 import Modal from '../ui/modal';
 
 const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
@@ -241,23 +240,23 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
               </button>
             </div>
             {/* Meta Tags Row */}
-            <div className="flex  gap-3">
-            {job?.location && (
-  <span className="tag remote inline-flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded">
-    <MapPin size={16} aria-hidden="true" />
-    <span>{job.location}</span>
-  </span>
-)}
+            <div className="flex gap-3">
+              {job?.location && (
+                <span className='inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium  bg-white text-black shadow-[0_2px_8px_rgba(0,212,170,0.2)]' >
+                  <MapPin size={16} aria-hidden="true" />
+                  <span>{job.location}</span>
+                </span>
+              )}
 
-{job?.employment_type && (
-  <span className={`tag ${job.employment_type.toLowerCase()} inline-flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded`}>
-    <Briefcase size={16} aria-hidden="true" />
-    <span>{job.employment_type}</span>
-  </span>
-)}
+              {job?.employment_type && (
+                <span className={`inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-[10px] text-sm font-medium  bg-white text-black shadow-[0_2px_8px_rgba(0,212,170,0.2)]`}>
+                  <Briefcase size={16} aria-hidden="true" />
+                  <span>{job.employment_type}</span>
+                </span>
+              )}
 
               {job?.salary_range && (
-                <div className="tag full-time flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white shadow-[0_2px_8px_rgba(0,212,170,0.2)]">
                   <span>{job.salary_range}</span>
                 </div>
               )}
@@ -275,34 +274,34 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       {/* Action Section */}
       <div className='bg-white dark:bg-dark-25 px-8 py-6 border-b border-gray-200 dark:border-dark-15'>
         <div className="flex flex-wrap gap-3 items-center">
-          <Button
+          <button
             onClick={handleApplyNow}
             className="bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center"
           >
             Apply Now
-          </Button>
+          </button>
 
-          <Button
+          <button
             onClick={handleSave}
-            className={`py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isSaved
+            className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isSaved
               ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white'
               : 'border-[#00d4aa] bg-white text-[#00d4aa] hover:bg-[#00d4aa] hover:text-white dark:bg-dark-25 dark:text-[#00d4aa] dark:hover:bg-[#00d4aa] dark:hover:text-white'
-            }`}
+              }`}
           >
             <Bookmark size={16} className="mr-2" />
             {isSaved ? 'Saved' : 'Save Job'}
-          </Button>
+          </button>
 
-          <Button
+          <button
             onClick={handleMarkApplied}
-            className={`py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isApplied
+            className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isApplied
               ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white'
               : 'border-[#00d4aa] bg-white text-[#00d4aa] hover:bg-[#00d4aa] hover:text-white dark:bg-dark-25 dark:text-[#00d4aa] dark:hover:bg-[#00d4aa] dark:hover:text-white'
-            }`}
+              }`}
           >
             <Check size={16} className="mr-2" />
             {isApplied ? 'Applied' : 'Mark Applied'}
-          </Button>
+          </button>
 
           <button
             onClick={handleShare}
@@ -323,7 +322,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       </div>
 
       {/* Scrollable Content */}
-      <div className="max-h-[calc(100dvh-500px)] overflow-y-auto">
+      <div className="max-h-[calc(100dvh-300px)] overflow-y-auto">
         {/* Job Meta */}
         <div className="px-8 py-4 bg-gray-50 dark:bg-dark-20 border-b border-gray-200 dark:border-dark-15">
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -387,8 +386,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
             </div>
 
             <div className="bg-gradient-to-br from-gray-50 to-white dark:from-dark-20 dark:to-dark-25 rounded-xl p-6 border border-gray-200 dark:border-dark-15 shadow-sm">
-              <div className="prose prose-lg max-w-none dark:prose-invert prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-relaxed prose-headings:text-gray-900 dark:prose-headings:text-white">
-                <div className="whitespace-pre-wrap">
+              <div className="prose prose-lg max-w-none dark:prose-invert">
+                <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-200 leading-relaxed">
                   {job.description}
                 </div>
               </div>

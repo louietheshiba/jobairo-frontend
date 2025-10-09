@@ -59,7 +59,7 @@ const DropDownRangebutton = React.forwardRef<
       <div className="relative inline-block" ref={dropdownRef}>
         <button
           ref={ref}
-          className={`flex w-fit items-center justify-between gap-1 rounded px-2 py-0.5 font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
+          className={`flex w-full items-center justify-between gap-1 rounded px-2 py-0.5 font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
             className || ''
           }`}
           onClick={toggleDropdown}
@@ -70,7 +70,7 @@ const DropDownRangebutton = React.forwardRef<
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 z-[99999] mt-2 max-h-[300px] w-[250px] overflow-y-auto rounded-md bg-white shadow-lg ring-1 ring-gray-200 dark:bg-dark-30 dark:ring-dark-15 sm:right-auto sm:w-[300px]">
+          <div className="absolute right-0 z-[99999] mt-2 max-h-[300px] w-[320px] overflow-y-auto rounded-md bg-white shadow-lg ring-1 ring-gray-200 dark:bg-dark-30 dark:ring-dark-15 sm:right-auto sm:w-[380px]">
             <div className="p-4">
               <h1 className="mb-4 whitespace-nowrap text-base font-semibold dark:text-white">
                 Salary Range
