@@ -22,6 +22,7 @@ const UserMenu = () => {
         await signOut();
         setIsDropdownOpen(false);
         router.push('/auth');
+        
     };
 
     if (user) {
@@ -96,7 +97,7 @@ const UserMenu = () => {
     return (
         <button
             onClick={() => router.push('/auth')}
-            className="font-poppins text-sm font-semibold text-primary-10 dark:text-primary-10 hover:text-primary-15 dark:hover:text-primary-15 transition-colors sm:text-base"
+            className="bg-[#00d4aa] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 sm:text-base"
         >
             Sign Up/Login
         </button>

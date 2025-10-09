@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Briefcase, Building } from 'lucide-react';
+import { MapPin, Briefcase, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import type { Option } from '@/types/FiltersType';
@@ -97,7 +97,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
               {/* Location */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-[18px] h-[18px] text-[#00d4aa]" />
                   Location
                 </label>
                 <Select
@@ -114,7 +114,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
               {/* Employment Type */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <Briefcase className="w-4 h-4" />
+                  <Briefcase className="w-[18px] h-[18px] text-[#00d4aa]" />
                   Job Type
                 </label>
                 <Select
@@ -131,7 +131,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
               {/* Company */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <Building className="w-4 h-4" />
+                  <Users className="w-[18px] h-[18px] text-[#00d4aa]" />
                   Company
                 </label>
                 <Select
@@ -150,12 +150,10 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
           </div>
           
 
-          <div className="grid grid-cols-2 items-center justify-center gap-1.5 md:flex mb-10">
-
-
+          <div className="flex items-center gap-3 mb-4">
             <DropDownRangebutton
               id="salaryRange"
-              className="!w-full !bg-primary-10 !text-white"
+              className="w-50 bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-1.5 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
               onApply={(range) => {
                 handleChange('salaryRange', range);
               }}
@@ -166,7 +164,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
 
             <DropDownButton
               id="education"
-              className="!w-full !bg-primary-10 !text-white"
+              className="w-[30%] bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-1.5 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
               options={EDUCATION_LIST}
               value={filters?.education}
               onChange={(val) => {
@@ -178,7 +176,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
 
             <DropDownButton
               id="experienceLevel"
-              className="!w-full !bg-primary-10 !text-white"
+              className="w-[30%] bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-1.5 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
               options={EXPERIENCE_LEVEL_LIST}
               value={filters?.experienceLevel}
               onChange={(val) => {
@@ -187,11 +185,15 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
             >
               Experience Level
             </DropDownButton>
-          </div>
 
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+<Button
+              onClick={handleSaveSearch}
+              disabled={isSaving}
+              
+              className=" w-52 bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? 'Saving...' : 'Save Search'}
+            </Button>
             <Button
               onClick={() => {
                 // Clear all filters
@@ -199,23 +201,17 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
                 handleChange('jobType', '');
                 handleChange('company', '');
               }}
-              className="flex items-center justify-center !border-gray-300 !bg-white !text-gray-700 hover:!bg-gray-50 dark:!border-dark-15 dark:!bg-dark-25 dark:!text-white dark:hover:!bg-dark-20 !px-4 !py-2 !text-sm"
+              className="w-52 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3  text-sm dark:bg-dark-25 dark:border-dark-15 dark:text-white dark:hover:bg-dark-20"
             >
               Clear All Filters
             </Button>
 
-            <Button
-              onClick={handleSaveSearch}
-              disabled={isSaving}
-              className="flex items-center justify-center gap-2 !border-primary-10 !bg-primary-10 !text-white hover:!border-primary-15 hover:!bg-primary-15 !px-4 !py-2 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? 'Saving...' : 'Save Search'}
-            </Button>
+            
           </div>
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-2">
         <AppliedFilters filterData={filters} setFilters={setFilters} />
       </div>
     </div>

@@ -68,19 +68,19 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
   return (
     <div
       onClick={() => onClick(item)}
-      className="group relative flex min-h-[220px] flex-col gap-3 rounded-lg bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-lg cursor-pointer dark:bg-dark-25"
+      className="group relative flex min-h-[220px] flex-col gap-3 rounded-[16px] bg-white p-6 border-2 border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,212,170,0.15)] hover:border-[#00d4aa] hover:-translate-y-1 cursor-pointer dark:bg-dark-25"
     >
       {/* Header with Title and Bookmark */}
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-poppins text-lg font-semibold text-secondary dark:text-white flex-1 pr-2">
+        <h2 className="font-poppins text-[20px] font-bold text-[#333] dark:text-white flex-1 pr-2">
           {item?.title}
         </h2>
         <button
-          className="flex-shrink-0 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-dark-30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-shrink-0 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-dark-30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           onClick={handleSaveJob}
           disabled={isSaving}
         >
-          <Bookmark className={`w-5 h-5 ${isSaved ? 'text-primary-10 fill-primary-10' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`} />
+          <Bookmark className={`w-5 h-5 transition-all duration-300 ${isSaved ? 'fill-[#00d4aa] stroke-[#00d4aa]' : 'stroke-[#999] fill-none hover:stroke-[#00d4aa] hover:scale-110'}`} />
         </button>
       </div>
 
@@ -92,7 +92,7 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
       </div>
 
       {/* Company Info */}
-      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-center gap-2 text-[14px] text-[#666] dark:text-gray-400">
         <span className="font-medium">{item?.company?.name || 'Company not specified'}</span>
         <span className="text-gray-400">•</span>
         <span className="capitalize">{item?.remote_type || 'Not specified'}</span>
@@ -106,7 +106,7 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
       </p>
 
       {/* Job Tags */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 group-hover:mb-[50px] transition-all duration-300">
         <span className={`tag capitalize ${item?.employment_type?.toLowerCase()}`}>
           {item?.employment_type}
         </span>
@@ -121,9 +121,9 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
       </div>
 
       {/* Quick Apply Button - Hidden by default, shows on card hover */}
-      <div className="mt-auto pt-4">
+      <div className="absolute bottom-6 left-6 right-6">
         <button
-          className="w-full rounded-md border border-primary-10 bg-primary-10 py-2 font-poppins text-sm font-medium text-white duration-300 hover:border-primary-15 hover:bg-primary-15 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="w-full rounded-md bg-gradient-to-r from-[#00d4aa] to-[#00b894] py-2 font-poppins text-sm font-medium text-white duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,212,170,0.4)] opacity-0 translate-y-[10px] group-hover:opacity-100 group-hover:translate-y-0 transition-all"
           onClick={(e) => {
             e.stopPropagation();
             onClick(item); // Open modal

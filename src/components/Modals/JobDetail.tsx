@@ -225,40 +225,40 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       isCloseIcon={false}
     >
       {/* Header with gradient background */}
-      <div className="relative bg-gradient-to-r from-[#10b981] to-[#047857] text-white px-8 py-6">
+      <div className="relative bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white px-8 py-6">
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-4">
-            <h1 className="text-3xl font-bold mb-2 leading-tight">
+            <h1 className="text-[20px] font-bold mb-2 leading-tight">
               {job?.title}
             </h1>
             <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={() => job?.company?.website && window.open(job.company.website, '_blank')}
-                className="text-xl font-semibold hover:underline cursor-pointer flex items-center gap-2"
+                className="text-xl font-semibold hover:underline cursor-pointer flex items-center gap-2 hover:scale-105 transition-all duration-300"
               >
                 {job?.company?.name}
                 <ExternalLink size={16} />
               </button>
             </div>
             {/* Meta Tags Row */}
-            <div className="flex flex-wrap gap-3">
-              {job?.location && (
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <MapPin size={16} />
-                  <span className="text-sm font-medium">{job.location}</span>
-                </div>
-              )}
+            <div className="flex  gap-3">
+            {job?.location && (
+  <span className="tag remote inline-flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded">
+    <MapPin size={16} aria-hidden="true" />
+    <span>{job.location}</span>
+  </span>
+)}
 
-              {job?.employment_type && (
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <Briefcase size={16} />
-                  <span className="text-sm font-medium">{job.employment_type}</span>
-                </div>
-              )}
+{job?.employment_type && (
+  <span className={`tag ${job.employment_type.toLowerCase()} inline-flex items-center gap-2 whitespace-nowrap px-2 py-1 rounded`}>
+    <Briefcase size={16} aria-hidden="true" />
+    <span>{job.employment_type}</span>
+  </span>
+)}
 
               {job?.salary_range && (
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <span className="text-sm font-medium">{job.salary_range}</span>
+                <div className="tag full-time flex items-center gap-2">
+                  <span>{job.salary_range}</span>
                 </div>
               )}
             </div>
@@ -266,7 +266,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
           <button
             onClick={onClose}
-            className="flex-shrink-0 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+            className="flex-shrink-0 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 hover:scale-105 transition-all duration-300"
           >
             <X size={20} />
           </button>
@@ -274,55 +274,51 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       </div>
       {/* Action Section */}
       <div className='bg-white dark:bg-dark-25 px-8 py-6 border-b border-gray-200 dark:border-dark-15'>
-        <div className="flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex gap-3">
-            <Button
-              onClick={handleApplyNow}
-              className=" w-40 !bg-[#10b981] !border-[#10b981] !py-1 !px-6 text-sm !text-white hover:!bg-[#047857] font-semibold rounded-lg shadow-sm hover:shadow-md transition-all justify-center"
-            >
-              Apply Now
-            </Button>
+        <div className="flex flex-wrap gap-3 items-center">
+          <Button
+            onClick={handleApplyNow}
+            className="bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center"
+          >
+            Apply Now
+          </Button>
 
-            <Button
-              onClick={handleSave}
-              className={`!py-1 !px-6 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all w-40 justify-center ${isSaved
-                ? '!bg-[#10b981] !border-[#10b981] !text-white hover:!bg-[#047857]'
-                : '!border-[#10b981] !bg-white !text-[#10b981] hover:!bg-[#10b981] hover:!text-white dark:!bg-dark-25 dark:!text-[#10b981] dark:hover:!bg-[#10b981] dark:hover:!text-white'
-              }`}
-            >
-              <Bookmark size={16} className="mr-2" />
-              {isSaved ? 'Saved' : 'Save Job'}
-            </Button>
+          <Button
+            onClick={handleSave}
+            className={`py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isSaved
+              ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white'
+              : 'border-[#00d4aa] bg-white text-[#00d4aa] hover:bg-[#00d4aa] hover:text-white dark:bg-dark-25 dark:text-[#00d4aa] dark:hover:bg-[#00d4aa] dark:hover:text-white'
+            }`}
+          >
+            <Bookmark size={16} className="mr-2" />
+            {isSaved ? 'Saved' : 'Save Job'}
+          </Button>
 
-            <Button
-              onClick={handleMarkApplied}
-              className={`!py-1 !px-6 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all w-40 justify-center ${isApplied
-                ? '!bg-[#10b981] !border-[#10b981] !text-white hover:!bg-[#047857]'
-                : '!border-[#10b981] !bg-white !text-[#10b981] hover:!bg-[#10b981] hover:!text-white dark:!bg-dark-25 dark:!text-[#10b981] dark:hover:!bg-[#10b981] dark:hover:!text-white'
-              }`}
-            >
-              <Check size={16} className="mr-2" />
-              {isApplied ? 'Applied' : 'Mark Applied'}
-            </Button>
-          </div>
+          <Button
+            onClick={handleMarkApplied}
+            className={`py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isApplied
+              ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white'
+              : 'border-[#00d4aa] bg-white text-[#00d4aa] hover:bg-[#00d4aa] hover:text-white dark:bg-dark-25 dark:text-[#00d4aa] dark:hover:bg-[#00d4aa] dark:hover:text-white'
+            }`}
+          >
+            <Check size={16} className="mr-2" />
+            {isApplied ? 'Applied' : 'Mark Applied'}
+          </Button>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleShare}
-              className="p-3 text-gray-500 hover:text-[#10b981] dark:text-gray-400 dark:hover:text-[#10b981] rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 transition-colors"
-              title="Share job"
-            >
-              <Share2 size={20} />
-            </button>
+          <button
+            onClick={handleShare}
+            className="p-3 text-gray-500 hover:text-[#00d4aa] dark:text-gray-400 dark:hover:text-[#00d4aa] rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 hover:scale-105 transition-all duration-300"
+            title="Share job"
+          >
+            <Share2 size={20} />
+          </button>
 
-            <button
-              onClick={handleHide}
-              className="p-3 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 transition-colors"
-              title={isHidden ? "Unhide job" : "Hide job"}
-            >
-              <EyeOff size={20} />
-            </button>
-          </div>
+          <button
+            onClick={handleHide}
+            className="p-3 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 hover:scale-105 transition-all duration-300"
+            title={isHidden ? "Unhide job" : "Hide job"}
+          >
+            <EyeOff size={20} />
+          </button>
         </div>
       </div>
 
@@ -338,13 +334,13 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         {/* Company Card */}
         {job?.company && (
           <div className="px-8 py-6">
-            <div className="bg-gradient-to-r from-[#10b981]/10 to-[#047857]/10 dark:from-[#10b981]/5 dark:to-[#047857]/5 rounded-xl p-6 border border-[#10b981]/20 dark:border-[#10b981]/10">
+            <div className="bg-gradient-to-r from-[#00d4aa]/10 to-[#00b894]/10 dark:from-[#00d4aa]/5 dark:to-[#00b894]/5 rounded-xl p-6 border border-[#00d4aa]/20 dark:border-[#00d4aa]/10">
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 bg-white dark:bg-dark-15 rounded-xl flex items-center justify-center shadow-sm border border-gray-200 dark:border-dark-15">
                   {job.company.logo_url ? (
                     <img src={job.company.logo_url} alt={job.company.name} className="w-10 h-10 rounded-lg" />
                   ) : (
-                    <span className="text-2xl font-bold text-[#10b981]">
+                    <span className="text-2xl font-bold text-[#00d4aa]">
                       {job.company.name.charAt(0)}
                     </span>
                   )}
@@ -362,7 +358,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
                       href={job.company.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 mt-3 text-[#10b981] hover:text-[#047857] font-medium transition-colors"
+                      className="inline-flex items-center gap-2 mt-3 text-[#00d4aa] hover:text-[#00b894] font-medium transition-colors"
                     >
                       Visit website <ExternalLink size={14} />
                     </a>
@@ -377,12 +373,12 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         {job?.description && (
           <div className="px-8 pb-8">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-[20px] font-bold text-[#333] dark:text-white">
                 Job Description
               </h3>
 
               <button
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#10b981] hover:text-[#047857] dark:text-[#10b981] dark:hover:text-[#10b981] rounded-lg hover:bg-[#10b981]/10 dark:hover:bg-[#10b981]/10 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#00d4aa] hover:text-[#00b894] dark:text-[#00d4aa] dark:hover:text-[#00b894] rounded-lg hover:bg-[#00d4aa]/10 dark:hover:bg-[#00d4aa]/10 hover:scale-105 transition-all duration-300"
                 onClick={() => copyToClipboard(job.description)}
               >
                 {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}

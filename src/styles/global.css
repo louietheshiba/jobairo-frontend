@@ -32,15 +32,19 @@ body {
 
 /* Job Card Tags */
 .tag {
-  @apply inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300;
+  @apply inline-block rounded-md bg-[#f0f0f0] px-3.5 py-1.5 text-[13px] font-semibold text-gray-700;
+}
+
+.tag.full-time {
+  @apply bg-[#f0f0f0] text-gray-700;
+}
+
+.tag.remote {
+  @apply bg-[#e6f7ff] text-[#0066cc];
 }
 
 .tag.hybrid {
   @apply bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200;
-}
-
-.tag.remote {
-  @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
 }
 
 .tag.onsite {
