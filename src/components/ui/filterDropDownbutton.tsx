@@ -63,9 +63,15 @@ const FilterDropDownbutton = React.forwardRef<
       let newValues: string[];
 
       if (isMulti) {
-        newValues = selectedValues.includes(selectedValue)
-          ? selectedValues.filter((v) => v !== selectedValue)
-          : [...selectedValues, selectedValue];
+        // Special handling for "No Marked Jobs Filter" - clear all other selections
+        if (selectedValue === '') {
+          newValues = [];
+        } else {
+          // Remove empty string if it exists and add the new value
+          newValues = selectedValues.filter(v => v !== '').includes(selectedValue)
+            ? selectedValues.filter(v => v !== '' && v !== selectedValue)
+            : [...selectedValues.filter(v => v !== ''), selectedValue];
+        }
       } else {
         newValues = [selectedValue];
         setIsOpen(false);
@@ -75,6 +81,10 @@ const FilterDropDownbutton = React.forwardRef<
       onChange?.(isMulti ? newValues : newValues[0] ?? '');
     };
 
+    const handleButtonClick = () => {
+      toggleDropdown();
+    };
+
     return (
       <div className="relative inline-block" ref={dropdownRef}>
         <button
@@ -82,7 +92,7 @@ const FilterDropDownbutton = React.forwardRef<
           className={`flex w-full items-center justify-between gap-1 rounded px-2 py-0.5 font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
             className || ''
           }`}
-          onClick={toggleDropdown}
+          onClick={handleButtonClick}
           {...props}
         >
           <p className="mb-0.5">

@@ -154,10 +154,10 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
           </div>
         </div>
 
-<div className='flex gap-6'>
-    <DropDownRangebutton
+<div className='grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap lg:gap-6'>
+  <DropDownRangebutton
     id="salaryRange"
-    className="w-52 bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
+    className="w-full lg:w-52 bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 min-h-[44px] flex items-center"
     onApply={(range) => {
       handleChange('salaryRange', range);
     }}
@@ -165,9 +165,9 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
   >
     Salary Range
   </DropDownRangebutton>
-    <DropDownButton
+  <DropDownButton
     id="education"
-    className="w-full bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
+    className="w-full bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 min-h-[44px] flex items-center"
     options={EDUCATION_LIST}
     value={filters?.education}
     onChange={(val) => {
@@ -176,7 +176,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
   >
     Education
   </DropDownButton>
-    <DropDownButton
+  <DropDownButton
     id="experienceLevel"
     className="w-full bg-[#00d4aa] text-white font-semibold rounded-lg px-3 py-2 shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:bg-[#00b894] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300"
     options={EXPERIENCE_LEVEL_LIST}
@@ -187,38 +187,37 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
   >
     Experience Level
   </DropDownButton>
+  <div className='flex flex-col sm:flex-row gap-3 lg:gap-6 lg:flex-row'>
     <button
-    onClick={handleSaveSearch}
-    disabled={isSaving}
-    className=" bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    {isSaving ? 'Saving...' : 'Save Search'}
-  </button>
+      onClick={handleSaveSearch}
+      disabled={isSaving}
+      className="w-full sm:w-auto bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
+    >
+      {isSaving ? 'Saving...' : 'Save Search'}
+    </button>
     <button
-    onClick={() => {
-      handleChange('locations', []);
-      handleChange('jobType', '');
-      handleChange('company', '');
-      handleChange('salaryRange', null);
-      handleChange('education', '');
-      handleChange('experienceLevel', '');
-    }}
-    className=" bg-white from-[#00d4aa] to-[#00b894] border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] transition-all duration-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-
-  >
-    Clear All Filters
-  </button>
+      onClick={() => {
+        handleChange('locations', []);
+        handleChange('jobType', '');
+        handleChange('company', '');
+        handleChange('salaryRange', null);
+        handleChange('education', '');
+        handleChange('experienceLevel', '');
+      }}
+      className="w-full sm:w-auto bg-white border border-red-600 text-red-600 font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.1)] hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,212,170,0.2)] transition-all duration-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
+    >
+      Clear All Filters
+    </button>
   </div>
-  
+</div>
+        </div>
+      )}
 
+      <div className="mt-2">
+        <AppliedFilters filterData={filters} setFilters={setFilters} />
       </div>
-    )}
-
-    <div className="mt-2">
-      <AppliedFilters filterData={filters} setFilters={setFilters} />
     </div>
-  </div>
-);
+  );
 
 };
 

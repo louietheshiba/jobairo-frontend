@@ -10,7 +10,7 @@ const Chip = ({
   label: string;
   onDelete: (label: string) => void;
 }) => (
-  <Button className="flex !w-fit items-center justify-center gap-1 whitespace-nowrap !rounded-full !border-primary-10 !bg-white !py-1.5 px-[18px] text-sm !text-primary-10 dark:!bg-dark-25 dark:hover:!bg-dark-20">
+  <Button className="flex !w-fit items-center justify-center gap-1 whitespace-nowrap !rounded-full !border-primary-10 !bg-white !py-1.5 px-[18px] text-sm !text-white dark:!bg-dark-25 dark:hover:!bg-dark-20">
     <p>{label}</p>
     <div onClick={() => onDelete(label)}>
       <X size={18} />
@@ -34,6 +34,18 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
     else if (label.startsWith('Company:')) {
       updatedFilters.company = '';
     }
+    // Handle education filter
+    else if (label.startsWith('Education:')) {
+      updatedFilters.education = '';
+    }
+    // Handle experience level filter
+    else if (label.startsWith('Experience Level:')) {
+      updatedFilters.experienceLevel = '';
+    }
+    // Handle salary range filter
+    else if (label.startsWith('Salary Range:')) {
+      updatedFilters.salaryRange = null;
+    }
 
     setFilters(updatedFilters);
   };
@@ -43,6 +55,9 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
       ...filterData.locations.map(({ label }) => ({ label })),
       { label: filterData.jobType ? `Job Type: ${filterData.jobType}` : null },
       { label: filterData.company ? `Company: ${filterData.company}` : null },
+      { label: filterData.education ? `Education: ${filterData.education}` : null },
+      { label: filterData.experienceLevel ? `Experience Level: ${filterData.experienceLevel}` : null },
+      { label: filterData.salaryRange ? `Salary Range: $${filterData.salaryRange[0]}K - $${filterData.salaryRange[1]}K` : null },
     ];
 
     return chips.map((chip, index) =>
@@ -60,7 +75,10 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
     return (
       filterData.locations.length > 0 ||
       filterData.jobType !== '' ||
-      filterData.company !== ''
+      filterData.company !== '' ||
+      filterData.education !== '' ||
+      filterData.experienceLevel !== '' ||
+      filterData.salaryRange !== null
     )
   };
 
@@ -69,12 +87,12 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
       <div className="flex flex-wrap items-center gap-1">{renderChips()}</div>
 
       {isFilterApplied() && (
-        <Button
+        <button
           onClick={handleClearFilters}
-          className="flex !w-fit items-center justify-center gap-1 whitespace-nowrap !rounded-full !border-red-600 !bg-white !py-1.5 px-[18px] text-sm !text-red-600 dark:!bg-dark-25 dark:hover:!bg-dark-20"
+          className="flex !w-fit items-center justify-center gap-1 whitespace-nowrap !rounded-full border border-red-600 !bg-white !py-1.5 px-[18px] text-sm !text-red-600 hover:!bg-gray-50 dark:!bg-dark-25 dark:hover:!bg-dark-20"
         >
           Clear Filters
-        </Button>
+        </button>
       )}
     </div>
   );

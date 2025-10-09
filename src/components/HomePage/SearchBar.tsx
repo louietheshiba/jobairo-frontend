@@ -91,12 +91,12 @@ const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
             onFocus={() => setShowSuggestions(!!suggestions.length && !isExactMatch)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
             placeholder="Search for jobs..."
-            className="w-full rounded-full border-2 border-[#e0e0e0] bg-white px-8 py-5 pr-20 text-lg shadow-lg focus:border-[#00d4aa] focus:shadow-[0_0_0_4px_rgba(0,212,170,0.2)] focus:outline-none transition-all duration-300 dark:border-dark-15 dark:bg-dark-25 dark:text-white dark:focus:border-primary-10"
+            className="w-full rounded-full border-2 border-[#e0e0e0] bg-white px-8 py-5 pr-20 text-lg shadow-lg focus:border-[#00d4aa] focus:shadow-[0_0_0_4px_rgba(0,212,170,0.2)] focus:outline-none transition-all duration-300 dark:border-dark-15 dark:bg-dark-25 dark:text-white dark:focus:border-primary-10 min-h-[44px] sm:min-h-[auto]"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <button
               type="submit"
-              className="rounded-full bg-gradient-to-r from-[#00d4aa] to-[#00b894] p-2 text-white shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:scale-105 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300"
+              className="rounded-full bg-gradient-to-r from-[#00d4aa] to-[#00b894] p-2 text-white shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:scale-105 hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <Search size={16} />
             </button>

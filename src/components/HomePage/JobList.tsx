@@ -132,6 +132,39 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
       });
     }
 
+    // Education filter
+    if (filters.education && filters.education !== '') {
+      // For now, we'll filter based on job description or required skills containing education keywords
+      // This could be improved with proper education level data in the job schema
+      const educationKeywords = filters.education.toLowerCase();
+      filtered = filtered.filter(job =>
+        job.description?.toLowerCase().includes(educationKeywords) ||
+        job.required_skills?.toLowerCase().includes(educationKeywords)
+      );
+    }
+
+    // Experience level filter
+    if (filters.experienceLevel && filters.experienceLevel !== '') {
+      const experienceKeywords = filters.experienceLevel.toLowerCase();
+      filtered = filtered.filter(job =>
+        job.title?.toLowerCase().includes(experienceKeywords) ||
+        job.description?.toLowerCase().includes(experienceKeywords) ||
+        job.experience_level?.toLowerCase().includes(experienceKeywords) ||
+        job.required_skills?.toLowerCase().includes(experienceKeywords)
+      );
+    }
+
+    // Salary range filter
+    if (filters.salaryRange && filters.salaryRange.length === 2) {
+      const [minSalary, maxSalary] = filters.salaryRange;
+      if (minSalary !== undefined && maxSalary !== undefined) {
+        filtered = filtered.filter(job => {
+          const jobSalary = parseInt(job.salary_range?.replace(/[^0-9]/g, '') || '0');
+          return jobSalary >= minSalary && jobSalary <= maxSalary;
+        });
+      }
+    }
+
     // Relevance sorting
     if (filters.relevance && filters.relevance !== 'Relevance') {
       switch (filters.relevance) {

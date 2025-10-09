@@ -69,14 +69,16 @@ export const JOB_TYPE_LIST = [
 
 export const RELEVANCE_LIST = [
   { id: 1, label: 'Relevance', value: '' },
-  { id: 2, label: 'Most Recent', value: 'Most Recent' },
-  { id: 3, label: 'Oldest', value: 'Oldest' },
-  { id: 4, label: 'Highest Salary', value: 'Highest Salary' },
-  { id: 5, label: 'Least Experience', value: 'Least Experience' },
+  { id: 2, label: 'No Relevance', value: '' },
+  { id: 3, label: 'Most Recent', value: 'Most Recent' },
+  { id: 4, label: 'Oldest', value: 'Oldest' },
+  { id: 5, label: 'Highest Salary', value: 'Highest Salary' },
+  { id: 6, label: 'Least Experience', value: 'Least Experience' },
 ];
 
 export const DATE_POSTED_LIST = [
   { id: 8, label: 'Date Posted', value: '' },
+  { id: 9, label: 'No Date Filter', value: '' },
   { id: 1, label: '24hrs', value: '24hrs' },
   { id: 2, label: '2 days', value: '2 days' },
   { id: 3, label: '4 days', value: '4 days' },
@@ -87,6 +89,7 @@ export const DATE_POSTED_LIST = [
 ];
 
 export const MARK_JOBS_LIST = [
+  { id: 4, label: 'No Marked Jobs Filter', value: '' },
   { id: 1, label: 'Exclude Saved jobs', value: 'Exclude Saved jobs' },
   { id: 2, label: 'Exclude applied jobs', value: 'Exclude applied jobs' },
   { id: 3, label: 'Exclude viewed jobs', value: 'Exclude viewed jobs' },
