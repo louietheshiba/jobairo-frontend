@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Home, Heart, FileText, EyeOff, Search, Eye, Settings, LogOut, ArrowLeft, Sun, Moon } from 'lucide-react';
+import { Heart, FileText, EyeOff, Search, Eye, Settings, LogOut, ArrowLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/context/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/context/ProfileContext';

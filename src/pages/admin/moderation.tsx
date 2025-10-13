@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/hooks/useAuth';
 import AdminSidebar from '@/components/Admin/AdminSidebar';
-import AdminModeration from '@/components/Admin/AdminModeration';
 
 const AdminModerationPage = () => {
   const router = useRouter();
@@ -28,7 +27,10 @@ const AdminModerationPage = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <AdminModeration />
+      <div className="ml-64 p-8">
+        <h1 className="text-2xl font-bold text-gray-900">Moderation</h1>
+        <p className="text-gray-600 mt-2">Moderate content and user reports.</p>
+      </div>
     </div>
   );
 };

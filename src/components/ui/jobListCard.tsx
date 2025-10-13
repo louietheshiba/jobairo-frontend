@@ -6,7 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { getDisplayLabelFromLocation } from '@/utils/locations';
 import type { JobListCardProps } from '@/types/JobTypes';
 
-const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave, onApply }: JobListCardProps) => {
+const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }: JobListCardProps) => {
   const { user } = useAuth();
   const [isSaved, setIsSaved] = useState(initialIsSaved);
   const [isSaving, setIsSaving] = useState(false);

@@ -278,9 +278,6 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     }
   };
 
-  const handleApplyJob = (jobId: string) => {
-    setAppliedJobIds(prev => [...prev, jobId]);
-  };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -405,7 +402,7 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
         {!loading && jobs.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4">
             {jobs.map((item) => (
-              <JobListCard key={item.id} item={item} onClick={handleCardClick} isSaved={savedJobIds.includes(item.id)} onSave={handleSaveJob} onApply={handleApplyJob} />
+              <JobListCard key={item.id} item={item} onClick={handleCardClick} isSaved={savedJobIds.includes(item.id)} onSave={handleSaveJob} />
             ))}
           </div>
         )}

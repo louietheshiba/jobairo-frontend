@@ -2,15 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import {
   Search,
-  Filter,
   Edit,
   Trash2,
   Eye,
   EyeOff,
-  Star,
   Upload,
   Plus,
-  MoreHorizontal,
   CheckSquare,
   Square,
   Mail,

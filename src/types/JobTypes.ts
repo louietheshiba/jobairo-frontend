@@ -48,7 +48,6 @@ export type JobListCardProps = {
   onClick: (job: Job) => void;
   isSaved?: boolean;
   onSave?: (jobId: string, isSaved: boolean) => void;
-  onApply?: (jobId: string) => void;
 };
 
 export type JobListProps = {
