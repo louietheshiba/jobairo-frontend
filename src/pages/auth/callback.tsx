@@ -66,7 +66,7 @@ const AuthCallbackPage = () => {
           toast.success(`Welcome back, ${user.user_metadata?.full_name || user.user_metadata?.name || 'User'}! 🎉`);
 
           // Successfully authenticated, redirect to intended page or home
-          const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/';
+          const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/dashboard';
           sessionStorage.removeItem('auth_redirect_url');
           router.push(redirectUrl);
         } else {

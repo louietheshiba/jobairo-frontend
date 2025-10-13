@@ -84,7 +84,7 @@ const AuthPage = () => {
             (userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
           sessionStorage.removeItem('auth_redirect_url');
           router.push(redirectUrl);
-        }, 100);
+        }, 500);
       } else {
         // Sign up without job preferences
         const { data, error } = await supabase.auth.signUp({
@@ -103,13 +103,13 @@ const AuthPage = () => {
           console.log('User confirmed immediately');
           // Wait a moment for userRole to be set, then redirect
           setTimeout(() => {
-            console.log('Login redirect - userRole:', userRole); // Debug log
+            console.log('Signup redirect - userRole:', userRole); // Debug log
             const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
-              (userRole === 'admin' ? '/dashboard' : '/dashboard');
+              (userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
             console.log('Redirecting to:', redirectUrl); // Debug log
             sessionStorage.removeItem('auth_redirect_url');
             router.push(redirectUrl);
-          }, 100);
+          }, 500);
         } else {
           console.log('Email confirmation required');
           setSuccess('Check your email for a verification link!');

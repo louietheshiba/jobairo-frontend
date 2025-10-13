@@ -20,18 +20,17 @@ export const useAuth = () => {
         console.log('Fetching profile for user ID:', session.user.id); // Debug log
         const { data: profileData, error } = await supabase
           .from('profiles')
-          .select('*')  // Get full profile data for debugging
+          .select('role')  // Only select role for faster query
           .eq('user_id', session.user.id)
           .single();
 
-        console.log('Full user profile:', profileData); // Debug log
+        console.log('User role from profile:', profileData?.role); // Debug log
         console.log('Profile fetch error:', error); // Debug log
 
         if (error) {
           console.error('Error fetching user role:', error);
           setUserRole('job_seeker'); // Default role
         } else {
-          console.log('User role from profile:', profileData?.role); // Debug log
           setUserRole(profileData?.role || 'job_seeker');
         }
       } else {
@@ -52,11 +51,10 @@ export const useAuth = () => {
         if (session?.user) {
           const { data: profileData, error } = await supabase
             .from('profiles')
-            .select('*')  // Get full profile for debugging
+            .select('role')  // Only select role for faster query
             .eq('user_id', session.user.id)
             .single();
 
-          console.log('Auth state change - Full user profile:', profileData); // Debug log
           console.log('Auth state change - User role:', profileData?.role); // Debug log
 
           if (error) {
@@ -122,7 +120,7 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: `${window.location.origin}/auth/login/reset-password`,
     });
     return { data, error };
   };

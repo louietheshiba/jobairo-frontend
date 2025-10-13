@@ -25,7 +25,7 @@ const Dashboard = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    if (!user && !loading) {
+    if (!loading && !user) {
       router.push('/auth/login');
       return;
     }

@@ -27,13 +27,16 @@ const ProtectedRoute = ({
       // If user is authenticated but shouldn't be on this page
       router.push(userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
     }
-  }, [user, loading, router, redirectTo, requireAuth]);
+  }, [user, loading, router, redirectTo, requireAuth, userRole]);
 
   // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#319795]"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#10b981] mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
       </div>
     );
   }
