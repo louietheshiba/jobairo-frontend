@@ -8,13 +8,13 @@ export const WORK_SCHEDULE_LIST = [
   },
   {
     id: 2,
-    label: 'Onsite',
-    value: 'Onsite',
+    label: 'Hybrid',
+    value: 'Hybrid',
   },
   {
     id: 3,
-    label: 'Hybrid',
-    value: 'Hybrid',
+    label: 'On-Site',
+    value: 'On-Site',
   },
 ];
 
@@ -59,8 +59,8 @@ export const EXPERIENCE_LEVEL_LIST = [
 ];
 
 export const JOB_TYPE_LIST = [
-  { id: 1, label: 'Full Time', value: 'Full Time' },
-  { id: 2, label: 'Part Time', value: 'Part Time' },
+  { id: 1, label: 'Full-time', value: 'Full-time' },
+  { id: 2, label: 'Part-time', value: 'Part-time' },
   { id: 3, label: 'Contractor', value: 'Contractor' },
   { id: 4, label: 'Temporary', value: 'Temporary' },
   { id: 5, label: 'Intern', value: 'Intern' },

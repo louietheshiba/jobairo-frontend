@@ -49,7 +49,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess, onBa
 
         <button
           onClick={onSuccess}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981]"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981]"
         >
           Back to Login
         </button>
@@ -91,7 +91,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess, onBa
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Sending...' : 'Send Reset Link'}
         </button>
@@ -100,7 +100,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess, onBa
       <div className="mt-32 text-center">
         <button
           onClick={onBackToLogin}
-          className="text-[#00d4aa] hover:text-[#00b894] mt-10 dark:text-[#10b981] font-medium text-sm"
+          className="text-[#10b981] hover:text-[#047857] mt-10 dark:text-[#10b981] font-medium text-sm"
         >
           ← Back to Login
         </button>

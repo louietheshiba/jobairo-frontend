@@ -130,3 +130,29 @@ export const searchLocations = (query: string): LocationOption[] => {
     option.country.toLowerCase().includes(lowerQuery)
   ).slice(0, 50); // Limit to 50 results
 };
+
+// Helper function to get display label from database location value
+export const getDisplayLabelFromLocation = (locationValue: string): string => {
+  if (!locationValue) return 'Not specified';
+
+  // First try to find exact match
+  const exactMatch = locationOptions.find(option => option.value === locationValue);
+  if (exactMatch) return exactMatch.label;
+
+  // If no exact match, try to find by country name (for cases like "Japan", "US", etc.)
+  const countryMatch = locationOptions.find(option =>
+    option.country.toLowerCase() === locationValue.toLowerCase()
+  );
+  if (countryMatch) return countryMatch.label;
+
+  // If still no match, try partial matches
+  const partialMatch = locationOptions.find(option =>
+    option.country.toLowerCase().includes(locationValue.toLowerCase()) ||
+    option.city.toLowerCase().includes(locationValue.toLowerCase()) ||
+    (option.state && option.state.toLowerCase().includes(locationValue.toLowerCase()))
+  );
+  if (partialMatch) return partialMatch.label;
+
+  // If no match found, return the original value
+  return locationValue;
+};

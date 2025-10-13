@@ -4,19 +4,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
 import DeleteAccountModal from './DeleteAccountModal';
-import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 
-// Job types options
-const JOB_TYPES = [
-  'Full-time',
-  'Part-time',
-  'Contract',
-  'Freelance',
-  'Internship',
-  'Remote',
-  'Hybrid',
-  'On-site'
-];
 
 
 
@@ -25,12 +13,6 @@ const SettingsTab: React.FC = () => {
   const { profile, loading, updateProfile } = useProfile();
   const [formData, setFormData] = useState({
     full_name: '',
-  });
-  const [jobPreferences, setJobPreferences] = useState({
-    desired_salary_min: '',
-    desired_salary_max: '',
-    job_types: [] as string[],
-    preferred_locations: [] as string[],
   });
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -43,32 +25,10 @@ const SettingsTab: React.FC = () => {
         full_name: profile.full_name,
       });
       
-      // Initialize job preferences
-      setJobPreferences({
-        desired_salary_min: profile.job_preferences?.desired_salary_min ? profile.job_preferences.desired_salary_min.toString() : '',
-        desired_salary_max: profile.job_preferences?.desired_salary_max ? profile.job_preferences.desired_salary_max.toString() : '',
-        job_types: profile.job_preferences?.job_types || [],
-        preferred_locations: profile.job_preferences?.preferred_locations || [],
-      });
     }
   }, [profile]);
 
 
-  const handleJobPreferenceChange = (field: string, value: any) => {
-    setJobPreferences(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const toggleJobType = (jobType: string) => {
-    setJobPreferences(prev => ({
-      ...prev,
-      job_types: prev.job_types.includes(jobType)
-        ? prev.job_types.filter(type => type !== jobType)
-        : [...prev.job_types, jobType]
-    }));
-  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -77,12 +37,6 @@ const SettingsTab: React.FC = () => {
 
     const success = await updateProfile({
       full_name: formData.full_name,
-      job_preferences: {
-        desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
-        desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
-        job_types: jobPreferences.job_types,
-        preferred_locations: jobPreferences.preferred_locations,
-      },
     });
 
     if (success) {
@@ -191,75 +145,6 @@ const SettingsTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Job Preferences Section */}
-        <div className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6">
-          <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Job Preferences</h4>
-          
-          {/* Salary Range */}
-          <div className="mb-6">
-            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Desired Salary Range</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  Minimum ($)
-                </label>
-                <input
-                  type="number"
-                  value={jobPreferences.desired_salary_min}
-                  onChange={(e) => handleJobPreferenceChange('desired_salary_min', e.target.value)}
-                  placeholder="50000"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  Maximum ($)
-                </label>
-                <input
-                  type="number"
-                  value={jobPreferences.desired_salary_max}
-                  onChange={(e) => handleJobPreferenceChange('desired_salary_max', e.target.value)}
-                  placeholder="100000"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#282828] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Job Types */}
-          <div className="mb-6">
-            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Preferred Job Types</h5>
-            <div className="flex flex-wrap gap-2">
-              {JOB_TYPES.map((jobType) => (
-                <button
-                  key={jobType}
-                  type="button"
-                  onClick={() => toggleJobType(jobType)}
-                  className={`px-3 py-2 rounded-[10px] text-sm font-medium transition-all duration-300 ${
-                    jobPreferences.job_types.includes(jobType)
-                      ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5'
-                      : 'bg-gray-100 dark:bg-[#282828] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {jobType}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Preferred Locations */}
-          <div>
-            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Preferred Locations</h5>
-            <LocationAutocomplete
-              value={jobPreferences.preferred_locations}
-              onChange={(locations) => setJobPreferences(prev => ({ ...prev, preferred_locations: locations }))}
-              placeholder="Search for cities (e.g., New York, San Francisco)"
-            />
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Select multiple locations from the dropdown
-            </p>
-          </div>
-        </div>
 
         {/* Account Management */}
         <div className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6">
@@ -288,7 +173,7 @@ const SettingsTab: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-gradient-to-r from-[#10b981] to-[#047857] text-white rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

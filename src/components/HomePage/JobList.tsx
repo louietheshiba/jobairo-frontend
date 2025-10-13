@@ -63,20 +63,39 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     // Other filters (client-side for now)
     if (filters.locations.length > 0) {
       const locationValues = filters.locations.map(loc => loc.value.toLowerCase());
-      filtered = filtered.filter(job =>
-        locationValues.some(loc => job.location?.toLowerCase().includes(loc))
-      );
+      filtered = filtered.filter(job => {
+        const jobLocation = job.location?.toLowerCase() || '';
+        return locationValues.some(loc => {
+          // Check if the filter value matches the job location directly
+          if (jobLocation.includes(loc)) return true;
+
+          // Also check if the filter value matches any part of the location (city, state, country)
+          const locationParts = loc.split('-');
+          return locationParts.some(part =>
+            jobLocation.includes(part) ||
+            jobLocation.includes(part.replace(/-/g, ' '))
+          );
+        });
+      });
     }
 
     if (filters.jobType) {
       filtered = filtered.filter(job =>
-        job.employment_type?.toLowerCase() === filters.jobType.toLowerCase()
+        job.employment_type?.toLowerCase().includes(filters.jobType.toLowerCase())
       );
     }
 
     if (filters.company) {
       filtered = filtered.filter(job =>
         job.company?.name?.toLowerCase().includes(filters.company.toLowerCase())
+      );
+    }
+
+    // Work schedule filter
+    if (filters.workSchedule.length > 0) {
+      const workScheduleValues = filters.workSchedule.map(ws => ws.value.toLowerCase());
+      filtered = filtered.filter(job =>
+        workScheduleValues.some(ws => job.remote_type?.toLowerCase().includes(ws))
       );
     }
 
@@ -259,6 +278,10 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     }
   };
 
+  const handleApplyJob = (jobId: string) => {
+    setAppliedJobIds(prev => [...prev, jobId]);
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedJob(null);
@@ -269,6 +292,7 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     if (filters.locations.length) active.push(...filters.locations.map(loc => ({ key: 'locations', value: loc.value, label: `Location: ${loc.label}` })));
     if (filters.jobType) active.push({ key: 'jobType', value: filters.jobType, label: `Job Type: ${filters.jobType}` });
     if (filters.company) active.push({ key: 'company', value: filters.company, label: `Company: ${filters.company}` });
+    if (filters.workSchedule.length) active.push(...filters.workSchedule.map(ws => ({ key: 'workSchedule', value: ws.value, label: `Work Setting: ${ws.label}` })));
     return active;
   };
 
@@ -279,6 +303,8 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
       handleChange('jobType', '');
     } else if (filter.key === 'company') {
       handleChange('company', '');
+    } else if (filter.key === 'workSchedule') {
+      handleChange('workSchedule', filters.workSchedule.filter(ws => ws.value !== filter.value));
     }
   };
 
@@ -287,81 +313,82 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
   const activeFilters = getActiveFilters();
 
   return (
-    <div className="px-[15px] pb-10 pt-6 sm:pb-[50px] sm:pt-[30px]">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 sm:gap-7">
+    <div className="px-[15px] pb-5 pt-3 sm:pb-[20px] sm:pt-[15px]">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-2 ">
         {/* Job count and filters */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between py-0.5">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
               {loading ? 'Loading jobs...' : `${jobs.length} jobs found`}
             </h2>
             {activeFilters.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1">
                 {activeFilters.map((filter, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#00d4aa] to-[#00b894] px-3 py-1 text-sm text-white shadow-[0_2px_8px_rgba(0,212,170,0.2)]"
+                    className="inline-flex items-center gap-1 rounded-full bg-[#10b981] px-2 py-0.5 text-xs text-white shadow-[0_2px_8px_rgba(16,185,129,0.2)]"
                   >
                     {filter.label}
                     <button
                       onClick={() => handleRemoveFilter(filter)}
                       className="ml-1 hover:text-gray-200"
                     >
-                      <X size={14} />
+                      <X size={10} />
                     </button>
                   </span>
                 ))}
               </div>
             )}
           </div>
+
+          <div className="flex items-center gap-1">
+              <FilterDropDownbutton
+                id="relevance"
+                iconColor={isDarkMode ? 'white' : '#666666'}
+                className="!gap-0.5 !font-medium text-themeGray-15 dark:text-white !px-1 !py-0.5 text-sm"
+                options={RELEVANCE_LIST?.filter(
+                  ({ label }) => label !== 'Relevance'
+                )}
+                value={filters?.relevance}
+                onChange={(val) => {
+                  handleChange('relevance', `${val}`);
+                }}
+              >
+                Relevance
+              </FilterDropDownbutton>
+  
+              <FilterDropDownbutton
+                id="datePosted"
+                iconColor={isDarkMode ? 'white' : '#666666'}
+                className="!gap-0.5 !font-medium text-themeGray-15 dark:text-white !px-1 !py-0.5 text-sm"
+                options={DATE_POSTED_LIST?.filter(
+                  ({ label }) => label !== 'Date Posted'
+                )}
+                value={filters?.datePosted}
+                onChange={(val) => {
+                  handleChange('datePosted', `${val}`);
+                }}
+              >
+                Date Posted
+              </FilterDropDownbutton>
+  
+              <FilterDropDownbutton
+                id="markedJobs"
+                iconColor={isDarkMode ? 'white' : '#666666'}
+                className="!gap-0.5 !font-medium text-themeGray-15 dark:text-white !px-1 !py-0.5 text-sm"
+                options={MARK_JOBS_LIST}
+                isMulti
+                value={filters?.markedJobs}
+                onChange={(val) => {
+                  handleChange('markedJobs', val);
+                }}
+              >
+                Marked Jobs
+              </FilterDropDownbutton>
+            </div>
         </div>
-
-
-        <div className="flex items-center sm:gap-7 mb-4">
-          <FilterDropDownbutton
-            id="relevance"
-            iconColor={isDarkMode ? 'white' : '#666666'}
-            className="!gap-1.5 !font-semibold text-themeGray-15 dark:text-white"
-            options={RELEVANCE_LIST?.filter(
-              ({ label }) => label !== 'Relevance'
-            )}
-            value={filters?.relevance}
-            onChange={(val) => {
-              handleChange('relevance', `${val}`);
-            }}
-          >
-            Relevance
-          </FilterDropDownbutton>
-
-          <FilterDropDownbutton
-            id="datePosted"
-            iconColor={isDarkMode ? 'white' : '#666666'}
-            className="!gap-1.5 !font-semibold text-themeGray-15 dark:text-white"
-            options={DATE_POSTED_LIST?.filter(
-              ({ label }) => label !== 'Date Posted'
-            )}
-            value={filters?.datePosted}
-            onChange={(val) => {
-              handleChange('datePosted', `${val}`);
-            }}
-          >
-            Date Posted
-          </FilterDropDownbutton>
-
-          <FilterDropDownbutton
-            id="markedJobs"
-            iconColor={isDarkMode ? 'white' : '#666666'}
-            className="!gap-1.5 !font-semibold text-themeGray-15 dark:text-white"
-            options={MARK_JOBS_LIST}
-            isMulti
-            value={filters?.markedJobs}
-            onChange={(val) => {
-              handleChange('markedJobs', val);
-            }}
-          >
-            Marked Jobs
-          </FilterDropDownbutton>
-        </div>
+ 
+      
 
      
         {/* Loading State */}
@@ -376,9 +403,9 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
 
         {/* Jobs Grid */}
         {!loading && jobs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4">
             {jobs.map((item) => (
-              <JobListCard key={item.id} item={item} onClick={handleCardClick} isSaved={savedJobIds.includes(item.id)} onSave={handleSaveJob} />
+              <JobListCard key={item.id} item={item} onClick={handleCardClick} isSaved={savedJobIds.includes(item.id)} onSave={handleSaveJob} onApply={handleApplyJob} />
             ))}
           </div>
         )}

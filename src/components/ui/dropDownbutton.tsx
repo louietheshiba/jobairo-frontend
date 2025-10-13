@@ -76,7 +76,7 @@ const DropDownButton = React.forwardRef<HTMLButtonElement, DropDownButtonProps>(
       <div className="relative inline-block" ref={dropdownRef}>
         <button
           ref={ref}
-          className={`flex w-full items-center justify-between gap-1 rounded px-2 py-0.5 font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
+          className={`flex w-full rounded  font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
             className || ''
           }`}
           onClick={toggleDropdown}

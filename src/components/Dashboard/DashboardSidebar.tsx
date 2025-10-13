@@ -43,16 +43,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
 
       <nav className="mt-6">
         <div className="px-3 pb-10">
-          <button
-            onClick={() => onTabChange('relevant')}
-            className={`w-full flex items-center px-3 py-2 text-left rounded-lg transition-colors ${activeTab === 'relevant'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <Home className="w-5 h-5 mr-3" />
-            Relevant Jobs
-          </button>
 
           <button
             onClick={() => onTabChange('saved')}

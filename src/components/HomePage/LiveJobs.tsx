@@ -12,8 +12,8 @@ const LiveJobs = ({ setFilters, filters, handleChange }: LiveJobsProps) => {
   }, [handleChange]);
 
   return (
-    <div className="bg-white px-[15px] pb-[10px] pt-[20px] dark:bg-dark-25 sm:pb-[10px]">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 sm:gap-10">
+    <div className="bg-white px-[15px] pb-[5px] pt-[15px] dark:bg-dark-25 sm:pb-[5px]">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-3 sm:gap-6">
         <HomeHeader />
         <SearchBar
           onSearch={handleSearch}

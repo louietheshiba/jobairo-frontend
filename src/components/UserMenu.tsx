@@ -97,7 +97,7 @@ const UserMenu = () => {
     return (
         <button
             onClick={() => router.push('/auth/login')}
-            className="bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 transition-all duration-300 sm:text-base"
+            className="bg-gradient-to-r from-[#10b981] to-[#047857] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 sm:text-base"
         >
             Sign Up/Login
         </button>

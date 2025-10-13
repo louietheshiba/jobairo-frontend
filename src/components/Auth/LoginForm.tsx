@@ -127,7 +127,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, onFo
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 text-[#00d4aa] focus:ring-[#00d4aa] border-gray-300 rounded"
+              className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
             />
             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-white">
               Remember me
@@ -137,7 +137,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, onFo
           <button
             type="button"
             onClick={onForgotPassword}
-            className="text-sm text-[#00d4aa] hover:text-[#00b894] dark:text-white"
+            className="text-sm text-[#10b981] hover:text-[#047857] dark:text-white"
           >
             Forgot password?
           </button>
@@ -146,7 +146,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, onFo
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
@@ -157,7 +157,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, onFo
           Don't have an account?{' '}
           <button
             onClick={onSwitchToSignup}
-            className="text-[#00d4aa] hover:text-[#00b894] dark:text-blue-400 font-medium"
+            className="text-[#10b981] hover:text-[#047857] dark:text-blue-400 font-medium"
           >
             Sign up
           </button>

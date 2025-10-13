@@ -13,6 +13,7 @@ create table public.profiles (
   avatar_url text,
   phone text,
   location text,
+  role text check (role in ('job_seeker', 'admin')) default 'job_seeker',
   job_preferences jsonb, -- { "salary": "100k+", "types": ["remote", "full-time"] }
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -118,9 +119,9 @@ BEGIN
   INSERT INTO public.users (id, full_name)
   VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', NEW.email));
 
-  -- Insert into profiles table
-  INSERT INTO public.profiles (user_id, avatar_url)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'avatar_url');
+  -- Insert into profiles table with role
+  INSERT INTO public.profiles (user_id, avatar_url, role)
+  VALUES (NEW.id, NEW.raw_user_meta_data->>'avatar_url', 'job_seeker');
 
   RETURN NEW;
 END;
@@ -152,6 +153,14 @@ CREATE POLICY "Users can update own user data" ON public.users FOR UPDATE USING 
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- Allow admins to view and update all profiles
+CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
+CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
 
 -- RLS Policies for other tables (basic examples, adjust as needed)
 CREATE POLICY "Users can view jobs" ON public.jobs FOR SELECT USING (true);

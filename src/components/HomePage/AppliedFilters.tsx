@@ -10,7 +10,7 @@ const Chip = ({
   label: string;
   onDelete: (label: string) => void;
 }) => (
-  <Button className="flex !w-fit items-center justify-center gap-1 whitespace-nowrap !rounded-full !border-primary-10 !bg-white !py-1.5 px-[18px] text-sm !text-white dark:!bg-dark-25 dark:hover:!bg-dark-20">
+  <Button className="flex !w-fit items-center justify-center gap-1 whitespace-nowrap !rounded-full !border-primary-10 !bg-[#10b981] !py-1.5 px-[18px] text-sm !text-white dark:!bg-dark-25 dark:hover:!bg-dark-20 active:!bg-[#047857]">
     <p>{label}</p>
     <div onClick={() => onDelete(label)}>
       <X size={18} />
@@ -46,6 +46,11 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
     else if (label.startsWith('Salary Range:')) {
       updatedFilters.salaryRange = null;
     }
+    // Handle work schedule filter
+    else if (label.startsWith('Work Setting:')) {
+      const workSettingLabel = label.replace('Work Setting: ', '');
+      updatedFilters.workSchedule = updatedFilters.workSchedule.filter((ws: any) => ws.label !== workSettingLabel);
+    }
 
     setFilters(updatedFilters);
   };
@@ -58,6 +63,7 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
       { label: filterData.education ? `Education: ${filterData.education}` : null },
       { label: filterData.experienceLevel ? `Experience Level: ${filterData.experienceLevel}` : null },
       { label: filterData.salaryRange ? `Salary Range: $${filterData.salaryRange[0]}K - $${filterData.salaryRange[1]}K` : null },
+      ...filterData.workSchedule.map(({ label }) => ({ label: `Work Setting: ${label}` })),
     ];
 
     return chips.map((chip, index) =>
@@ -78,12 +84,13 @@ const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
       filterData.company !== '' ||
       filterData.education !== '' ||
       filterData.experienceLevel !== '' ||
-      filterData.salaryRange !== null
+      filterData.salaryRange !== null ||
+      filterData.workSchedule.length > 0
     )
   };
 
   return (
-    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end p-8 pt-0">
+    <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end  px-4">
       <div className="flex flex-wrap items-center gap-1">{renderChips()}</div>
 
       {isFilterApplied() && (

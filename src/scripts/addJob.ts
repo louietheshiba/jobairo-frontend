@@ -25,6 +25,7 @@ const newJob = {
   "remote_type": "remote"
 };
 
+
 async function addJob() {
   // Step 1: Upsert company
   const { data: company, error: companyError } = await supabase

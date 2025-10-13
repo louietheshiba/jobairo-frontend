@@ -4,19 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import { FcGoogle } from 'react-icons/fc';
 import JobAiroLogo from '@/components/Icons/JobAiroLogo';
-import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 
-// Job types options
-const JOB_TYPES = [
-  'Full-time',
-  'Part-time',
-  'Contract',
-  'Freelance',
-  'Internship',
-  'Remote',
-  'Hybrid',
-  'On-site'
-];
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,15 +17,10 @@ const AuthPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [jobPreferences, setJobPreferences] = useState({
-    desired_salary_min: '',
-    desired_salary_max: '',
-    job_types: [] as string[],
-    preferred_locations: [] as string[],
-  });
+  // Removed jobPreferences state as it's no longer needed
 
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
 
   // Redirect if already logged in
@@ -69,48 +52,7 @@ const AuthPage = () => {
     }
   };
 
-  const toggleJobType = (jobType: string) => {
-    setJobPreferences(prev => ({
-      ...prev,
-      job_types: prev.job_types.includes(jobType)
-        ? prev.job_types.filter(type => type !== jobType)
-        : [...prev.job_types, jobType]
-    }));
-  };
 
-  const saveJobPreferences = async (userId: string) => {
-    try {
-      console.log('saveJobPreferences called with userId:', userId);
-      console.log('Current jobPreferences state:', jobPreferences);
-
-      const preferencesData = {
-        desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
-        desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
-        job_types: jobPreferences.job_types,
-        preferred_locations: jobPreferences.preferred_locations,
-      };
-
-      console.log('Formatted preferences data:', preferencesData);
-
-      // Use upsert to handle both insert and update cases
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: userId,
-          job_preferences: preferencesData,
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) {
-        console.error('Failed to save job preferences:', error);
-      } else {
-        console.log('Job preferences saved successfully via upsert');
-      }
-    } catch (error) {
-      console.error('Error saving job preferences:', error);
-    }
-  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,54 +77,47 @@ const AuthPage = () => {
           password,
         });
         if (error) throw error;
-        
-        const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/';
-        sessionStorage.removeItem('auth_redirect_url');
-        router.push(redirectUrl);
+
+        // Wait a moment for userRole to be set, then redirect
+        setTimeout(() => {
+          const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
+            (userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
+          sessionStorage.removeItem('auth_redirect_url');
+          router.push(redirectUrl);
+        }, 100);
       } else {
-        // Sign up with job preferences in user metadata
+        // Sign up without job preferences
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-              // Store job preferences in user metadata temporarily
-              pending_job_preferences: {
-                desired_salary_min: jobPreferences.desired_salary_min ? parseInt(jobPreferences.desired_salary_min) : undefined,
-                desired_salary_max: jobPreferences.desired_salary_max ? parseInt(jobPreferences.desired_salary_max) : undefined,
-                job_types: jobPreferences.job_types,
-                preferred_locations: jobPreferences.preferred_locations,
-              }
-            }
           },
         });
         if (error) throw error;
 
         console.log('Job preferences stored in user metadata for email confirmation');
 
-        // If user is created immediately (without email confirmation), save job preferences
+        // If user is created immediately (without email confirmation), redirect
         if (data.user && data.user.email_confirmed_at) {
-          console.log('User confirmed immediately, saving job preferences...');
-          // User is confirmed immediately, save job preferences
-          await saveJobPreferences(data.user.id);
-          const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/';
-          sessionStorage.removeItem('auth_redirect_url');
-          router.push(redirectUrl);
+          console.log('User confirmed immediately');
+          // Wait a moment for userRole to be set, then redirect
+          setTimeout(() => {
+            console.log('Login redirect - userRole:', userRole); // Debug log
+            const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
+              (userRole === 'admin' ? '/dashboard' : '/dashboard');
+            console.log('Redirecting to:', redirectUrl); // Debug log
+            sessionStorage.removeItem('auth_redirect_url');
+            router.push(redirectUrl);
+          }, 100);
         } else {
-          console.log('Email confirmation required - job preferences stored in user metadata');
+          console.log('Email confirmation required');
           setSuccess('Check your email for a verification link!');
 
           // Clear the form after successful signup
           setEmail('');
           setPassword('');
           setConfirmPassword('');
-          setJobPreferences({
-            desired_salary_min: '',
-            desired_salary_max: '',
-            job_types: [],
-            preferred_locations: [],
-          });
           setAcceptTerms(false);
         }
       }
@@ -216,7 +151,7 @@ const AuthPage = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#00d4aa] to-[#00b894] flex flex-col justify-center items-center p-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#10b981] to-[#047857] flex flex-col justify-center items-center p-8">
         <div className="max-w-md w-full bg-white dark:bg-dark-20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8">
           <div className="text-center mb-8">
             <div className="mb-6 flex justify-center">
@@ -261,7 +196,7 @@ const AuthPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
@@ -270,7 +205,7 @@ const AuthPage = () => {
           <div className="mt-8 text-center">
             <button
               onClick={() => setShowForgotPassword(false)}
-              className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#00d4aa] font-medium"
+              className="text-[#10b981] hover:text-[#047857] dark:text-[#10b981] font-medium"
             >
               ← Back to Login
             </button>
@@ -283,7 +218,7 @@ const AuthPage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Left Side - Branding - Fixed */}
-      <div className="hidden lg:flex lg:fixed lg:inset-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#00d4aa] to-[#00b894] text-white">
+      <div className="hidden lg:flex lg:fixed lg:inset-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white">
         <div className="flex flex-col justify-center items-center w-full p-8 md:p-12">
           <div className="max-w-md text-center w-full">
             <div className="mb-8 flex justify-center">
@@ -348,7 +283,7 @@ const AuthPage = () => {
                   setError('');
                   setSuccess('');
                 }}
-                className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#00d4aa] font-medium"
+                className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981] font-medium"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
@@ -436,73 +371,6 @@ const AuthPage = () => {
               </div>
             )}
 
-            {!isLogin && (
-              <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Job Preferences (Optional)</h4>
-
-                {/* Salary Range */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Desired Salary Range ($)
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="number"
-                      value={jobPreferences.desired_salary_min}
-                      onChange={(e) => setJobPreferences(prev => ({ ...prev, desired_salary_min: e.target.value }))}
-                      placeholder="Min"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="number"
-                      value={jobPreferences.desired_salary_max}
-                      onChange={(e) => setJobPreferences(prev => ({ ...prev, desired_salary_max: e.target.value }))}
-                      placeholder="Max"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Job Types */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Preferred Job Types
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {JOB_TYPES.map((jobType) => (
-                      <button
-                        key={jobType}
-                        type="button"
-                        onClick={() => toggleJobType(jobType)}
-                        className={`px-2 py-1 rounded-[10px] text-xs font-medium transition-all duration-300 ${
-                          jobPreferences.job_types.includes(jobType)
-                            ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white shadow-[0_2px_8px_rgba(0,212,170,0.3)] hover:shadow-[0_4px_12px_rgba(0,212,170,0.4)] hover:-translate-y-0.5'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                      >
-                        {jobType}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Preferred Locations */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Preferred Locations
-                  </label>
-                  <LocationAutocomplete
-                    value={jobPreferences.preferred_locations}
-                    onChange={(locations) => setJobPreferences(prev => ({ ...prev, preferred_locations: locations }))}
-                    placeholder="Search for cities (e.g., New York, San Francisco)"
-                    className="text-sm"
-                  />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Select multiple locations from the dropdown
-                  </p>
-                </div>
-              </div>
-            )}
 
             {isLogin && (
               <div className="flex items-center justify-between">
@@ -512,7 +380,7 @@ const AuthPage = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-[#00d4aa] focus:ring-[#00d4aa] border-gray-300 rounded"
+                    className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-white">
                     Remember me
@@ -522,7 +390,7 @@ const AuthPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981]"
+                  className="text-sm text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]"
                 >
                   Forgot password?
                 </button>
@@ -536,16 +404,16 @@ const AuthPage = () => {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="h-4 w-4 text-[#00d4aa] focus:ring-[#00d4aa] border-gray-300 rounded"
+                  className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
                   required
                 />
                 <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-900 dark:text-white">
                   I accept the{' '}
-                  <a href="/terms" className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981]">
+                  <a href="/terms" className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]">
                     Terms and Conditions
                   </a>{' '}
                   and{' '}
-                  <a href="/privacy" className="text-[#00d4aa] hover:text-[#00b894] dark:text-[#10b981]">
+                  <a href="/privacy" className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]">
                     Privacy Policy
                   </a>
                 </label>
@@ -555,7 +423,7 @@ const AuthPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(0,212,170,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#00d4aa] to-[#00b894] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {loading 
                 ? (isLogin ? 'Signing in...' : 'Creating account...') 

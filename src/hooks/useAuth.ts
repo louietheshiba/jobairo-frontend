@@ -5,13 +5,39 @@ import { supabase } from '@/utils/supabase';
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session user ID:', session?.user?.id); // Debug log
       setSession(session);
       setUser(session?.user ?? null);
+
+      // Fetch user role from profiles table based on authenticated user ID
+      if (session?.user) {
+        console.log('Fetching profile for user ID:', session.user.id); // Debug log
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')  // Get full profile data for debugging
+          .eq('user_id', session.user.id)
+          .single();
+
+        console.log('Full user profile:', profileData); // Debug log
+        console.log('Profile fetch error:', error); // Debug log
+
+        if (error) {
+          console.error('Error fetching user role:', error);
+          setUserRole('job_seeker'); // Default role
+        } else {
+          console.log('User role from profile:', profileData?.role); // Debug log
+          setUserRole(profileData?.role || 'job_seeker');
+        }
+      } else {
+        setUserRole(null);
+      }
+
       setLoading(false);
     };
 
@@ -21,6 +47,28 @@ export const useAuth = () => {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Fetch user role from profiles table on auth state change
+        if (session?.user) {
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')  // Get full profile for debugging
+            .eq('user_id', session.user.id)
+            .single();
+
+          console.log('Auth state change - Full user profile:', profileData); // Debug log
+          console.log('Auth state change - User role:', profileData?.role); // Debug log
+
+          if (error) {
+            console.error('Error fetching user role:', error);
+            setUserRole('job_seeker'); // Default role
+          } else {
+            setUserRole(profileData?.role || 'job_seeker');
+          }
+        } else {
+          setUserRole(null);
+        }
+
         setLoading(false);
 
         if (event === 'TOKEN_REFRESHED') {
@@ -30,6 +78,7 @@ export const useAuth = () => {
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
+          setUserRole(null);
         }
       }
     );
@@ -88,6 +137,7 @@ export const useAuth = () => {
   return {
     user,
     session,
+    userRole,
     loading,
     signOut,
     signInWithEmail,

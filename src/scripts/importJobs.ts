@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 const gitlabJobs = JSON.parse(
-  fs.readFileSync(path.join(process.cwd(), 'src/utils/gitlab_jobs_complete.json'), 'utf-8')
+  fs.readFileSync(path.join(process.cwd(), 'src/utils/test_dataset_cleaned_final.json'), 'utf-8')
 );
 
 async function importJobs() {
@@ -55,7 +55,7 @@ async function importJobs() {
       location: job.location || null,
       department: job.department || null,
       employment_type: job.employment_type || null,
-      remote_type: job.remote_type || null,
+      remote_type: job.work_setting || job.remote_type || null,
       salary_range: job.salary_range || null,
       application_url: job.application_url || null,
       source_url: job.source_url || null,

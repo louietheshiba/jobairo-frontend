@@ -5,7 +5,7 @@ import UserMenu from '../UserMenu';
 
 const HomeHeader = () => {
   return (
-    <div className="grid w-full grid-cols-1 gap-8 sm:gap-0 sm:grid-cols-3 items-center px-4 py-6 sm:px-6 lg:px-8">
+    <div className="grid w-full grid-cols-1 gap-6 sm:gap-0 sm:grid-cols-3 items-center px-4 py-4 sm:px-6 lg:px-8">
       {/* Spacer for left side */}
       <div></div>
 
@@ -14,7 +14,7 @@ const HomeHeader = () => {
         <span className="text-black dark:text-white">
           <JobAiroLogo />
         </span>
-        <p className="text-center font-poppins text-sm font-medium text-gray-700 dark:text-gray-300 sm:text-base uppercase">
+        <p className="text-center font-poppins text-xs font-medium text-gray-700 dark:text-gray-300 sm:text-sm uppercase">
           A Simplistic Job Search Engine
         </p>
       </div>

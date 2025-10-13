@@ -224,7 +224,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       isCloseIcon={false}
     >
       {/* Header with gradient background */}
-      <div className="relative bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white px-8 py-6">
+      <div className="relative bg-[#10b981] text-white px-8 py-6">
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-4">
             <h1 className="text-[20px] font-bold mb-2 leading-tight">
@@ -256,7 +256,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
               )}
 
               {job?.salary_range && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white shadow-[0_2px_8px_rgba(0,212,170,0.2)]">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-gradient-to-r from-[#10b981] to-[#047857] text-white shadow-[0_2px_8px_rgba(16,185,129,0.2)]">
                   <span>{job.salary_range}</span>
                 </div>
               )}
@@ -276,7 +276,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         <div className="flex flex-wrap gap-3 items-center">
           <button
             onClick={handleApplyNow}
-            className="bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center"
+            className="bg-[#10b981] text-white py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center"
           >
             Apply Now
           </button>
@@ -284,8 +284,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
           <button
             onClick={handleSave}
             className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isSaved
-              ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white'
-              : 'border-[#00d4aa] bg-white text-[#00d4aa] hover:bg-[#00d4aa] hover:text-white dark:bg-dark-25 dark:text-[#00d4aa] dark:hover:bg-[#00d4aa] dark:hover:text-white'
+              ? 'bg-[#10b981] text-white'
+              : 'border-[#10b981] bg-white text-[#10b981] hover:bg-gradient-to-r hover:from-[#10b981] hover:to-[#047857] hover:text-white dark:bg-dark-25 dark:text-[#10b981] dark:hover:bg-gradient-to-r dark:hover:from-[#10b981] dark:hover:to-[#047857] dark:hover:text-white'
               }`}
           >
             <Bookmark size={16} className="mr-2" />
@@ -295,8 +295,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
           <button
             onClick={handleMarkApplied}
             className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isApplied
-              ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894] text-white'
-              : 'border-[#00d4aa] bg-white text-[#00d4aa] hover:bg-[#00d4aa] hover:text-white dark:bg-dark-25 dark:text-[#00d4aa] dark:hover:bg-[#00d4aa] dark:hover:text-white'
+              ? 'bg-[#10b981] text-white'
+              : 'border-[#10b981] bg-white text-[#10b981] hover:bg-gradient-to-r hover:from-[#10b981] hover:to-[#047857] hover:text-white dark:bg-dark-25 dark:text-[#10b981] dark:hover:bg-gradient-to-r dark:hover:from-[#10b981] dark:hover:to-[#047857] dark:hover:text-white'
               }`}
           >
             <Check size={16} className="mr-2" />
@@ -305,7 +305,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
           <button
             onClick={handleShare}
-            className="p-3 text-gray-500 hover:text-[#00d4aa] dark:text-gray-400 dark:hover:text-[#00d4aa] rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 hover:scale-105 transition-all duration-300"
+            className="p-3 text-gray-500 hover:text-[#10b981] dark:text-gray-400 dark:hover:text-[#10b981] rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 hover:scale-105 transition-all duration-300"
             title="Share job"
           >
             <Share2 size={20} />
@@ -333,13 +333,13 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         {/* Company Card */}
         {job?.company && (
           <div className="px-8 py-6">
-            <div className="bg-gradient-to-r from-[#00d4aa]/10 to-[#00b894]/10 dark:from-[#00d4aa]/5 dark:to-[#00b894]/5 rounded-xl p-6 border border-[#00d4aa]/20 dark:border-[#00d4aa]/10">
+            <div className="bg-[#10b981]/10 dark:from-[#10b981]/5 dark:to-[#047857]/5 rounded-xl p-6 border border-[#10b981]/20 dark:border-[#10b981]/10">
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 bg-white dark:bg-dark-15 rounded-xl flex items-center justify-center shadow-sm border border-gray-200 dark:border-dark-15">
                   {job.company.logo_url ? (
                     <img src={job.company.logo_url} alt={job.company.name} className="w-10 h-10 rounded-lg" />
                   ) : (
-                    <span className="text-2xl font-bold text-[#00d4aa]">
+                    <span className="text-2xl font-bold text-[#10b981]">
                       {job.company.name.charAt(0)}
                     </span>
                   )}
@@ -357,7 +357,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
                       href={job.company.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 mt-3 text-[#00d4aa] hover:text-[#00b894] font-medium transition-colors"
+                      className="inline-flex items-center gap-2 mt-3 text-[#10b981] hover:text-[#047857] font-medium transition-colors"
                     >
                       Visit website <ExternalLink size={14} />
                     </a>
@@ -377,10 +377,10 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
               </h3>
 
               <button
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#00d4aa] hover:text-[#00b894] dark:text-[#00d4aa] dark:hover:text-[#00b894] rounded-lg hover:bg-[#00d4aa]/10 dark:hover:bg-[#00d4aa]/10 hover:scale-105 transition-all duration-300"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#10b981] hover:text-[#10b981] dark:text-[#10b981]  hover:bg-opacity-10 dark:hover:bg-gradient-to-r dark:hover:from-[#10b981] dark:hover:to-[#047857] dark:hover:bg-opacity-10 hover:scale-105 transition-all duration-300"
                 onClick={() => copyToClipboard(job.description)}
               >
-                {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+                {isCopied ? <Check size={16} className="text-[#10b981]" /> : <Copy size={16} />}
                 {isCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>

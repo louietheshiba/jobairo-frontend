@@ -12,13 +12,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       job_type,
       company_name,
       search,
+      work_setting,
       limit = '10000',
       offset = '0'
     } = req.query;
 
     console.log('Fetching jobs with filters:', {
       location, job_type,
-      company_name, search, limit, offset
+      company_name, search, work_setting, limit, offset
     });
 
     // First get total count without filters for pagination
@@ -37,7 +38,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (job_type && job_type !== 'all') {
-      countQuery = countQuery.eq('job_type', job_type);
+      countQuery = countQuery.ilike('employment_type', `%${job_type}%`);
+    }
+
+    if (work_setting && work_setting !== 'All Jobs') {
+      countQuery = countQuery.ilike('remote_type', `%${work_setting}%`);
     }
 
     if (search) {
@@ -66,7 +71,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (job_type && job_type !== 'all') {
-      query = query.eq('job_type', job_type);
+      query = query.ilike('employment_type', `%${job_type}%`);
+    }
+
+    if (work_setting && work_setting !== 'All Jobs') {
+      query = query.ilike('remote_type', `%${work_setting}%`);
     }
 
     if (search) {
