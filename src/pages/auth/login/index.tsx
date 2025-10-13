@@ -40,7 +40,7 @@ const AuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/login/callback`
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -136,7 +136,7 @@ const AuthPage = () => {
       setError('');
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/auth/login/reset-password`,
       });
 
       if (error) throw error;
