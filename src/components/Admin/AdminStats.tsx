@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Briefcase, Building, TrendingUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { supabase } from '@/utils/supabase';
 
 const AdminStats = () => {
@@ -10,14 +9,6 @@ const AdminStats = () => {
     totalCompanies: 0
   });
 
-  const [chartData, setChartData] = useState([
-    { name: 'Jan', jobs: 120, users: 80, companies: 25 },
-    { name: 'Feb', jobs: 150, users: 95, companies: 30 },
-    { name: 'Mar', jobs: 180, users: 110, companies: 35 },
-    { name: 'Apr', jobs: 220, users: 130, companies: 40 },
-    { name: 'May', jobs: 250, users: 150, companies: 45 },
-    { name: 'Jun', jobs: 280, users: 170, companies: 50 },
-  ]);
 
   useEffect(() => {
     fetchStats();
@@ -94,95 +85,12 @@ const AdminStats = () => {
         />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Growth Chart */}
-        <div className="bg-white dark:bg-dark-25 rounded-xl shadow-sm border border-gray-100 dark:border-dark-20 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Growth Trends</h3>
-            <TrendingUp className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="name"
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="jobs"
-                stroke="#3b82f6"
-                strokeWidth={3}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="users"
-                stroke="#10b981"
-                strokeWidth={3}
-                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Companies Chart */}
-        <div className="bg-white dark:bg-dark-25 rounded-xl shadow-sm border border-gray-100 dark:border-dark-20 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Companies Overview</h3>
-            <Building className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="name"
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
-              />
-              <Bar
-                dataKey="companies"
-                fill="#f59e0b"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Charts Section - Coming Soon */}
+      <div className="bg-white dark:bg-dark-25 rounded-xl shadow-sm border border-gray-100 dark:border-dark-20 p-8">
+        <div className="text-center">
+          <TrendingUp className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Analytics Charts</h3>
+          <p className="text-gray-600 dark:text-gray-400">Interactive charts and analytics coming soon...</p>
         </div>
       </div>
     </div>

@@ -17,19 +17,19 @@ import AdminStats from '@/components/Admin/AdminStats';
 import AdminJobs from '@/components/Admin/AdminJobs';
 
 const Dashboard = () => {
-  const router = useRouter();
-  const { user, userRole } = useAuth();
+   const router = useRouter();
+   const { user, userRole, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('saved');
   const [adminActiveTab, setAdminActiveTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!user && !loading) {
       router.push('/auth/login');
       return;
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleCardClick = (job: Job) => {
     setSelectedJob(job);
@@ -42,7 +42,7 @@ const Dashboard = () => {
   };
 
   // Admin Dashboard
-  if (userRole === 'admin') {
+  if (userRole === 'admin' && !loading) {
     const renderContent = () => {
       switch (adminActiveTab) {
         case 'dashboard':

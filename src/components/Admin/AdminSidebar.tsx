@@ -20,7 +20,7 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange }) => {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {

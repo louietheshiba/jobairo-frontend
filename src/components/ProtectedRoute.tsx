@@ -8,12 +8,12 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
 }
 
-const ProtectedRoute = ({ 
-  children, 
-  redirectTo = '/auth/login', 
-  requireAuth = true 
-}: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({
+   children,
+   redirectTo = '/auth/login',
+   requireAuth = true
+ }: ProtectedRouteProps) => {
+   const { user, loading, userRole } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const ProtectedRoute = ({
       router.push(redirectTo);
     } else if (!requireAuth && user) {
       // If user is authenticated but shouldn't be on this page
-      router.push('/dashboard');
+      router.push(userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
     }
   }, [user, loading, router, redirectTo, requireAuth]);
 

@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const UserMenu = () => {
-    const { user, signOut } = useAuth();
+    const { user, signOut, userRole } = useAuth();
     const { profile } = useProfile();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -67,7 +67,7 @@ const UserMenu = () => {
 
                         {/* Menu Items */}
                         <div className="py-2">
-                            <Link href='/dashboard'>
+                            <Link href={userRole === 'admin' ? '/admin/dashboard' : '/dashboard'}>
                                 <button
                                     onClick={() => {
                                         setIsDropdownOpen(false);

@@ -107,7 +107,6 @@ const internationalCities: LocationOption[] = [
   { value: 'delhi-india', label: 'Delhi, India', country: 'India', city: 'Delhi', priority: 4 },
 
   // Remote work option
-  { value: 'remote', label: 'Remote', country: 'Remote', city: 'Remote', priority: 0 },
 ];
 
 // Combine and sort by priority (lower number = higher priority)
