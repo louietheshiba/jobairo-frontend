@@ -107,6 +107,21 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
     return undefined;
   }, [user?.id, initialJobs]);
 
+  // Listen for tab change events to refresh data when switching to this tab
+  useEffect(() => {
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'relevant' && user) {
+        fetchRelevantJobs(false);
+      }
+    };
+
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
+
+    return () => {
+      window.removeEventListener('tabChanged', handleTabChange as EventListener);
+    };
+  }, [user]);
+
   // Refresh recommendations when user profile might have changed
   // This effect runs when the component becomes visible (tab is active)
   useEffect(() => {

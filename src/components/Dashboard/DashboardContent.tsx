@@ -21,6 +21,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   useEffect(() => {
     // Dispatch a custom event to trigger stats refresh when switching tabs
     window.dispatchEvent(new CustomEvent('statsRefresh'));
+    // Also dispatch tab change event to trigger specific tab data refresh
+    window.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: activeTab } }));
   }, [activeTab]);
 
   return (

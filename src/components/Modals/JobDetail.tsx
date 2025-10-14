@@ -69,8 +69,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         employmentType: job.employment_type
       });
 
-      // Trigger stats refresh
+      // Trigger stats refresh and job viewed event
       window.dispatchEvent(new CustomEvent('statsRefresh'));
+      window.dispatchEvent(new CustomEvent('jobViewed'));
     };
 
     checkStatus();
@@ -109,8 +110,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsSaved(false);
         toast.success('Job unsaved successfully');
-        // Trigger stats refresh
+        // Trigger stats refresh and job unsaved event
         window.dispatchEvent(new CustomEvent('statsRefresh'));
+        window.dispatchEvent(new CustomEvent('jobUnsaved'));
       } else {
         // Save
         const { error } = await supabase.from('saved_jobs').insert({
@@ -130,8 +132,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
           category: job.job_category,
           employmentType: job.employment_type
         });
-        // Trigger stats refresh
+        // Trigger stats refresh and job saved event
         window.dispatchEvent(new CustomEvent('statsRefresh'));
+        window.dispatchEvent(new CustomEvent('jobSaved'));
       }
     } catch (error) {
       console.error('Error saving/unsaving job:', error);
@@ -173,8 +176,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsApplied(true);
         toast.success('Job marked as applied! 🎉');
-        // Trigger stats refresh
+        // Trigger stats refresh and job applied event
         window.dispatchEvent(new CustomEvent('statsRefresh'));
+        window.dispatchEvent(new CustomEvent('jobApplied'));
       }
     } catch (error) {
       console.error('Error marking/unmarking applied:', error);

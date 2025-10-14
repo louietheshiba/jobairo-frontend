@@ -66,6 +66,21 @@ const HiddenJobsTab: React.FC = () => {
     }
   }, [user]);
 
+  // Listen for tab change events to refresh data when switching to this tab
+  useEffect(() => {
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'hidden' && user) {
+        fetchHiddenJobs(false);
+      }
+    };
+
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
+
+    return () => {
+      window.removeEventListener('tabChanged', handleTabChange as EventListener);
+    };
+  }, [user]);
+
   const handleUnhide = async (jobId: string) => {
     try {
       const { error } = await supabase

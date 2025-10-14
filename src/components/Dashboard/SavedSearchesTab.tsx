@@ -50,6 +50,21 @@ const SavedSearchesTab: React.FC = () => {
     }
   }, [user]);
 
+  // Listen for tab change events to refresh data when switching to this tab
+  useEffect(() => {
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'searches' && user) {
+        fetchSavedSearches(false);
+      }
+    };
+
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
+
+    return () => {
+      window.removeEventListener('tabChanged', handleTabChange as EventListener);
+    };
+  }, [user]);
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase

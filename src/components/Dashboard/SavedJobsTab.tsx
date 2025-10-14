@@ -79,10 +79,30 @@ const SavedJobsTab: React.FC<SavedJobsTabProps> = ({ onCardClick }) => {
       }
     };
 
+    // Also listen for job save/unsave events
+    const handleJobAction = () => {
+      if (user) {
+        fetchSavedJobs(false);
+      }
+    };
+
+    // Listen for tab change events to refresh data when switching to this tab
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'saved' && user) {
+        fetchSavedJobs(false);
+      }
+    };
+
     window.addEventListener('statsRefresh', handleRefresh);
+    window.addEventListener('jobSaved', handleJobAction);
+    window.addEventListener('jobUnsaved', handleJobAction);
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
 
     return () => {
       window.removeEventListener('statsRefresh', handleRefresh);
+      window.removeEventListener('jobSaved', handleJobAction);
+      window.removeEventListener('jobUnsaved', handleJobAction);
+      window.removeEventListener('tabChanged', handleTabChange as EventListener);
     };
   }, [user]);
 

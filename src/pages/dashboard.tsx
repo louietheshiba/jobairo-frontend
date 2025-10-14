@@ -34,9 +34,14 @@ const Dashboard = () => {
   // Preload dashboard data when user is available
   useEffect(() => {
     if (user && !loading) {
-      // Preload stats and initial tab data
-      window.dispatchEvent(new CustomEvent('statsRefresh'));
+      // Delay stats refresh to avoid blocking initial render
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
+      }, 200);
+
+      return () => clearTimeout(timer);
     }
+    return undefined;
   }, [user, loading]);
 
   const handleCardClick = (job: Job) => {

@@ -77,10 +77,28 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
       }
     };
 
+    // Also listen for job application events
+    const handleJobApplied = () => {
+      if (user) {
+        fetchAppliedJobs(false);
+      }
+    };
+
+    // Listen for tab change events to refresh data when switching to this tab
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'applied' && user) {
+        fetchAppliedJobs(false);
+      }
+    };
+
     window.addEventListener('statsRefresh', handleRefresh);
+    window.addEventListener('jobApplied', handleJobApplied);
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
 
     return () => {
       window.removeEventListener('statsRefresh', handleRefresh);
+      window.removeEventListener('jobApplied', handleJobApplied);
+      window.removeEventListener('tabChanged', handleTabChange as EventListener);
     };
   }, [user]);
 

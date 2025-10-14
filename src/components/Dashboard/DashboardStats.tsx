@@ -12,16 +12,17 @@ const DashboardStats: React.FC = () => {
       return;
     }
     try {
-      const [viewedRes, savedRes, appliedRes] = await Promise.all([
-        supabase.from('job_views').select('id', { count: 'exact' }).eq('user_id', user.id),
-        supabase.from('saved_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
-        supabase.from('applied_jobs').select('id', { count: 'exact' }).eq('user_id', user.id),
+      // Use Promise.allSettled for better error handling and performance
+      const [viewedRes, savedRes, appliedRes] = await Promise.allSettled([
+        supabase.from('job_views').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('saved_jobs').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('applied_jobs').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setStats({
-        viewed: viewedRes.count || 0,
-        saved: savedRes.count || 0,
-        applied: appliedRes.count || 0,
+        viewed: viewedRes.status === 'fulfilled' ? viewedRes.value.count || 0 : 0,
+        saved: savedRes.status === 'fulfilled' ? savedRes.value.count || 0 : 0,
+        applied: appliedRes.status === 'fulfilled' ? appliedRes.value.count || 0 : 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -29,8 +30,10 @@ const DashboardStats: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    // Initial fetch
-    fetchStats();
+    // Initial fetch with a small delay to avoid blocking render
+    const timer = setTimeout(() => {
+      fetchStats();
+    }, 100);
 
     // Listen for custom refresh event only (remove periodic refresh for better performance)
     const handleRefresh = () => {
@@ -40,6 +43,7 @@ const DashboardStats: React.FC = () => {
     window.addEventListener('statsRefresh', handleRefresh);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('statsRefresh', handleRefresh);
     };
   }, [fetchStats]);

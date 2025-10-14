@@ -142,10 +142,28 @@ const RecentlyViewedTab: React.FC = () => {
       }
     };
 
+    // Also listen for job view events
+    const handleJobViewed = () => {
+      if (user) {
+        fetchViewedJobs(false);
+      }
+    };
+
+    // Listen for tab change events to refresh data when switching to this tab
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'viewed' && user) {
+        fetchViewedJobs(false);
+      }
+    };
+
     window.addEventListener('statsRefresh', handleRefresh);
+    window.addEventListener('jobViewed', handleJobViewed);
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
 
     return () => {
       window.removeEventListener('statsRefresh', handleRefresh);
+      window.removeEventListener('jobViewed', handleJobViewed);
+      window.removeEventListener('tabChanged', handleTabChange as EventListener);
     };
   }, [user]);
 
