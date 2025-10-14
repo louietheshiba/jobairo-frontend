@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/utils/supabase';
 import JobListCard from '@/components/ui/jobListCard';
 import type { Job } from '@/types/JobTypes';
 import toast from 'react-hot-toast';
@@ -34,8 +35,39 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
         const allJobs = allJobsData.jobs || [];
 
         // Get personalized recommendations based on user activity
-        const recommendedJobs = activityTracker.getRecommendedJobs(allJobs);
-
+        let recommendedJobs = activityTracker.getRecommendedJobs(allJobs);
+  
+        // Filter out jobs that user has already saved, applied, or hidden
+        try {
+          const [savedRes, appliedRes, hiddenRes] = await Promise.all([
+            supabase.from('saved_jobs').select('job_id').eq('user_id', user.id),
+            supabase.from('applied_jobs').select('job_id').eq('user_id', user.id),
+            supabase.from('hidden_jobs').select('job_id').eq('user_id', user.id)
+          ]);
+  
+          const savedJobIds = new Set((savedRes.data as any[])?.map((s: any) => s.job_id) || []);
+          const appliedJobIds = new Set((appliedRes.data as any[])?.map((a: any) => a.job_id) || []);
+          const hiddenJobIds = new Set((hiddenRes.data as any[])?.map((h: any) => h.job_id) || []);
+  
+          // Filter out jobs that are already saved, applied, or hidden
+          recommendedJobs = recommendedJobs.filter(job =>
+            !savedJobIds.has(job.id) &&
+            !appliedJobIds.has(job.id) &&
+            !hiddenJobIds.has(job.id)
+          );
+  
+          console.log('Filtered recommended jobs:', recommendedJobs.length, 'from', allJobs.length, 'total jobs');
+          console.log('Filtered out:', {
+            saved: savedJobIds.size,
+            applied: appliedJobIds.size,
+            hidden: hiddenJobIds.size
+          });
+  
+        } catch (error) {
+          console.warn('Error filtering jobs:', error);
+          // Continue with unfiltered recommendations if filtering fails
+        }
+  
         if (recommendedJobs.length > 0) {
           setJobs(recommendedJobs);
           setPersonalized(true);
@@ -208,7 +240,7 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#10b981] to-[#047857] text-white text-sm font-medium rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center px-4 py-2 bg-[#10b981]  text-white text-sm font-medium rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {refreshing ? (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -223,14 +255,13 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
 
       {jobs.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🎯</div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No recommendations yet</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             Update your job preferences in settings to get personalized recommendations
           </p>
           <button
-            onClick={() => window.location.href = `${userRole === 'admin' ? '/' : '/'}?tab=settings`}
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#10b981] to-[#047857] text-white text-sm font-medium rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300"
+            onClick={() => window.location.href = `${userRole === 'admin' ? '/' : '/'}`}
+            className="inline-flex items-center px-4 py-2 bg-[#10b981]  text-white text-sm font-medium rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300"
           >
             Update Preferences
           </button>
@@ -250,7 +281,7 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-3">
+          {/* <div className="flex items-center justify-center gap-3">
             <button
               onClick={async () => {
                 if (!user || jobs.length === 0 || !jobs[0]?.id) return;
@@ -302,7 +333,7 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
             >
               Hide This Job
             </button>
-          </div>
+          </div> */}
         </>
       )}
     </div>

@@ -60,9 +60,10 @@ const UserMenu = () => {
                         {displayName}
                     </span>
                 </button>
+                
 
                 {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#282828] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#282828] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-[9999]">
                         {/* User Info */}
                         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -116,7 +117,7 @@ const UserMenu = () => {
     return (
         <button
             onClick={() => router.push('/auth/login')}
-            className="bg-gradient-to-r from-[#10b981] to-[#047857] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 sm:text-base"
+            className=" bg-[#10b981] text-white font-poppins text-sm font-semibold px-3 py-1.5 rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 sm:text-base"
         >
             Sign Up/Login
         </button>

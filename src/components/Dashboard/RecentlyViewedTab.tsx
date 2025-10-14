@@ -74,10 +74,13 @@ const RecentlyViewedTab: React.FC = () => {
     }
   };
 
-  const fetchViewedJobs = async () => {
-    if (!user) return;
+  const fetchViewedJobs = async (showLoading = true) => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const { data, error } = await supabase
         .from('job_views')
@@ -88,12 +91,14 @@ const RecentlyViewedTab: React.FC = () => {
 
       if (error) {
         console.error('Error fetching viewed jobs:', error);
+        if (showLoading) setLoading(false);
         return;
       }
 
       const jobIds = data.map(s => s.job_id);
       if (jobIds.length === 0) {
         setJobs([]);
+        if (showLoading) setLoading(false);
         return;
       }
 
@@ -104,6 +109,7 @@ const RecentlyViewedTab: React.FC = () => {
 
       if (jobsError) {
         console.error('Error fetching jobs:', jobsError);
+        if (showLoading) setLoading(false);
         return;
       }
 
@@ -116,18 +122,24 @@ const RecentlyViewedTab: React.FC = () => {
     } catch (error) {
       console.error('Error:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchViewedJobs();
+    if (user) {
+      fetchViewedJobs();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
     // Listen for stats refresh events to update the list when jobs are hidden
     const handleRefresh = () => {
-      fetchViewedJobs();
+      if (user) {
+        fetchViewedJobs(false); // Don't show loading for refresh updates
+      }
     };
 
     window.addEventListener('statsRefresh', handleRefresh);

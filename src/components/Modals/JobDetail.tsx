@@ -14,7 +14,6 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const hasChecked = useRef(false);
 
   useEffect(() => {
@@ -95,9 +94,8 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       return;
     }
 
-    if (!job || isLoading) return;
+    if (!job) return;
 
-    setIsLoading(true);
     try {
       if (isSaved) {
         // Unsave
@@ -138,8 +136,6 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
     } catch (error) {
       console.error('Error saving/unsaving job:', error);
       toast.error('Failed to save/unsave job');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -313,18 +309,13 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
           <button
             onClick={handleSave}
-            disabled={isLoading}
-            className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 ${isSaved
+            className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isSaved
               ? 'bg-[#10b981] text-white'
               : 'border-[#10b981] bg-white text-[#10b981] hover:bg-gradient-to-r hover:from-[#10b981] hover:to-[#047857] hover:text-white dark:bg-dark-25 dark:text-[#10b981] dark:hover:bg-gradient-to-r dark:hover:from-[#10b981] dark:hover:to-[#047857] dark:hover:text-white'
               }`}
           >
-            {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-            ) : (
-              <Bookmark size={16} className="mr-2" />
-            )}
-            {isLoading ? 'Saving...' : isSaved ? 'Saved' : 'Save Job'}
+            <Bookmark size={16} className="mr-2" />
+            {isSaved ? 'Saved' : 'Save Job'}
           </button>
 
           <button

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import RelevantJobsTab from './RelevantJobsTab';
 import SavedJobsTab from './SavedJobsTab';
 import AppliedJobsTab from './AppliedJobsTab';
@@ -17,28 +17,34 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   activeTab,
   onCardClick,
 }) => {
+  // Force re-render when activeTab changes to ensure fresh data
+  useEffect(() => {
+    // Dispatch a custom event to trigger stats refresh when switching tabs
+    window.dispatchEvent(new CustomEvent('statsRefresh'));
+  }, [activeTab]);
+
   return (
     <div className="bg-white rounded-lg shadow-sm dark:bg-dark-20">
       <div className="p-6">
         {activeTab === 'relevant' && (
-          <RelevantJobsTab onCardClick={onCardClick} />
+          <RelevantJobsTab key={`relevant-${Date.now()}`} onCardClick={onCardClick} />
         )}
 
         {activeTab === 'saved' && (
-          <SavedJobsTab onCardClick={onCardClick} />
+          <SavedJobsTab key={`saved-${Date.now()}`} onCardClick={onCardClick} />
         )}
 
         {activeTab === 'applied' && (
-          <AppliedJobsTab onCardClick={onCardClick} />
+          <AppliedJobsTab key={`applied-${Date.now()}`} onCardClick={onCardClick} />
         )}
 
-        {activeTab === 'hidden' && <HiddenJobsTab />}
+        {activeTab === 'hidden' && <HiddenJobsTab key={`hidden-${Date.now()}`} />}
 
-        {activeTab === 'searches' && <SavedSearchesTab />}
+        {activeTab === 'searches' && <SavedSearchesTab key={`searches-${Date.now()}`} />}
 
-        {activeTab === 'viewed' && <RecentlyViewedTab />}
+        {activeTab === 'viewed' && <RecentlyViewedTab key={`viewed-${Date.now()}`} />}
 
-        {activeTab === 'settings' && <SettingsTab />}
+        {activeTab === 'settings' && <SettingsTab key={`settings-${Date.now()}`} />}
       </div>
     </div>
   );

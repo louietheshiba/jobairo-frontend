@@ -6,10 +6,15 @@ import { supabase } from '@/utils/supabase';
 const DashboardStats: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({ viewed: 0, saved: 0, applied: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const fetchStats = useCallback(async () => {
-    if (!user) return;
+  const fetchStats = useCallback(async (showLoading = true) => {
+    if (!user) {
+      if (showLoading) setLoading(false);
+      return;
+    }
 
+    if (showLoading) setLoading(true);
     try {
       const [viewedRes, savedRes, appliedRes] = await Promise.all([
         supabase.from('job_views').select('id', { count: 'exact' }).eq('user_id', user.id),
@@ -24,6 +29,8 @@ const DashboardStats: React.FC = () => {
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    } finally {
+      if (showLoading) setLoading(false);
     }
   }, [user]);
 
@@ -31,18 +38,14 @@ const DashboardStats: React.FC = () => {
     // Initial fetch
     fetchStats();
 
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
-
-    // Listen for custom refresh event
+    // Listen for custom refresh event only (remove periodic refresh for better performance)
     const handleRefresh = () => {
-      fetchStats();
+      fetchStats(false); // Don't show loading for refresh updates
     };
 
     window.addEventListener('statsRefresh', handleRefresh);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('statsRefresh', handleRefresh);
     };
   }, [fetchStats]);

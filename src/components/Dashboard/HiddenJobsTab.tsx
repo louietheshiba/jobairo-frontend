@@ -8,53 +8,62 @@ const HiddenJobsTab: React.FC = () => {
   const [jobs, setJobs] = useState<(Job & { hiddenDate: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) return;
+  const fetchHiddenJobs = async (showLoading = true) => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    const fetchHiddenJobs = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('hidden_jobs')
-          .select('job_id, created_at')
-          .eq('user_id', user.id);
+    if (showLoading) setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('hidden_jobs')
+        .select('job_id, created_at')
+        .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error fetching hidden jobs:', error);
-          return;
-        }
-
-        const jobIds = data.map(s => s.job_id);
-        if (jobIds.length === 0) {
-          setJobs([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: jobsData, error: jobsError } = await supabase
-          .from('jobs')
-          .select('*')
-          .in('id', jobIds);
-
-        if (jobsError) {
-          console.error('Error fetching jobs:', jobsError);
-          return;
-        }
-
-        const jobsWithDate = jobsData.map(job => {
-          const hidden = data.find(s => s.job_id === job.id);
-          return { ...job, hiddenDate: hidden?.created_at || '' };
-        });
-
-        setJobs(jobsWithDate);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching hidden jobs:', error);
+        if (showLoading) setLoading(false);
+        return;
       }
-    };
 
-    fetchHiddenJobs();
+      const jobIds = data.map(s => s.job_id);
+      if (jobIds.length === 0) {
+        setJobs([]);
+        if (showLoading) setLoading(false);
+        return;
+      }
+
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('*')
+        .in('id', jobIds);
+
+      if (jobsError) {
+        console.error('Error fetching jobs:', jobsError);
+        if (showLoading) setLoading(false);
+        return;
+      }
+
+      const jobsWithDate = jobsData.map(job => {
+        const hidden = data.find(s => s.job_id === job.id);
+        return { ...job, hiddenDate: hidden?.created_at || '' };
+      });
+
+      setJobs(jobsWithDate);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchHiddenJobs();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const handleUnhide = async (jobId: string) => {
@@ -69,6 +78,8 @@ const HiddenJobsTab: React.FC = () => {
 
       setJobs(jobs.filter(j => j.id !== jobId));
       toast.success('Job unhidden');
+      // Trigger stats refresh
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
     } catch (error) {
       console.error('Error unhiding job:', error);
       toast.error('Failed to unhide job');
@@ -112,6 +123,8 @@ const HiddenJobsTab: React.FC = () => {
 
                 setJobs([]);
                 toast.success(`Unhidden ${jobIds.length} jobs`);
+                // Trigger stats refresh
+                window.dispatchEvent(new CustomEvent('statsRefresh'));
               } catch (error) {
                 console.error('Error unhiding all jobs:', error);
                 toast.error('Failed to unhide all jobs');

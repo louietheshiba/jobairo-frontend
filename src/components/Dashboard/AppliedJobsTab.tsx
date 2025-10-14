@@ -11,10 +11,13 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
   const [jobs, setJobs] = useState<(Job & { appliedDate: string; status: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAppliedJobs = async () => {
-    if (!user) return;
+  const fetchAppliedJobs = async (showLoading = true) => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const { data, error } = await supabase
         .from('applied_jobs')
@@ -23,12 +26,14 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
 
       if (error) {
         console.error('Error fetching applied jobs:', error);
+        if (showLoading) setLoading(false);
         return;
       }
 
       const jobIds = data.map(s => s.job_id);
       if (jobIds.length === 0) {
         setJobs([]);
+        if (showLoading) setLoading(false);
         return;
       }
 
@@ -39,6 +44,7 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
 
       if (jobsError) {
         console.error('Error fetching jobs:', jobsError);
+        if (showLoading) setLoading(false);
         return;
       }
 
@@ -51,18 +57,24 @@ const AppliedJobsTab: React.FC<AppliedJobsTabProps> = ({ onCardClick }) => {
     } catch (error) {
       console.error('Error:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAppliedJobs();
+    if (user) {
+      fetchAppliedJobs();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
     // Listen for stats refresh events to update the list when jobs are applied/unapplied
     const handleRefresh = () => {
-      fetchAppliedJobs();
+      if (user) {
+        fetchAppliedJobs(false); // Don't show loading for refresh updates
+      }
     };
 
     window.addEventListener('statsRefresh', handleRefresh);

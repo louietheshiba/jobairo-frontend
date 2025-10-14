@@ -8,6 +8,17 @@ interface JobActivity {
     company?: string;
     category?: string;
     employmentType?: string;
+    reason?: string; // For hide actions
+    description?: string;
+    salary_range?: string;
+    experience_level?: string;
+    required_skills?: string;
+    benefits?: string;
+    department?: string;
+    remote_type?: string;
+    application_url?: string;
+    date_posted?: string;
+    status?: string;
   };
 }
 
@@ -32,11 +43,26 @@ class ActivityTracker {
         jobData: jobData ? {
           title: jobData.title,
           location: jobData.location,
-          company: jobData.company,
+          company: jobData.company?.name || jobData.company, // Handle both object and string formats
           category: jobData.category || jobData.job_category,
-          employmentType: jobData.employment_type
+          employmentType: jobData.employment_type,
+          description: jobData.description,
+          salary_range: jobData.salary_range,
+          experience_level: jobData.experience_level,
+          required_skills: jobData.required_skills,
+          benefits: jobData.benefits,
+          department: jobData.department,
+          remote_type: jobData.remote_type,
+          application_url: jobData.application_url,
+          date_posted: jobData.date_posted,
+          status: jobData.status
         } : undefined
       };
+
+      // For hide actions, include reason if provided
+      if (action === 'hide' && jobData?.reason) {
+        activity.jobData = { ...activity.jobData, reason: jobData.reason };
+      }
 
       // Remove duplicate actions for same job (keep most recent)
       activityData.activities = activityData.activities.filter(
@@ -53,6 +79,8 @@ class ActivityTracker {
 
       activityData.lastUpdated = Date.now();
       this.saveActivityData(activityData);
+
+      console.log(`Tracked ${action} activity for job ${jobId}:`, activity.jobData);
     } catch (error) {
       console.warn('Failed to track activity:', error);
     }
@@ -87,12 +115,21 @@ class ActivityTracker {
   // Get recommended jobs based on user behavior
   getRecommendedJobs(allJobs: any[]): any[] {
     const activityData = this.getActivityData();
+    console.log('Activity data:', activityData.activities.length, 'activities');
+
     if (activityData.activities.length === 0) {
+      console.log('No activities found, returning empty recommendations');
       return [];
     }
 
     // Analyze user preferences
     const preferences = this.analyzePreferences(activityData.activities);
+    console.log('User preferences:', {
+      locations: Array.from(preferences.locations.keys()),
+      categories: Array.from(preferences.categories.keys()),
+      hiddenJobs: preferences.hiddenJobIds.size,
+      savedJobs: preferences.savedJobIds.size
+    });
 
     // Score jobs based on preferences
     const scoredJobs = allJobs.map(job => ({
@@ -100,11 +137,16 @@ class ActivityTracker {
       recommendationScore: this.calculateRecommendationScore(job, preferences, activityData.activities)
     }));
 
+    const filteredJobs = scoredJobs.filter(job => job.recommendationScore > 0);
+    console.log('Jobs with score > 0:', filteredJobs.length, 'from', allJobs.length);
+
     // Sort by recommendation score and return top recommendations
-    return scoredJobs
-      .filter(job => job.recommendationScore > 0)
+    const recommendedJobs = filteredJobs
       .sort((a, b) => b.recommendationScore - a.recommendationScore)
       .slice(0, 10); // Return top 10 recommendations
+
+    console.log('Final recommendations:', recommendedJobs.map(j => ({ id: j.id, score: j.recommendationScore, title: j.title?.substring(0, 30) })));
+    return recommendedJobs;
   }
 
   // Analyze user preferences from activities
@@ -114,9 +156,14 @@ class ActivityTracker {
       categories: new Map<string, number>(),
       companies: new Map<string, number>(),
       employmentTypes: new Map<string, number>(),
+      departments: new Map<string, number>(),
+      experienceLevels: new Map<string, number>(),
+      remoteTypes: new Map<string, number>(),
+      salaryRanges: new Map<string, number>(),
       viewedJobIds: new Set<string>(),
       savedJobIds: new Set<string>(),
-      hiddenJobIds: new Set<string>()
+      hiddenJobIds: new Set<string>(),
+      notInterestedJobIds: new Set<string>()
     };
 
     activities.forEach(activity => {
@@ -152,6 +199,39 @@ class ActivityTracker {
             (preferences.employmentTypes.get(activity.jobData.employmentType) || 0) + 1
           );
         }
+
+        // Track departments
+        if (activity.jobData.department) {
+          preferences.departments.set(
+            activity.jobData.department,
+            (preferences.departments.get(activity.jobData.department) || 0) + 1
+          );
+        }
+
+        // Track experience levels
+        if (activity.jobData.experience_level) {
+          preferences.experienceLevels.set(
+            activity.jobData.experience_level,
+            (preferences.experienceLevels.get(activity.jobData.experience_level) || 0) + 1
+          );
+        }
+
+        // Track remote types
+        if (activity.jobData.remote_type) {
+          preferences.remoteTypes.set(
+            activity.jobData.remote_type,
+            (preferences.remoteTypes.get(activity.jobData.remote_type) || 0) + 1
+          );
+        }
+
+        // Track salary ranges (simplified)
+        if (activity.jobData.salary_range) {
+          const salaryKey = activity.jobData.salary_range.split(' - ')[0] || activity.jobData.salary_range;
+          preferences.salaryRanges.set(
+            salaryKey,
+            (preferences.salaryRanges.get(salaryKey) || 0) + 1
+          );
+        }
       }
 
       // Track job IDs by action type
@@ -164,19 +244,38 @@ class ActivityTracker {
           break;
         case 'hide':
           preferences.hiddenJobIds.add(activity.jobId);
+          // Check if this is a "not interested" hide
+          if (activity.jobData?.reason === 'not_interested') {
+            preferences.notInterestedJobIds.add(activity.jobId);
+          }
           break;
       }
+    });
+
+    console.log('Analyzed preferences:', {
+      locations: Array.from(preferences.locations.keys()),
+      categories: Array.from(preferences.categories.keys()),
+      companies: Array.from(preferences.companies.keys()),
+      employmentTypes: Array.from(preferences.employmentTypes.keys()),
+      savedJobs: preferences.savedJobIds.size,
+      hiddenJobs: preferences.hiddenJobIds.size,
+      notInterestedJobs: preferences.notInterestedJobIds.size
     });
 
     return preferences;
   }
 
   // Calculate recommendation score for a job
-  private calculateRecommendationScore(job: any, preferences: any, _activities: JobActivity[]): number {
+  private calculateRecommendationScore(job: any, preferences: any, activities: JobActivity[]): number {
     let score = 0;
 
     // Don't recommend jobs the user has already hidden
     if (preferences.hiddenJobIds.has(job.id)) {
+      return 0;
+    }
+
+    // Don't recommend jobs marked as "not interested"
+    if (preferences.notInterestedJobIds.has(job.id)) {
       return 0;
     }
 
@@ -192,8 +291,9 @@ class ActivityTracker {
     }
 
     // Boost score for jobs from preferred companies
-    if (job.company && preferences.companies.has(job.company)) {
-      score += preferences.companies.get(job.company) * 2;
+    const jobCompany = typeof job.company === 'object' ? job.company?.name : job.company;
+    if (jobCompany && preferences.companies.has(jobCompany)) {
+      score += preferences.companies.get(jobCompany) * 2;
     }
 
     // Boost score for preferred employment types
@@ -202,9 +302,9 @@ class ActivityTracker {
       score += preferences.employmentTypes.get(jobEmploymentType) * 2;
     }
 
-    // Boost score for jobs similar to saved jobs
+    // Don't recommend jobs that are already saved (they appear in saved jobs tab)
     if (preferences.savedJobIds.has(job.id)) {
-      score += 10; // High boost for saved jobs
+      return 0; // Don't show saved jobs in recommendations
     }
 
     // Slightly boost score for jobs similar to viewed jobs

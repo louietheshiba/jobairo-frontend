@@ -14,32 +14,40 @@ const SavedSearchesTab: React.FC = () => {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) return;
+  const fetchSavedSearches = async (showLoading = true) => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    const fetchSavedSearches = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('saved_searches')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+    if (showLoading) setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('saved_searches')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching saved searches:', error);
-          return;
-        }
-
-        setSavedSearches(data || []);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching saved searches:', error);
+        if (showLoading) setLoading(false);
+        return;
       }
-    };
 
-    fetchSavedSearches();
+      setSavedSearches(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchSavedSearches();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const handleDelete = async (id: string) => {

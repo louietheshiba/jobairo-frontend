@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,6 +30,14 @@ const Dashboard = () => {
       return;
     }
   }, [user, loading, router]);
+
+  // Preload dashboard data when user is available
+  useEffect(() => {
+    if (user && !loading) {
+      // Preload stats and initial tab data
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
+    }
+  }, [user, loading]);
 
   const handleCardClick = (job: Job) => {
     setSelectedJob(job);
