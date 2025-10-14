@@ -134,7 +134,7 @@ class ActivityTracker {
     // Score jobs based on preferences
     const scoredJobs = allJobs.map(job => ({
       ...job,
-      recommendationScore: this.calculateRecommendationScore(job, preferences, activityData.activities)
+      recommendationScore: this.calculateRecommendationScore(job, preferences)
     }));
 
     const filteredJobs = scoredJobs.filter(job => job.recommendationScore > 0);
@@ -266,7 +266,7 @@ class ActivityTracker {
   }
 
   // Calculate recommendation score for a job
-  private calculateRecommendationScore(job: any, preferences: any, activities: JobActivity[]): number {
+  private calculateRecommendationScore(job: any, preferences: any): number {
     let score = 0;
 
     // Don't recommend jobs the user has already hidden

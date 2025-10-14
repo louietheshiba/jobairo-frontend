@@ -158,46 +158,6 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
     fetchRelevantJobs(true);
   };
 
-  const handleHideJob = async (jobId: string) => {
-    if (!user) return;
-
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
-
-    try {
-      // Track hide activity
-      activityTracker.trackActivity(jobId, 'hide', {
-        title: job.title,
-        location: job.location,
-        company: job.company?.name,
-        category: job.job_category,
-        employmentType: job.employment_type,
-        reason: 'hidden'
-      });
-
-      // Remove the job from the current list
-      setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-      toast.success('Job hidden from recommendations');
-
-      // Refresh recommendations to get new ones (faster update)
-      setTimeout(() => {
-        fetch('/api/jobs?limit=50').then(response => {
-          if (response.ok) {
-            response.json().then(data => {
-              const allJobs = data.jobs || [];
-              const newRecommendedJobs = activityTracker.getRecommendedJobs(allJobs);
-              if (newRecommendedJobs.length > 0) {
-                setJobs(newRecommendedJobs);
-              }
-            });
-          }
-        }).catch(() => {});
-      }, 300);
-    } catch (error) {
-      console.error('Error hiding job:', error);
-      toast.error('Failed to hide job');
-    }
-  };
 
   const getRecommendationReason = (index: number) => {
     // This could be enhanced with more sophisticated logic based on user activity
@@ -327,7 +287,45 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
               Not Interested
             </button>
             <button
-              onClick={() => jobs.length > 0 && jobs[0] && handleHideJob(jobs[0].id)}
+              onClick={() => {
+                if (!user || jobs.length === 0 || !jobs[0]?.id) return;
+                const jobId = jobs[0].id as string;
+                const job = jobs[0];
+
+                try {
+                  // Track hide activity
+                  activityTracker.trackActivity(jobId, 'hide', {
+                    title: job.title,
+                    location: job.location,
+                    company: job.company?.name,
+                    category: job.job_category,
+                    employmentType: job.employment_type,
+                    reason: 'hidden'
+                  });
+
+                  // Remove from current recommendations
+                  setJobs(prev => prev.filter(j => j.id !== jobId));
+                  toast.success('Job hidden from recommendations');
+
+                  // Refresh recommendations to get new ones (faster update)
+                  setTimeout(() => {
+                    fetch('/api/jobs?limit=50').then(response => {
+                      if (response.ok) {
+                        response.json().then(data => {
+                          const allJobs = data.jobs || [];
+                          const newRecommendedJobs = activityTracker.getRecommendedJobs(allJobs);
+                          if (newRecommendedJobs.length > 0) {
+                            setJobs(newRecommendedJobs);
+                          }
+                        });
+                      }
+                    }).catch(() => {});
+                  }, 300);
+                } catch (e) {
+                  console.error('Error hiding job:', e);
+                  toast.error('Failed to hide job');
+                }
+              }}
               disabled={jobs.length === 0}
               className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
