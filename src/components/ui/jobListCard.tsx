@@ -1,6 +1,7 @@
-import { Bookmark } from 'lucide-react';
+import { Bookmark, MapPin } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import jobActivity from '@/utils/jobActivity';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import { getDisplayLabelFromLocation } from '@/utils/locations';
@@ -54,9 +55,12 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
 
         setIsSaved(true);
         onSave?.(item.id, true);
+  try { await jobActivity.recordSave(item); } catch (e) {}
         toast.success('Job saved successfully! 🎉');
         // Trigger stats refresh
         window.dispatchEvent(new CustomEvent('statsRefresh'));
+  // Notify relevant jobs to refresh since user activity changed
+  window.dispatchEvent(new CustomEvent('relevantJobsRefresh'));
       }
     } catch (error) {
       console.error('Error saving/unsaving job:', error);
@@ -71,56 +75,87 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
 
     // Simply open the application URL without saving to database
     if (item.application_url) {
+      // record apply event and then open
+      try { await jobActivity.recordApply(item); } catch (e) {}
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
+      window.dispatchEvent(new CustomEvent('relevantJobsRefresh'));
       window.open(item.application_url, '_blank');
     } else {
       toast.error('Application URL not available');
     }
   };
 
+  const handleCardClick = () => {
+    try { jobActivity.recordView(item).then(() => {
+      window.dispatchEvent(new CustomEvent('relevantJobsRefresh'));
+    }); } catch (e) {}
+    onClick(item);
+  };
+
   return (
     <div
-      onClick={() => onClick(item)}
-      className="group relative flex min-h-[220px] flex-col gap-3 rounded-[16px] bg-white p-6 border-2 border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,212,170,0.15)] hover:border-[#10b981] hover:-translate-y-1 cursor-pointer dark:bg-dark-25"
+      onClick={handleCardClick}
+      className="group relative flex flex-col gap-3 rounded-[16px] bg-white p-6 border-2 border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,212,170,0.15)] hover:border-[#10b981] hover:-translate-y-1 cursor-pointer dark:bg-dark-25"
+      style={{ minHeight: 260 }}
     >
-      {/* Header with Title and Bookmark */}
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="font-poppins text-[20px] font-bold text-[#333] dark:text-white flex-1 pr-2">
-          {item?.title}
-        </h2>
-        <button
-          className="flex-shrink-0 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-dark-30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-          onClick={handleSaveJob}
-          disabled={isSaving}
-        >
-          <Bookmark className={`w-5 h-5 transition-all duration-300 ${isSaved ? 'fill-[#10b981] stroke-[#10b981]' : 'stroke-[#999] fill-none hover:stroke-[#10b981] hover:scale-110'}`} />
-        </button>
-      </div>
+      {/* Header: Title and Bookmark */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 pr-2">
+          <h2 className="font-poppins text-[20px] font-bold text-[#111] dark:text-white leading-tight line-clamp-2">
+            {item?.title}
+          </h2>
+        </div>
 
-      {/* Salary Range */}
-      <div className="flex justify-end">
-        <span className={`font-poppins text-xs font-semibold text-secondary dark:text-white ${item?.salary_range ? 'border border-[#10b981] rounded px-1.5 py-0.5' : ''}`}>
-          {item?.salary_range || ''}
-        </span>
-      </div>
-
-      {/* Company Info */}
-      <div className="flex flex-col gap-1 text-[14px] text-[#666] dark:text-gray-400">
-          <span className="capitalize">{getDisplayLabelFromLocation(item?.location) || 'Not specified'}</span>
-
-        <div className="flex items-center gap-2">
-          <span className="capitalize">{item?.company?.name || 'Not specified'}</span>
-          <span className="text-gray-400">•</span>
-          <span>Posted {Math.floor((new Date().getTime() - new Date(item?.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
+        {/* Bookmark at the top-right */}
+        <div className="flex-shrink-0">
+          <button
+            className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-dark-30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+            onClick={handleSaveJob}
+            disabled={isSaving}
+          >
+            <Bookmark className={`w-5 h-5 transition-all duration-300 ${isSaved ? 'fill-[#10b981] stroke-[#10b981]' : 'stroke-[#999] fill-none hover:stroke-[#10b981] hover:scale-110'}`} />
+          </button>
         </div>
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-        {item?.description || 'No description available'}
-      </p>
+      {/* Company and Salary row (salary under the bookmark on the right) */}
+      <div className="mt-1 flex items-center justify-between">
+        <div>
+          <span className="text-lg font-semibold text-[#0f172a] dark:text-white">{item?.company?.name || 'Not specified'}</span>
+        </div>
 
-      {/* Job Tags */}
-      <div className="flex flex-wrap gap-2 group-hover:mb-[50px] transition-all duration-300">
+        <div className="flex-shrink-0">
+          {item?.salary_range ? (
+            <span className="inline-flex items-center gap-2 rounded-md bg-[#ecfdf5] border border-[#bbf7d0] px-3 py-1 text-sm font-semibold text-[#065f46]">
+              <span className="font-poppins">{item?.salary_range}</span>
+            </span>
+          ) : (
+            <span className="text-sm text-gray-500"></span>
+          )}
+        </div>
+      </div>
+
+      {/* Location and meta row */}
+      <div className="mt-3 flex items-center justify-between text-sm text-[#444] dark:text-gray-400">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-[#065f46]">
+            <MapPin className="w-4 h-4 text-[#065f46]" />
+            <span className="font-medium truncate max-w-[200px]">{getDisplayLabelFromLocation(item?.location) || 'Not specified'}</span>
+          </div>
+
+          <div className="text-gray-400">•</div>
+
+          <div className="text-sm text-gray-600 dark:text-gray-400">Posted {Math.floor((new Date().getTime() - new Date(item?.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))} days ago</div>
+        </div>
+      </div>
+      {/* Body: description (flex-1) and tag row reserve */}
+      <div className="flex-1 flex flex-col justify-between pb-12">
+        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 overflow-hidden">
+          {item?.description || 'No description available'}
+        </p>
+
+        {/* Job Tags - reserve space so cards align */}
+        <div className="flex items-center gap-2 min-h-[32px] flex-wrap transition-all duration-300 mt-3">
         <span className={`tag capitalize ${item?.employment_type?.toLowerCase()}`}>
           {item?.employment_type}
         </span>
@@ -132,6 +167,7 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
             {item.department}
           </span>
         )}
+        </div>
       </div>
 
       {/* Quick Apply Button - Hidden by default, shows on card hover */}

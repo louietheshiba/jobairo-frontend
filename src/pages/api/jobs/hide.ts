@@ -7,25 +7,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { userId, jobId } = req.body;
+    const { userId, jobId, reason } = req.body as { userId?: string; jobId?: string; reason?: string };
 
     if (!userId || !jobId) {
-      return res.status(400).json({ error: 'User ID and Job ID are required' });
+      return res.status(400).json({ error: 'Missing userId or jobId' });
     }
 
-    console.log('Hiding job:', { userId, jobId });
+    const payload: Record<string, any> = {
+      user_id: userId,
+      job_id: jobId,
+    };
 
-    // Add to hidden_jobs table
-    const { error } = await supabase
-      .from('hidden_jobs')
-      .insert({
-        user_id: userId,
-        job_id: jobId,
-      });
+    if (reason) payload.reason = reason;
+
+    const { error } = await supabase.from('hidden_jobs').insert(payload);
 
     if (error) {
-      // If the job is already hidden, that's fine
-      if (error.code === '23505') { // Unique constraint violation
+      // Unique constraint (already hidden) -> treat as success
+      if ((error as any).code === '23505') {
         return res.status(200).json({ message: 'Job already hidden' });
       }
 
@@ -33,11 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'Failed to hide job' });
     }
 
-    console.log('Job hidden successfully:', { userId, jobId });
     return res.status(200).json({ message: 'Job hidden successfully' });
-
-  } catch (error) {
-    console.error('Hide job API error:', error);
+  } catch (err) {
+    console.error('Hide job API error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

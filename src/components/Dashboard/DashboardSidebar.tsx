@@ -56,6 +56,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
           </button>
 
           <button
+            onClick={() => onTabChange('relevant')}
+            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'relevant'
+                ? 'bg-primary-10 text-white'
+                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
+              }`}
+          >
+            <Search className="w-5 h-5 mr-3" />
+            Relevant Jobs
+          </button>
+
+          <button
             onClick={() => onTabChange('applied')}
             className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'applied'
                 ? 'bg-primary-10 text-white'

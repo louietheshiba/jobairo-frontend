@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import {
   LayoutDashboard,
   Briefcase,
+  TrendingUp,
   Users,
   LogOut,
   ArrowLeft,
@@ -88,6 +89,20 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange }) =
           >
             <Briefcase className="w-5 h-5 mr-3" />
             Job Management
+          </button>
+
+          <button
+            onClick={() => onTabChange('relevant')}
+            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${
+              activeTab === 'relevant'
+                ? 'bg-[#10b981] text-white shadow-md'
+                : isDarkMode
+                ? 'text-gray-300 hover:bg-[#10b981]/10 hover:text-[#10b981]'
+                : 'text-gray-700 hover:bg-[#10b981]/10 hover:text-[#10b981]'
+            }`}
+          >
+            <TrendingUp className="w-5 h-5 mr-3" />
+            Relevant Jobs
           </button>
 
           <button

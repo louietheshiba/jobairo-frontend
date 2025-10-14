@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import JobListCard from '@/components/ui/jobListCard';
 import type { Job } from '@/types/JobTypes';
 import toast from 'react-hot-toast';
+import { activityTracker } from '@/utils/activityTracker';
 
 interface RelevantJobsTabProps {
   jobs?: Job[]; // Made optional since we'll fetch our own
@@ -12,6 +13,7 @@ interface RelevantJobsTabProps {
 const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, onCardClick }) => {
    const { user, userRole } = useAuth();
   const [jobs, setJobs] = useState<Job[]>(initialJobs || []);
+  const [personalized, setPersonalized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -25,19 +27,35 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
     }
 
     try {
-      const response = await fetch(`/api/jobs/relevant?userId=${user.id}`);
-      const data = await response.json();
+      // Use client-side recommendations only - much faster
+      const allJobsResponse = await fetch('/api/jobs?limit=100'); // Limit to 100 jobs for performance
+      if (allJobsResponse.ok) {
+        const allJobsData = await allJobsResponse.json();
+        const allJobs = allJobsData.jobs || [];
 
-      if (response.ok) {
-        setJobs(data.jobs || []);
-        localStorage.setItem('lastRelevantJobsFetch', Date.now().toString());
-        if (showRefreshIndicator) {
-          toast.success('Recommendations refreshed! 🎯');
+        // Get personalized recommendations based on user activity
+        const recommendedJobs = activityTracker.getRecommendedJobs(allJobs);
+
+        if (recommendedJobs.length > 0) {
+          setJobs(recommendedJobs);
+          setPersonalized(true);
+          if (showRefreshIndicator) toast.success('Recommendations refreshed! 🎯');
+        } else {
+          // Show some recent jobs if no recommendations yet
+          const recentJobs = allJobs.slice(0, 10);
+          setJobs(recentJobs);
+          setPersonalized(false);
+          if (showRefreshIndicator) toast.success('Showing recent jobs - start interacting to get personalized recommendations!');
         }
       } else {
-        console.error('Failed to fetch relevant jobs:', data.error);
-        toast.error('Failed to load recommendations');
+        // Fallback: show empty state
+        setJobs([]);
+        setPersonalized(null);
+        toast.error('Failed to load jobs');
       }
+
+      const ts = Date.now();
+      localStorage.setItem('lastRelevantJobsFetch', ts.toString());
     } catch (error) {
       console.error('Error fetching relevant jobs:', error);
       toast.error('Failed to load recommendations');
@@ -50,26 +68,59 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
   useEffect(() => {
     // Only fetch if we don't have initial jobs or if user changes
     if (!initialJobs || initialJobs.length === 0) {
-      fetchRelevantJobs();
+      // Delay fetch slightly to avoid blocking initial render
+      const timer = setTimeout(() => fetchRelevantJobs(), 100);
+      return () => clearTimeout(timer);
     }
+    return undefined;
   }, [user?.id, initialJobs]);
 
   // Refresh recommendations when user profile might have changed
   // This effect runs when the component becomes visible (tab is active)
   useEffect(() => {
-    const lastFetchTime = localStorage.getItem('lastRelevantJobsFetch');
-    const currentTime = Date.now();
-
-    // Always refresh if no cache exists (preferences were updated) or cache is old
-    const shouldRefresh = !lastFetchTime ||
-      (currentTime - parseInt(lastFetchTime)) > 300000 || // 5 minutes
-      jobs.length === 0; // No jobs loaded yet
+    // Only refresh if no jobs loaded yet, otherwise rely on manual refresh
+    const shouldRefresh = jobs.length === 0;
 
     if (shouldRefresh) {
-      console.log('Refreshing relevant jobs - cache cleared or expired');
-      fetchRelevantJobs();
+      console.log('Loading initial relevant jobs');
+      const timer = setTimeout(() => fetchRelevantJobs(), 200);
+      return () => clearTimeout(timer);
     }
+    return undefined;
   }, []);
+
+  // Listen for external events that signal user activity changed and recommendations should refresh
+  useEffect(() => {
+    let timeout: any = null;
+    const handler = () => {
+      // debounce refreshes within 2s and only refresh if not already loading
+      if (timeout) clearTimeout(timeout);
+      if (loading || refreshing) return; // Don't refresh if already loading
+
+      timeout = setTimeout(() => {
+        console.log('Received relevantJobsRefresh event, updating recommendations');
+        // Just update the jobs list without full fetch - much faster
+        fetch('/api/jobs?limit=50').then(response => {
+          if (response.ok) {
+            response.json().then(data => {
+              const allJobs = data.jobs || [];
+              const recommendedJobs = activityTracker.getRecommendedJobs(allJobs);
+              if (recommendedJobs.length > 0) {
+                setJobs(recommendedJobs);
+                setPersonalized(true);
+              }
+            });
+          }
+        }).catch(() => {});
+      }, 2000); // Longer debounce to avoid too frequent updates
+    };
+
+    window.addEventListener('relevantJobsRefresh', handler);
+    return () => {
+      window.removeEventListener('relevantJobsRefresh', handler);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [user?.id, loading, refreshing]);
 
   const handleRefresh = () => {
     fetchRelevantJobs(true);
@@ -78,25 +129,38 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
   const handleHideJob = async (jobId: string) => {
     if (!user) return;
 
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
+
     try {
-      const response = await fetch('/api/jobs/hide', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          jobId: jobId,
-        }),
+      // Track hide activity
+      activityTracker.trackActivity(jobId, 'hide', {
+        title: job.title,
+        location: job.location,
+        company: job.company?.name,
+        category: job.job_category,
+        employmentType: job.employment_type,
+        reason: 'hidden'
       });
 
-      if (response.ok) {
-        // Remove the job from the current list
-        setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-        toast.success('Job hidden from recommendations');
-      } else {
-        toast.error('Failed to hide job');
-      }
+      // Remove the job from the current list
+      setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
+      toast.success('Job hidden from recommendations');
+
+      // Refresh recommendations to get new ones (faster update)
+      setTimeout(() => {
+        fetch('/api/jobs?limit=50').then(response => {
+          if (response.ok) {
+            response.json().then(data => {
+              const allJobs = data.jobs || [];
+              const newRecommendedJobs = activityTracker.getRecommendedJobs(allJobs);
+              if (newRecommendedJobs.length > 0) {
+                setJobs(newRecommendedJobs);
+              }
+            });
+          }
+        }).catch(() => {});
+      }, 300);
     } catch (error) {
       console.error('Error hiding job:', error);
       toast.error('Failed to hide job');
@@ -127,12 +191,19 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
 
   return (
     <div>
+      {/* recent activity removed */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recommended Jobs</h3>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Personalized job recommendations based on your preferences and activity
           </p>
+          {personalized === false && (
+            <div className="mt-2 inline-flex items-center gap-2 text-sm text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12A9 9 0 1112 3a9 9 0 019 9z"/></svg>
+              <span>Showing recent & popular jobs — interact (view/save/apply) to personalize recommendations.</span>
+            </div>
+          )}
         </div>
         <button
           onClick={handleRefresh}
@@ -158,7 +229,7 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
             Update your job preferences in settings to get personalized recommendations
           </p>
           <button
-            onClick={() => window.location.href = `${userRole === 'admin' ? '/admin/dashboard' : '/dashboard'}?tab=settings`}
+            onClick={() => window.location.href = `${userRole === 'admin' ? '/' : '/'}?tab=settings`}
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#10b981] to-[#047857] text-white text-sm font-medium rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300"
           >
             Update Preferences
@@ -166,7 +237,7 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
         </div>
       ) : (
         <>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4 mb-6">
             {jobs.map((job, index) => (
               <div key={job.id} className="relative">
                 <JobListCard item={job} onClick={onCardClick} />
@@ -180,7 +251,48 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
           </div>
 
           <div className="flex items-center justify-center gap-3">
-            <button className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+            <button
+              onClick={async () => {
+                if (!user || jobs.length === 0 || !jobs[0]?.id) return;
+                const jobId = jobs[0].id as string;
+                const job = jobs[0];
+
+                try {
+                  // Track "not interested" activity
+                  activityTracker.trackActivity(jobId, 'hide', {
+                    title: job.title,
+                    location: job.location,
+                    company: job.company?.name,
+                    category: job.job_category,
+                    employmentType: job.employment_type,
+                    reason: 'not_interested'
+                  });
+
+                  // Remove from current recommendations
+                  setJobs(prev => prev.filter(j => j.id !== jobId));
+                  toast.success('Marked as not interested');
+
+                  // Refresh recommendations to get new ones (faster update)
+                  setTimeout(() => {
+                    fetch('/api/jobs?limit=50').then(response => {
+                      if (response.ok) {
+                        response.json().then(data => {
+                          const allJobs = data.jobs || [];
+                          const newRecommendedJobs = activityTracker.getRecommendedJobs(allJobs);
+                          if (newRecommendedJobs.length > 0) {
+                            setJobs(newRecommendedJobs);
+                          }
+                        });
+                      }
+                    }).catch(() => {});
+                  }, 300);
+                } catch (e) {
+                  console.error('Error marking not interested:', e);
+                  toast.error('Failed to mark as not interested');
+                }
+              }}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
               Not Interested
             </button>
             <button

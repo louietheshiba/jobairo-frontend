@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import useCopyToClipboard from '@/hooks/copyToClipboard';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
+import { activityTracker } from '@/utils/activityTracker';
 import type { JobDetailsModalProps } from '@/types/JobTypes';
 import Modal from '../ui/modal';
 
@@ -13,6 +14,7 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const hasChecked = useRef(false);
 
   useEffect(() => {
@@ -59,6 +61,15 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
         viewed_at: new Date().toISOString(),
       });
 
+      // Track job view in activity tracker
+      activityTracker.trackActivity(job.id, 'view', {
+        title: job.title,
+        location: job.location,
+        company: job.company?.name,
+        category: job.job_category,
+        employmentType: job.employment_type
+      });
+
       // Trigger stats refresh
       window.dispatchEvent(new CustomEvent('statsRefresh'));
     };
@@ -84,8 +95,9 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
       return;
     }
 
-    if (!job) return;
+    if (!job || isLoading) return;
 
+    setIsLoading(true);
     try {
       if (isSaved) {
         // Unsave
@@ -112,12 +124,22 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsSaved(true);
         toast.success('Job saved successfully! 🎉');
+        // Track save activity
+        activityTracker.trackActivity(job.id, 'save', {
+          title: job.title,
+          location: job.location,
+          company: job.company?.name,
+          category: job.job_category,
+          employmentType: job.employment_type
+        });
         // Trigger stats refresh
         window.dispatchEvent(new CustomEvent('statsRefresh'));
       }
     } catch (error) {
       console.error('Error saving/unsaving job:', error);
       toast.error('Failed to save/unsave job');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -205,6 +227,14 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
         setIsHidden(true);
         toast.success('Job hidden from your feed');
+        // Track hide activity
+        activityTracker.trackActivity(job.id, 'hide', {
+          title: job.title,
+          location: job.location,
+          company: job.company?.name,
+          category: job.job_category,
+          employmentType: job.employment_type
+        });
         // Trigger stats refresh
         window.dispatchEvent(new CustomEvent('statsRefresh'));
         onClose();
@@ -283,13 +313,18 @@ const JobDetailsModal = ({ isOpen, job, onClose }: JobDetailsModalProps) => {
 
           <button
             onClick={handleSave}
-            className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center ${isSaved
+            disabled={isLoading}
+            className={`flex py-1 px-6 text-sm font-semibold rounded-lg shadow-[0_4px_15px_rgba(0,212,170,0.3)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.4)] hover:-translate-y-0.5 transition-all duration-300 justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 ${isSaved
               ? 'bg-[#10b981] text-white'
               : 'border-[#10b981] bg-white text-[#10b981] hover:bg-gradient-to-r hover:from-[#10b981] hover:to-[#047857] hover:text-white dark:bg-dark-25 dark:text-[#10b981] dark:hover:bg-gradient-to-r dark:hover:from-[#10b981] dark:hover:to-[#047857] dark:hover:text-white'
               }`}
           >
-            <Bookmark size={16} className="mr-2" />
-            {isSaved ? 'Saved' : 'Save Job'}
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+            ) : (
+              <Bookmark size={16} className="mr-2" />
+            )}
+            {isLoading ? 'Saving...' : isSaved ? 'Saved' : 'Save Job'}
           </button>
 
           <button

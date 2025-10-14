@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 
 import type { Option } from '@/types/FiltersType';
 import { SUGGETIONS } from '@/utils/constant';
+import { activityTracker } from '@/utils/activityTracker';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -69,6 +70,13 @@ const SearchBar = ({ onSearch, handleChange }: SearchBarProps) => {
     onSearchRef.current(query);
     setShowSuggestions(false);
     setSuggestions([]);
+
+    // Track search activity
+    if (query.trim()) {
+      activityTracker.trackActivity(`search_${Date.now()}`, 'search', {
+        query: query.trim()
+      });
+    }
   };
 
   const handleSuggestionClick = (suggestion: Option) => {

@@ -34,7 +34,7 @@ const SaveSearch = ({ setFilters, filters, handleChange, showFilters = false }: 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch('/api/jobs?limit=10000');
+  const response = await fetch('/api/jobs?limit=1000');
         const data = await response.json();
         const companies = data.jobs?.map((job: any) => job.company?.name).filter(Boolean) || [];
         const uniqueCompanies = [...new Set(companies)].map((name, index) => ({

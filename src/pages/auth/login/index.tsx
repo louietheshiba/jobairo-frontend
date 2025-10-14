@@ -81,7 +81,7 @@ const AuthPage = () => {
         // Wait a moment for userRole to be set, then redirect
         setTimeout(() => {
           const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
-            (userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
+            (userRole === 'admin' ? '/' : '/');
           sessionStorage.removeItem('auth_redirect_url');
           router.push(redirectUrl);
         }, 500);
@@ -105,7 +105,7 @@ const AuthPage = () => {
           setTimeout(() => {
             console.log('Signup redirect - userRole:', userRole); // Debug log
             const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
-              (userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
+              (userRole === 'admin' ? '/' : '/');
             console.log('Redirecting to:', redirectUrl); // Debug log
             sessionStorage.removeItem('auth_redirect_url');
             router.push(redirectUrl);

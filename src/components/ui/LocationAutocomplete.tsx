@@ -1,6 +1,7 @@
-import React from 'react';
-import Select from 'react-select';
+import React, { useCallback } from 'react';
+import AsyncSelect from 'react-select/async';
 import { LocationOption, locationOptions } from '@/utils/locations';
+import { useRef } from 'react';
 
 interface LocationAutocompleteProps {
   value: string[];
@@ -18,8 +19,21 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   className = ""
 }) => {
   // Convert string array to LocationOption array for react-select
+  // Build selected options even if they aren't in the static `locationOptions` list
   const selectedOptions = value
-    .map(locationValue => locationOptions.find(opt => opt.value === locationValue))
+    .map(locationValue => {
+      const found = locationOptions.find(opt => opt.value === locationValue);
+      if (found) return found;
+      // If not found in static list, create a simple option so AsyncSelect can render it
+      return {
+        value: locationValue,
+        label: locationValue,
+        country: '',
+        state: '',
+        city: locationValue,
+        priority: 2,
+      } as LocationOption;
+    })
     .filter(Boolean) as LocationOption[];
 
   // Convert LocationOption array back to string array
@@ -114,28 +128,69 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     }),
   };
 
-  // Custom filter function to prioritize US cities and show relevant results
-  const filterOption = (option: any, inputValue: string) => {
-    if (!inputValue) return true;
-    const searchValue = inputValue.toLowerCase();
-    return (
-      option.data.label.toLowerCase().includes(searchValue) ||
-      option.data.city.toLowerCase().includes(searchValue) ||
-      (option.data.state && option.data.state.toLowerCase().includes(searchValue)) ||
-      option.data.country.toLowerCase().includes(searchValue)
-    );
-  };
+  // Load options from server (Nominatim proxy)
+  // Debounced loadOptions to avoid spamming the API while typing
+  const debounceTimer = useRef<number | null>(null);
+  const loadOptions = useCallback((inputValue: string) => {
+    return new Promise<LocationOption[]>(resolve => {
+      if (!inputValue || inputValue.trim().length === 0) {
+        resolve([]);
+        return;
+      }
+
+      // Clear previous timer
+      if (debounceTimer.current) {
+        window.clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
+
+      debounceTimer.current = window.setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/locations/search?q=${encodeURIComponent(inputValue)}`);
+          if (!res.ok) {
+            resolve([]);
+            return;
+          }
+          const json = await res.json();
+          const results = json.results || [];
+
+          const mapped: LocationOption[] = results.map((r: any) => ({
+            value: (r.label || '').trim(),
+            label: r.label,
+            country: r.country || '',
+            state: r.state || '',
+            city: r.city || r.label,
+            priority: r.country_code === 'us' ? 1 : 3
+          }));
+
+          // Deduplicate
+          const seen = new Set();
+          const dedup = mapped.filter(item => {
+            if (seen.has(item.value)) return false;
+            seen.add(item.value);
+            return true;
+          });
+
+          resolve(dedup);
+        } catch (err) {
+          console.error('Error loading location options', err);
+          resolve([]);
+        }
+      }, 300); // 300ms debounce
+    });
+  }, []);
 
   return (
     <div className={className}>
-      <Select
+      <AsyncSelect
+        cacheOptions
+        defaultOptions={false}
+        loadOptions={loadOptions}
         isMulti={isMulti}
         value={selectedOptions}
         onChange={handleChange}
-        options={locationOptions}
         placeholder={placeholder}
         styles={customStyles}
-        filterOption={filterOption}
         menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
         menuPosition="fixed"
         classNamePrefix="location-select "

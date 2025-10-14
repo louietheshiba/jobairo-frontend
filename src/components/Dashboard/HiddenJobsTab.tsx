@@ -96,7 +96,29 @@ const HiddenJobsTab: React.FC = () => {
           </p>
         </div>
         {jobs.length > 0 && (
-          <button className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+          <button
+            onClick={async () => {
+              if (!user || jobs.length === 0) return;
+
+              try {
+                const jobIds = jobs.map(job => job.id);
+                const { error } = await supabase
+                  .from('hidden_jobs')
+                  .delete()
+                  .eq('user_id', user.id)
+                  .in('job_id', jobIds);
+
+                if (error) throw error;
+
+                setJobs([]);
+                toast.success(`Unhidden ${jobIds.length} jobs`);
+              } catch (error) {
+                console.error('Error unhiding all jobs:', error);
+                toast.error('Failed to unhide all jobs');
+              }
+            }}
+            className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          >
             Unhide All
           </button>
         )}
@@ -108,7 +130,7 @@ const HiddenJobsTab: React.FC = () => {
           <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Hidden jobs will appear here</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+  <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4">
           {jobs.map((job) => (
             <div key={job.id} className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-start justify-between mb-3">

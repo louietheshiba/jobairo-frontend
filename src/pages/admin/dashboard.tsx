@@ -5,6 +5,7 @@ import AdminSidebar from '@/components/Admin/AdminSidebar';
 import AdminStats from '@/components/Admin/AdminStats';
 import AdminJobs from '@/components/Admin/AdminJobs';
 import AdminUsers from '@/components/Admin/AdminUsers';
+import RelevantJobsTab from '@/components/Dashboard/RelevantJobsTab';
 
 const AdminDashboard = () => {
    const router = useRouter();
@@ -51,6 +52,18 @@ const AdminDashboard = () => {
         );
       case 'jobs':
         return <AdminJobs />;
+      case 'relevant':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Relevant Jobs</h1>
+            </div>
+            <RelevantJobsTab onCardClick={(job) => {
+              // admin might want to view/edit the job — route to job admin page
+              router.push(`/admin/jobs?jobId=${job.id}`);
+            }} />
+          </div>
+        );
       case 'users':
         return <AdminUsers />;
       case 'moderation':

@@ -15,6 +15,8 @@ import Container from '@/layouts/Container';
 import AdminSidebar from '@/components/Admin/AdminSidebar';
 import AdminStats from '@/components/Admin/AdminStats';
 import AdminJobs from '@/components/Admin/AdminJobs';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 const Dashboard = () => {
    const router = useRouter();
@@ -82,8 +84,18 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black">
         <AdminSidebar activeTab={adminActiveTab} onTabChange={setAdminActiveTab} />
-        <div className="ml-64 p-8">
-          {renderContent()}
+        <div className="ml-64">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[#065f46] bg-[#ecfdf5] hover:bg-[#d1fae5]">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Home
+              </Link>
+            </div>
+          </div>
+          <div className="mx-auto w-full max-w-screen-xl px-5 xl:px-1 p-8">
+            {renderContent()}
+          </div>
         </div>
       </div>
     );
@@ -100,8 +112,16 @@ const Dashboard = () => {
               <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
               {/* Main Content */}
-              <div className="flex-1 ml-64 p-8 overflow-y-auto min-h-screen dark:bg-black">
-                <div className="max-w-6xl mx-auto">
+              <div className="flex-1 ml-64 overflow-y-auto min-h-screen dark:bg-black">
+                <div className="mx-auto w-full max-w-screen-xl px-5 xl:px-1 p-8">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Link href="/" className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[#065f46] bg-[#ecfdf5] hover:bg-[#d1fae5]">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Home
+                      </Link>
+                    </div>
+                  </div>
                   <DashboardStats />
 
                   <DashboardContent

@@ -175,7 +175,7 @@ const RecentlyViewedTab: React.FC = () => {
           <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Jobs you view will appear here</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+  <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4">
           {jobs.map((job) => (
             <div key={job.id} className="relative">
               <JobListCard

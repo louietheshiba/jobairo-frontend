@@ -5,7 +5,7 @@ const AccountDeletedPage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Left Side - Branding - Fixed */}
-      <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex flex-col justify-center items-center p-12">
+      <div className="hidden lg:flex justify-center  lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex flex-col justify-center items-center p-12">
         <div className="max-w-md text-center">
           <div className="mb-8 mx-auto flex justify-center">
             <JobAiroLogo />
@@ -42,7 +42,7 @@ const AccountDeletedPage = () => {
       </div>
 
       {/* Right Side - Message */}
-      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
+      <div className="w-full flex justify-center lg:w-1/2 lg:ml-[50%]  flex-col p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
         <div className="max-w-md w-full mx-auto py-8">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
+import { activityTracker } from '@/utils/activityTracker';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -33,6 +34,9 @@ export const useAuth = () => {
         } else {
           setUserRole(profileData?.role || 'job_seeker');
         }
+
+        // Set user ID in activity tracker when user logs in
+        activityTracker.setUserId(session.user.id);
       } else {
         setUserRole(null);
       }
@@ -63,6 +67,9 @@ export const useAuth = () => {
           } else {
             setUserRole(profileData?.role || 'job_seeker');
           }
+
+          // Set user ID in activity tracker when user logs in
+          activityTracker.setUserId(session.user.id);
         } else {
           setUserRole(null);
         }

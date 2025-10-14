@@ -69,6 +69,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const hiddenJobIds = hiddenJobs?.map(hj => hj.job_id) || [];
 
+    // Detect whether the user has any recorded activity at all
+    const { data: anyActivityRows } = await supabase
+      .from('user_job_activity')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    const hasActivity = Array.isArray(anyActivityRows) && anyActivityRows.length > 0;
+
     // Build the query for relevant jobs
     let query = supabase
       .from('jobs')
@@ -146,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('Query built with filters applied');
 
-    const { data: relevantJobs, error: jobsError } = await query;
+  const { data: relevantJobs, error: jobsError } = await query;
 
     if (jobsError) {
       console.error('Error fetching relevant jobs:', jobsError);
@@ -164,9 +173,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })));
     }
 
-    // If we don't have enough jobs based on preferences, get some recent jobs as fallback
+    // Prepare finalJobs array (start with relevantJobs or empty)
     let finalJobs = relevantJobs || [];
 
+    // If we don't have enough, add recent jobs (same as before)
     if (finalJobs.length < 6) {
       console.log('Not enough preference-based jobs, adding recent jobs as fallback');
 
@@ -180,7 +190,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .order('date_posted', { ascending: false })
         .limit(12);
 
-      // Exclude already fetched jobs and user's applied/hidden jobs
       const existingIds = [...finalJobs.map(j => j.id), ...excludeIds];
       if (existingIds.length > 0) {
         fallbackQuery.not('id', 'in', `(${existingIds.join(',')})`);
@@ -188,11 +197,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const { data: fallbackJobs } = await fallbackQuery;
       if (fallbackJobs) {
-        finalJobs = [...finalJobs, ...fallbackJobs].slice(0, 12);
+        finalJobs = [...finalJobs, ...fallbackJobs].slice(0, 24);
       }
     }
 
-    // Transform jobs to match the expected format
+    // Server-side scoring using user activity (if available)
+    // Fetch activity rows for these job IDs for this user
+    const jobIds = finalJobs.map(j => j.id);
+    let activityRows: any[] = [];
+    if (jobIds.length > 0) {
+      const { data: acts, error: actsError } = await supabase
+        .from('user_job_activity')
+        .select('job_id, activity_type, created_at')
+        .eq('user_id', userId as string)
+        .in('job_id', jobIds);
+
+      if (actsError) {
+        console.warn('Error fetching user activity for scoring:', actsError);
+      } else {
+        activityRows = acts || [];
+      }
+    }
+
+    // Build a map of counts per job
+    const activityMap: Record<string, { views: number; saves: number; applies: number }> = {};
+    activityRows.forEach((r: any) => {
+      const id = r.job_id;
+      if (!activityMap[id]) activityMap[id] = { views: 0, saves: 0, applies: 0 };
+      if (r.activity_type === 'view') activityMap[id].views++;
+      if (r.activity_type === 'save') activityMap[id].saves++;
+      if (r.activity_type === 'apply') activityMap[id].applies++;
+    });
+
+    // Transform and score jobs
     const transformedJobs = finalJobs.map(job => ({
       id: job.id,
       title: job.title,
@@ -220,10 +257,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       applicant_count: job.applicant_count || 0
     }));
 
-    console.log(`Returning ${transformedJobs.length} relevant jobs for user ${userId}`);
+    // Compute score for each transformed job
+    // If the user has activity, use activity-weighted scoring.
+    // If the user has no activity, fall back to popularity (applicant_count) + recency.
+    const scored = transformedJobs.map(job => {
+      let score = 0;
+
+      if (hasActivity) {
+        const counts = activityMap[job.id] || { views: 0, saves: 0, applies: 0 };
+        score += (counts.views || 0) * 1;
+        score += (counts.saves || 0) * 5;
+        score += (counts.applies || 0) * 10;
+      } else {
+        // popularity fallback: use applicant_count if available
+        score += (job.applicant_count || 0) * 1;
+      }
+
+      // small recency bonus (applies in both modes)
+      const postedTs = job.date_posted ? new Date(job.date_posted).getTime() : 0;
+      if (postedTs) {
+        const days = (Date.now() - postedTs) / (1000 * 60 * 60 * 24);
+        if (days < 1) score += 5;
+        else if (days < 7) score += 3;
+        else if (days < 30) score += 1;
+      }
+
+      return { job, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+
+    const finalTransformed = scored.map(s => s.job).slice(0, 50);
+
+    console.log(`Returning ${finalTransformed.length} relevant jobs for user ${userId} (personalized=${hasActivity})`);
 
     return res.status(200).json({
-      jobs: transformedJobs,
+      jobs: finalTransformed,
+      personalized: !!hasActivity,
       preferences: {
         preferred_locations,
         desired_salary_min,

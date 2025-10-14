@@ -55,8 +55,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   // Get user from Supabase auth
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
     };
 
     getUser();
@@ -91,76 +91,99 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
 
     console.log('Loading profile for user:', user.id);
 
-    try {
-      // Load from users table with blocked status
-      const { data: userData } = await supabase
-        .from('users')
-        .select('full_name, is_blocked')
-        .eq('id', user.id)
-        .single();
+    // Retry logic to avoid transient DB/network errors causing sign-out
+    const maxAttempts = 2;
+    let attempt = 0;
+    let lastError: any = null;
 
-      // Check if user is blocked
-      if (userData?.is_blocked) {
-        console.log('User is blocked, signing out...');
-        // Sign out the blocked user
-        await supabase.auth.signOut();
-        // Import toast dynamically to avoid SSR issues
-        const { default: toast } = await import('react-hot-toast');
-        toast.error('Your account is blocked. Please contact support.', {
-          duration: 6000,
-          style: {
-            background: '#FEE2E2',
-            color: '#DC2626',
-            border: '1px solid #FECACA',
+    while (attempt < maxAttempts) {
+      try {
+        // Primary load attempt
+        attempt += 1;
+        // Load from users table with blocked status
+        const { data: userData, error: userErr } = await supabase
+          .from('users')
+          .select('full_name, is_blocked')
+          .eq('id', user.id)
+          .single();
+
+        if (userErr) {
+          throw userErr;
+        }
+
+        // Check if user is blocked
+        if (userData?.is_blocked) {
+          console.log('User is blocked, signing out...');
+          // Sign out the blocked user
+          await supabase.auth.signOut();
+          // Import toast dynamically to avoid SSR issues
+          const { default: toast } = await import('react-hot-toast');
+          toast.error('Your account is blocked. Please contact support.', {
+            duration: 6000,
+            style: {
+              background: '#FEE2E2',
+              color: '#DC2626',
+              border: '1px solid #FECACA',
+            },
+          });
+          setLoading(false);
+          return;
+        }
+
+        // User is not blocked, continue with normal profile loading
+        const { data: profileData, error: profileErr } = await supabase
+          .from('profiles')
+          .select('phone, location, avatar_url, job_preferences')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileErr && profileErr.code !== 'PGRST116') {
+          // PGRST116 = no rows found; treat as empty profile rather than an error
+          throw profileErr;
+        }
+
+        const newProfile = {
+          full_name: userData?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
+          phone: profileData?.phone || '',
+          location: profileData?.location || '',
+          avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url || '',
+          job_preferences: profileData?.job_preferences || {
+            desired_salary_min: undefined,
+            desired_salary_max: undefined,
+            job_types: [],
+            preferred_locations: [],
           },
-        });
+        };
+
+        console.log('Setting profile to:', newProfile);
+        setProfile(newProfile);
         setLoading(false);
         return;
+      } catch (err) {
+        lastError = err;
+        console.warn(`Profile load attempt ${attempt} failed:`, err);
+        // small backoff before retry
+        await new Promise(res => setTimeout(res, 300 * attempt));
       }
-      
-      // User is not blocked, continue with normal profile loading
-
-      // Load from profiles table
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('phone, location, avatar_url, job_preferences')
-        .eq('user_id', user.id)
-        .single();
-
-      const newProfile = {
-        full_name: userData?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
-        phone: profileData?.phone || '',
-        location: profileData?.location || '',
-        avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url || '',
-        job_preferences: profileData?.job_preferences || {
-          desired_salary_min: undefined,
-          desired_salary_max: undefined,
-          job_types: [],
-          preferred_locations: [],
-        },
-      };
-
-      console.log('Setting profile to:', newProfile);
-      setProfile(newProfile);
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      // Fallback to auth metadata
-      const fallbackProfile = {
-        full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
-        phone: '',
-        location: '',
-        avatar_url: user.user_metadata?.avatar_url || '',
-        job_preferences: {
-          desired_salary_min: undefined,
-          desired_salary_max: undefined,
-          job_types: [],
-          preferred_locations: [],
-        },
-      };
-      setProfile(fallbackProfile);
-    } finally {
-      setLoading(false);
     }
+
+    // All attempts failed: fall back to auth metadata but don't sign out the user
+    console.error('Failed to load profile after retries:', lastError);
+    const fallbackProfile = {
+      full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
+      phone: '',
+      location: '',
+      avatar_url: user.user_metadata?.avatar_url || '',
+      job_preferences: {
+        desired_salary_min: undefined,
+        desired_salary_max: undefined,
+        job_types: [],
+        preferred_locations: [],
+      },
+    };
+    setProfile(fallbackProfile);
+    setLoading(false);
+    return;
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {

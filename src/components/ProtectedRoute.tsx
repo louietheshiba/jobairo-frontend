@@ -25,7 +25,7 @@ const ProtectedRoute = ({
       router.push(redirectTo);
     } else if (!requireAuth && user) {
       // If user is authenticated but shouldn't be on this page
-      router.push(userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
+      router.push("/");
     }
   }, [user, loading, router, redirectTo, requireAuth, userRole]);
 

@@ -169,7 +169,7 @@ const SavedJobsTab: React.FC<SavedJobsTabProps> = ({ onCardClick }) => {
         </div>
       ) : (
         /* Jobs Grid */
-        <div className="grid gap-5 gap-y-[30px] sm:gap-y-[50px] md:grid-cols-2 lg:grid-cols-3">
+  <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4 gap-y-[30px] sm:gap-y-[50px]">
           {jobs.map((job) => (
             <div key={job.id} className="relative">
               <JobListCard item={job} onClick={onCardClick} isSaved={true} />
