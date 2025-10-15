@@ -21,8 +21,8 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   // Convert string array to LocationOption array for react-select
   // Build selected options even if they aren't in the static `locationOptions` list
   const selectedOptions = value
-    .map(locationValue => {
-      const found = locationOptions.find(opt => opt.value === locationValue);
+    .map((locationValue: string) => {
+      const found = locationOptions.find((opt: LocationOption) => opt.value === locationValue);
       if (found) return found;
       // If not found in static list, create a simple option so AsyncSelect can render it
       return {
