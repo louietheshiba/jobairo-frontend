@@ -2,6 +2,7 @@ import { Bookmark, MapPin } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import jobActivity from '@/utils/jobActivity';
+import { activityTracker } from '@/utils/activityTracker';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import { getDisplayLabelFromLocation } from '@/utils/locations';
@@ -56,9 +57,11 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
         setIsSaved(true);
         onSave?.(item.id, true);
   try { await jobActivity.recordSave(item); } catch (e) {}
+  activityTracker.trackActivity(item.id, 'save', item);
         toast.success('Job saved successfully! 🎉');
-        // Trigger stats refresh
+        // Trigger stats refresh and job saved event
         window.dispatchEvent(new CustomEvent('statsRefresh'));
+        window.dispatchEvent(new CustomEvent('jobSaved', { detail: { jobId: item.id } }));
   // Notify relevant jobs to refresh since user activity changed
   window.dispatchEvent(new CustomEvent('relevantJobsRefresh'));
       }
@@ -77,7 +80,9 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
     if (item.application_url) {
       // record apply event and then open
       try { await jobActivity.recordApply(item); } catch (e) {}
+      activityTracker.trackActivity(item.id, 'apply', item);
       window.dispatchEvent(new CustomEvent('statsRefresh'));
+      window.dispatchEvent(new CustomEvent('jobApplied', { detail: { jobId: item.id } }));
       window.dispatchEvent(new CustomEvent('relevantJobsRefresh'));
       window.open(item.application_url, '_blank');
     } else {
@@ -89,6 +94,7 @@ const JobListCard = ({ item, onClick, isSaved: initialIsSaved = false, onSave }:
     try { jobActivity.recordView(item).then(() => {
       window.dispatchEvent(new CustomEvent('relevantJobsRefresh'));
     }); } catch (e) {}
+    activityTracker.trackActivity(item.id, 'view', item);
     onClick(item);
   };
 

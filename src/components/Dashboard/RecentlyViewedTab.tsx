@@ -23,8 +23,9 @@ const RecentlyViewedTab: React.FC = () => {
       }
 
       toast.success('Job saved successfully! 🎉');
-      // Trigger stats refresh
+      // Trigger stats refresh and job saved event
       window.dispatchEvent(new CustomEvent('statsRefresh'));
+      window.dispatchEvent(new CustomEvent('jobSaved', { detail: { jobId } }));
     } catch (error) {
       console.error('Error saving job:', error);
       toast.error('Failed to save job');
@@ -47,8 +48,9 @@ const RecentlyViewedTab: React.FC = () => {
       // Remove from the list immediately for better UX
       setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
       toast.success('Job hidden from your view');
-      // Trigger stats refresh for consistency
+      // Trigger stats refresh and job hidden event
       window.dispatchEvent(new CustomEvent('statsRefresh'));
+      window.dispatchEvent(new CustomEvent('jobHidden', { detail: { jobId } }));
     } catch (error) {
       console.error('Error hiding job:', error);
       toast.error('Failed to hide job');

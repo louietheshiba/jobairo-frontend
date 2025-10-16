@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile } from '@/context/ProfileContext';
 import useOutsideAlerter from '@/hooks/outSideAlerter';
 import { LogOut, Home, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/router';
@@ -8,7 +7,6 @@ import Link from 'next/link';
 
 const UserMenu = () => {
     const { user, signOut, userRole, loading: authLoading } = useAuth();
-    const { profile, loading: profileLoading } = useProfile();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const router = useRouter();
@@ -23,21 +21,21 @@ const UserMenu = () => {
         await signOut();
         setIsDropdownOpen(false);
         router.push('/auth/login');
-        
+
     };
 
-    // Don't decide login state until auth + profile loading settle to avoid flicker
-    if (authLoading || profileLoading) {
+    // Don't decide login state until auth loading settles to avoid flicker
+    if (authLoading) {
         return (
             <div className="h-8 w-32 bg-gray-100 dark:bg-[#1f1f1f] rounded-md animate-pulse"></div>
         );
     }
 
     if (user) {
-        const userName = (profile && profile.full_name) ? profile.full_name : (user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User');
+        const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
         const initial = userName ? userName.charAt(0).toUpperCase() : 'U';
         const displayName = userName && userName.length > 15 ? `${userName.substring(0, 15)}...` : userName;
-        const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url;
+        const avatarUrl = user.user_metadata?.avatar_url;
 
         return (
             <div className="relative" ref={dropdownRef}>

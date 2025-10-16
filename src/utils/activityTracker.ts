@@ -1,6 +1,6 @@
 interface JobActivity {
   jobId: string;
-  action: 'view' | 'save' | 'hide' | 'search';
+  action: 'view' | 'save' | 'hide' | 'search' | 'apply';
   timestamp: number;
   jobData?: {
     title?: string;
@@ -33,7 +33,7 @@ class ActivityTracker {
   private maxActivities = 100; // Limit stored activities
 
   // Track a job action
-  trackActivity(jobId: string, action: 'view' | 'save' | 'hide' | 'search', jobData?: any): void {
+  trackActivity(jobId: string, action: 'view' | 'save' | 'hide' | 'search' | 'apply', jobData?: any): void {
     try {
       const activityData = this.getActivityData();
       const activity: JobActivity = {
@@ -128,13 +128,14 @@ class ActivityTracker {
       locations: Array.from(preferences.locations.keys()),
       categories: Array.from(preferences.categories.keys()),
       hiddenJobs: preferences.hiddenJobIds.size,
-      savedJobs: preferences.savedJobIds.size
+      savedJobs: preferences.savedJobIds.size,
+      appliedJobs: activityData.activities.filter(a => a.action === 'apply').length
     });
 
     // Score jobs based on preferences
     const scoredJobs = allJobs.map(job => ({
       ...job,
-      recommendationScore: this.calculateRecommendationScore(job, preferences)
+      recommendationScore: this.calculateRecommendationScore(job, preferences, activityData.activities)
     }));
 
     const filteredJobs = scoredJobs.filter(job => job.recommendationScore > 0);
@@ -170,33 +171,37 @@ class ActivityTracker {
       if (activity.jobData) {
         // Track locations
         if (activity.jobData.location) {
+          const weight = activity.action === 'save' ? 3 : activity.action === 'apply' ? 5 : 1;
           preferences.locations.set(
             activity.jobData.location,
-            (preferences.locations.get(activity.jobData.location) || 0) + 1
+            (preferences.locations.get(activity.jobData.location) || 0) + weight
           );
         }
 
         // Track categories
         if (activity.jobData.category) {
+          const weight = activity.action === 'save' ? 3 : activity.action === 'apply' ? 5 : 1;
           preferences.categories.set(
             activity.jobData.category,
-            (preferences.categories.get(activity.jobData.category) || 0) + 1
+            (preferences.categories.get(activity.jobData.category) || 0) + weight
           );
         }
 
         // Track companies
         if (activity.jobData.company) {
+          const weight = activity.action === 'save' ? 2 : activity.action === 'apply' ? 4 : 1;
           preferences.companies.set(
             activity.jobData.company,
-            (preferences.companies.get(activity.jobData.company) || 0) + 1
+            (preferences.companies.get(activity.jobData.company) || 0) + weight
           );
         }
 
         // Track employment types
         if (activity.jobData.employmentType) {
+          const weight = activity.action === 'save' ? 2 : activity.action === 'apply' ? 4 : 1;
           preferences.employmentTypes.set(
             activity.jobData.employmentType,
-            (preferences.employmentTypes.get(activity.jobData.employmentType) || 0) + 1
+            (preferences.employmentTypes.get(activity.jobData.employmentType) || 0) + weight
           );
         }
 
@@ -242,6 +247,9 @@ class ActivityTracker {
         case 'save':
           preferences.savedJobIds.add(activity.jobId);
           break;
+        case 'apply':
+          preferences.viewedJobIds.add(activity.jobId); // Applied jobs are also viewed
+          break;
         case 'hide':
           preferences.hiddenJobIds.add(activity.jobId);
           // Check if this is a "not interested" hide
@@ -266,7 +274,7 @@ class ActivityTracker {
   }
 
   // Calculate recommendation score for a job
-  private calculateRecommendationScore(job: any, preferences: any): number {
+  private calculateRecommendationScore(job: any, preferences: any, activities?: JobActivity[]): number {
     let score = 0;
 
     // Don't recommend jobs the user has already hidden
@@ -285,7 +293,7 @@ class ActivityTracker {
     }
 
     // Boost score for jobs in preferred categories
-    const jobCategory = job.category || job.job_category;
+    const jobCategory = job.category;
     if (jobCategory && preferences.categories.has(jobCategory)) {
       score += preferences.categories.get(jobCategory) * 4;
     }
@@ -302,14 +310,47 @@ class ActivityTracker {
       score += preferences.employmentTypes.get(jobEmploymentType) * 2;
     }
 
-    // Don't recommend jobs that are already saved (they appear in saved jobs tab)
+    // Don't recommend jobs the user has already saved (they already know about them)
+    // Instead, boost similar jobs based on saved job characteristics
     if (preferences.savedJobIds.has(job.id)) {
       return 0; // Don't show saved jobs in recommendations
+    }
+
+    // Don't recommend jobs the user has already applied to
+    if (activities && activities.some((a: JobActivity) => a.jobId === job.id && a.action === 'apply')) {
+      return 0; // Don't show applied jobs in recommendations
     }
 
     // Slightly boost score for jobs similar to viewed jobs
     if (preferences.viewedJobIds.has(job.id)) {
       score += 1;
+    }
+
+    // Boost score for jobs similar to applied jobs (highest priority for similar jobs)
+    if (activities) {
+      const appliedJobs = activities.filter((a: JobActivity) => a.action === 'apply');
+      if (appliedJobs.length > 0) {
+        // Check if this job is similar to any applied job
+        for (const applied of appliedJobs) {
+          if (applied.jobData) {
+            const appliedCategory = applied.jobData.category;
+            const appliedCompany = applied.jobData.company;
+            const appliedLocation = applied.jobData.location;
+            const appliedEmploymentType = applied.jobData.employmentType;
+
+            const jobCategory = job.category || job.job_category;
+            const jobCompany = typeof job.company === 'object' ? job.company?.name : job.company;
+            const jobLocation = job.location;
+            const jobEmploymentType = job.employment_type;
+
+            // Boost if similar to applied jobs
+            if (appliedCategory && jobCategory && appliedCategory === jobCategory) score += 6;
+            if (appliedCompany && jobCompany && appliedCompany === jobCompany) score += 4;
+            if (appliedLocation && jobLocation && appliedLocation === jobLocation) score += 3;
+            if (appliedEmploymentType && jobEmploymentType && appliedEmploymentType === jobEmploymentType) score += 2;
+          }
+        }
+      }
     }
 
     // Recency boost - prefer recently active jobs
@@ -346,6 +387,7 @@ class ActivityTracker {
       totalSaves: 0,
       totalHides: 0,
       totalSearches: 0,
+      totalApplies: 0,
       uniqueJobsViewed: new Set<string>(),
       uniqueJobsSaved: new Set<string>(),
       topLocations: [] as Array<{location: string, count: number}>,
@@ -361,6 +403,10 @@ class ActivityTracker {
         case 'save':
           stats.totalSaves++;
           stats.uniqueJobsSaved.add(activity.jobId);
+          break;
+        case 'apply':
+          stats.totalApplies++;
+          stats.uniqueJobsViewed.add(activity.jobId); // Applied jobs are also viewed
           break;
         case 'hide':
           stats.totalHides++;

@@ -37,32 +37,29 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
         // Get personalized recommendations based on user activity
         let recommendedJobs = activityTracker.getRecommendedJobs(allJobs);
   
-        // Filter out jobs that user has already saved, applied, or hidden
+        // Filter out jobs that user has already applied or hidden, but keep saved jobs for similar recommendations
         try {
-          const [savedRes, appliedRes, hiddenRes] = await Promise.all([
-            supabase.from('saved_jobs').select('job_id').eq('user_id', user.id),
+          const [appliedRes, hiddenRes] = await Promise.all([
             supabase.from('applied_jobs').select('job_id').eq('user_id', user.id),
             supabase.from('hidden_jobs').select('job_id').eq('user_id', user.id)
           ]);
-  
-          const savedJobIds = new Set((savedRes.data as any[])?.map((s: any) => s.job_id) || []);
+
           const appliedJobIds = new Set((appliedRes.data as any[])?.map((a: any) => a.job_id) || []);
           const hiddenJobIds = new Set((hiddenRes.data as any[])?.map((h: any) => h.job_id) || []);
-  
-          // Filter out jobs that are already saved, applied, or hidden
+
+          // Filter out jobs that are already applied or hidden, but keep saved jobs for similar recommendations
           recommendedJobs = recommendedJobs.filter(job =>
-            !savedJobIds.has(job.id) &&
             !appliedJobIds.has(job.id) &&
             !hiddenJobIds.has(job.id)
           );
-  
+
           console.log('Filtered recommended jobs:', recommendedJobs.length, 'from', allJobs.length, 'total jobs');
           console.log('Filtered out:', {
-            saved: savedJobIds.size,
             applied: appliedJobIds.size,
-            hidden: hiddenJobIds.size
+            hidden: hiddenJobIds.size,
+            keptSavedJobs: true // Saved jobs are kept for similar recommendations
           });
-  
+
         } catch (error) {
           console.warn('Error filtering jobs:', error);
           // Continue with unfiltered recommendations if filtering fails
@@ -168,6 +165,27 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
       if (timeout) clearTimeout(timeout);
     };
   }, [user?.id, loading, refreshing]);
+
+  // Listen for job saved, applied, or hidden events to filter out jobs in real-time
+  useEffect(() => {
+    const handleJobAction = (event: CustomEvent) => {
+      const { jobId } = event.detail;
+      if (jobId) {
+        console.log(`Job ${jobId} was ${event.type.replace('job', '').toLowerCase()}, removing from recommendations`);
+        setJobs(prev => prev.filter(job => job.id !== jobId));
+      }
+    };
+
+    window.addEventListener('jobSaved', handleJobAction as EventListener);
+    window.addEventListener('jobApplied', handleJobAction as EventListener);
+    window.addEventListener('jobHidden', handleJobAction as EventListener);
+
+    return () => {
+      window.removeEventListener('jobSaved', handleJobAction as EventListener);
+      window.removeEventListener('jobApplied', handleJobAction as EventListener);
+      window.removeEventListener('jobHidden', handleJobAction as EventListener);
+    };
+  }, []);
 
   const handleRefresh = () => {
     fetchRelevantJobs(true);

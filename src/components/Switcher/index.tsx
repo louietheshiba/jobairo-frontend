@@ -1,11 +1,28 @@
 import React from 'react';
 
-import { useTheme } from '@/context/useTheme';
-
 import DarkModeIcon from '../Icons/DarkModeIcon';
 
 const Switcher = () => {
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  // Simple theme toggle without context dependency for SSR compatibility
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+
+  React.useEffect(() => {
+    const storedPreference = localStorage.getItem('jobario_theme');
+    setIsDarkMode(storedPreference === 'dark');
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const newValue = !prev;
+      localStorage.setItem('jobario_theme', newValue ? 'dark' : 'light');
+      if (newValue) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return newValue;
+    });
+  };
 
   return (
     <button

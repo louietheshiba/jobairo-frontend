@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import AsyncSelect from 'react-select/async';
 import { LocationOption, locationOptions } from '@/utils/locations';
-import { useRef } from 'react';
+import { getAllCities, getAllStates, getAllCountries } from 'country-state-city';
 
 interface LocationAutocompleteProps {
   value: string[];
@@ -128,9 +128,12 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     }),
   };
 
-  // Load options from server (Nominatim proxy)
-  // Debounced loadOptions to avoid spamming the API while typing
-  const debounceTimer = useRef<number | null>(null);
+  // Load options from static dataset (country-state-city)
+  // Client-side filtering for better performance
+  const allCities = useMemo(() => getAllCities(), []);
+  const allStates = useMemo(() => getAllStates(), []);
+  const allCountries = useMemo(() => getAllCountries(), []);
+
   const loadOptions = useCallback((inputValue: string) => {
     return new Promise<LocationOption[]>(resolve => {
       if (!inputValue || inputValue.trim().length === 0) {
@@ -138,47 +141,126 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
         return;
       }
 
-      // Clear previous timer
-      if (debounceTimer.current) {
-        window.clearTimeout(debounceTimer.current);
-        debounceTimer.current = null;
+      const searchTerm = inputValue.toLowerCase().trim();
+      const results: LocationOption[] = [];
+
+      // Search cities first - prioritize exact matches and common patterns from job data
+      const cityMatches = allCities
+        .filter(city => {
+          const cityName = city.name.toLowerCase();
+          const stateName = city.stateCode?.toLowerCase() || '';
+          const countryName = city.countryCode?.toLowerCase() || '';
+
+          // Check for exact matches first
+          if (cityName === searchTerm || stateName === searchTerm || countryName === searchTerm) {
+            return true;
+          }
+
+          // Check for partial matches
+          return cityName.includes(searchTerm) ||
+                 stateName.includes(searchTerm) ||
+                 countryName.includes(searchTerm);
+        })
+        .slice(0, 20) // Limit results
+        .map(city => {
+          const state = allStates.find(s => s.isoCode === city.stateCode && s.countryCode === city.countryCode);
+          const country = allCountries.find(c => c.isoCode === city.countryCode);
+          const label = `${city.name}${state ? `, ${state.name}` : ''}${country ? `, ${country.name}` : ''}`;
+          return {
+            value: label,
+            label,
+            country: country?.name || '',
+            state: state?.name || '',
+            city: city.name,
+            priority: city.countryCode === 'US' ? 1 : 3
+          };
+        });
+
+      // Search states if no city matches or to add more results
+      const stateMatches = allStates
+        .filter(state => {
+          const stateName = state.name.toLowerCase();
+          const countryName = state.countryCode?.toLowerCase() || '';
+
+          // Check for exact matches first
+          if (stateName === searchTerm || countryName === searchTerm) {
+            return true;
+          }
+
+          // Check for partial matches
+          return stateName.includes(searchTerm) || countryName.includes(searchTerm);
+        })
+        .slice(0, 10)
+        .map(state => {
+          const country = allCountries.find(c => c.isoCode === state.countryCode);
+          const label = `${state.name}${country ? `, ${country.name}` : ''}`;
+          return {
+            value: label,
+            label,
+            country: country?.name || '',
+            state: state.name,
+            city: '',
+            priority: state.countryCode === 'US' ? 1 : 3
+          };
+        });
+
+      results.push(...cityMatches, ...stateMatches);
+
+      // Search countries if still no matches or to add more results
+      if (results.length < 5) {
+        const countryMatches = allCountries
+          .filter(country => {
+            const countryName = country.name.toLowerCase();
+
+            // Check for exact matches first
+            if (countryName === searchTerm) {
+              return true;
+            }
+
+            // Check for partial matches
+            return countryName.includes(searchTerm);
+          })
+          .slice(0, 5)
+          .map(country => ({
+            value: country.name,
+            label: country.name,
+            country: country.name,
+            state: '',
+            city: '',
+            priority: 2
+          }));
+        results.push(...countryMatches);
       }
 
-      debounceTimer.current = window.setTimeout(async () => {
-        try {
-          const res = await fetch(`/api/locations/search?q=${encodeURIComponent(inputValue)}`);
-          if (!res.ok) {
-            resolve([]);
-            return;
+      // Deduplicate and sort by priority (lower number = higher priority)
+      const seen = new Set();
+      const dedup = results
+        .filter(item => {
+          if (seen.has(item.value)) return false;
+          seen.add(item.value);
+          return true;
+        })
+        .sort((a, b) => {
+          // First sort by priority
+          if (a.priority !== b.priority) {
+            return a.priority - b.priority;
           }
-          const json = await res.json();
-          const results = json.results || [];
+          // Then by exact match relevance
+          const aExact = a.city.toLowerCase() === searchTerm ||
+                        (a.state && a.state.toLowerCase() === searchTerm) ||
+                        a.country.toLowerCase() === searchTerm;
+          const bExact = b.city.toLowerCase() === searchTerm ||
+                        (b.state && b.state.toLowerCase() === searchTerm) ||
+                        b.country.toLowerCase() === searchTerm;
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+          return a.label.localeCompare(b.label);
+        })
+        .slice(0, 10); // Limit to 10 results
 
-          const mapped: LocationOption[] = results.map((r: any) => ({
-            value: (r.label || '').trim(),
-            label: r.label,
-            country: r.country || '',
-            state: r.state || '',
-            city: r.city || r.label,
-            priority: r.country_code === 'us' ? 1 : 3
-          }));
-
-          // Deduplicate
-          const seen = new Set();
-          const dedup = mapped.filter(item => {
-            if (seen.has(item.value)) return false;
-            seen.add(item.value);
-            return true;
-          });
-
-          resolve(dedup);
-        } catch (err) {
-          console.error('Error loading location options', err);
-          resolve([]);
-        }
-      }, 300); // 300ms debounce
+      resolve(dedup);
     });
-  }, []);
+  }, [allCities, allStates, allCountries]);
 
   return (
     <div className={className}>
