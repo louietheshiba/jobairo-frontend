@@ -17,7 +17,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
 
   const handleLogout = async () => {
     await signOut();
-    window.location.href = '/auth/login';
   };
 
   return (
@@ -38,7 +37,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
             </Link>
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Welcome {profile.full_name}!</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Welcome {profile?.full_name || 'User'}!</p>
       </div>
 
       <nav className="mt-6">

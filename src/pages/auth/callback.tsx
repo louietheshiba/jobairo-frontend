@@ -10,62 +10,13 @@ const AuthCallbackPage = () => {
     const handleAuthCallback = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-
         if (error) {
-          console.error('Auth callback error:', error);
           router.push('/?error=auth_callback_failed');
           return;
         }
-
         if (data.session) {
           const user = data.session.user;
-
-          // Get job preferences from user metadata (works across different browsers)
-          const pendingPreferences = user.user_metadata?.pending_job_preferences;
-          console.log('Pending preferences from user metadata:', pendingPreferences);
-
-          if (pendingPreferences) {
-            try {
-              console.log('Found job preferences in user metadata:', pendingPreferences);
-
-              // Update the profile with job preferences (profile already exists due to trigger)
-              console.log('Updating profile with job preferences...');
-              const { error } = await supabase
-                .from('profiles')
-                .update({
-                  job_preferences: pendingPreferences,
-                })
-                .eq('user_id', user.id);
-
-              if (error) {
-                console.error('Failed to save job preferences:', error);
-              } else {
-                console.log('Job preferences saved successfully from user metadata!');
-
-                // Clean up - remove pending preferences from user metadata
-                const { error: updateError } = await supabase.auth.updateUser({
-                  data: {
-                    pending_job_preferences: null
-                  }
-                });
-
-                if (updateError) {
-                  console.error('Failed to clean up user metadata:', updateError);
-                } else {
-                  console.log('Cleaned up pending preferences from user metadata');
-                }
-              }
-            } catch (error) {
-              console.error('Failed to process job preferences:', error);
-            }
-          } else {
-            console.log('No pending job preferences found in user metadata');
-          }
-
-          // Show success toast
-          toast.success(`Welcome back, ${user.user_metadata?.full_name || user.user_metadata?.name || 'User'}! 🎉`);
-
-          // Successfully authenticated, redirect to intended page or home
+          toast.success(`Welcome back, ${user.user_metadata?.full_name || user.user_metadata?.name || 'User'}!`);
           const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/';
           sessionStorage.removeItem('auth_redirect_url');
           router.push(redirectUrl);

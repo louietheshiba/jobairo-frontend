@@ -38,19 +38,20 @@ const Select = <T,>({
         ),
       }}
       styles={{
-        control: (base) => ({
+        control: (base, state) => ({
           ...base,
           width: '100%',
           borderRadius: '12px',
           border: `2px solid ${isDarkMode ? '#575757' : '#e0e0e0'}`,
-          padding: '8px 18px',
+          padding: '6px',
           backgroundColor: isDarkMode ? '#282828' : 'white',
           boxShadow: 'none',
           transition: 'all 0.3s ease',
-          '&:hover': { borderColor: '#00d4aa' },
+          '&:hover': { borderColor: '#10b981' },
           '&:focus-within': {
-            borderColor: '#00d4aa',
-            boxShadow: '0 0 0 3px rgba(0, 212, 170, 0.1)',
+            borderColor: '#10b981',
+            boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.1)',
+            padding: '6px', // Keep same padding when focused
           },
           whiteSpace: 'nowrap',
           overflow: 'hidden',
@@ -107,3 +108,5 @@ const Select = <T,>({
 };
 
 export { Select };
+
+

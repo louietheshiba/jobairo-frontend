@@ -1,38 +1,30 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/context/ProfileContext';
 import useOutsideAlerter from '@/hooks/outSideAlerter';
 import { LogOut, Home, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const UserMenu = () => {
-    const { user, signOut, userRole, loading: authLoading } = useAuth();
+    const { user, signOut, userRole, } = useAuth();
+    const { profile } = useProfile();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const router = useRouter();
-
 
     useOutsideAlerter(dropdownRef, () => {
         setIsDropdownOpen(false);
     });
 
     const handleSignOut = async () => {
-        console.log("Signout clicked")
         await signOut();
         setIsDropdownOpen(false);
-        router.push('/auth/login');
-
     };
 
-    // Don't decide login state until auth loading settles to avoid flicker
-    if (authLoading) {
-        return (
-            <div className="h-8 w-32 bg-gray-100 dark:bg-[#1f1f1f] rounded-md animate-pulse"></div>
-        );
-    }
-
     if (user) {
-        const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+        // Priority: profile.full_name > user_metadata > email fallback
+        const userName = profile?.full_name|| 'User';
         const initial = userName ? userName.charAt(0).toUpperCase() : 'U';
         const displayName = userName && userName.length > 15 ? `${userName.substring(0, 15)}...` : userName;
         const avatarUrl = user.user_metadata?.avatar_url;
@@ -58,7 +50,7 @@ const UserMenu = () => {
                         {displayName}
                     </span>
                 </button>
-                
+
 
                 {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#282828] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-[9999]">
@@ -73,38 +65,38 @@ const UserMenu = () => {
                         </div>
 
                         {/* Menu Items */}
-                                        <div className="py-2">
-                                            {/* Dynamic Dashboard / Back to Home link based on current route */}
-                                            {router.pathname.startsWith('/dashboard') || router.pathname.startsWith('/admin') ? (
-                                                <Link href="/">
-                                                    <button
-                                                        onClick={() => setIsDropdownOpen(false)}
-                                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                    >
-                                                        <ArrowLeft size={16} />
-                                                        Back to Home
-                                                    </button>
-                                                </Link>
-                                            ) : (
-                                                <Link href={userRole === 'admin' ? '/admin/dashboard' : '/dashboard'}>
-                                                    <button
-                                                        onClick={() => setIsDropdownOpen(false)}
-                                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                    >
-                                                        <Home size={16} />
-                                                        Go to Dashboard
-                                                    </button>
-                                                </Link>
-                                            )}
+                        <div className="py-2">
+                            {/* Dynamic Dashboard / Back to Home link based on current route */}
+                            {router.pathname.startsWith('/dashboard') ? (
+                                <Link href="/">
+                                    <button
+                                        onClick={() => setIsDropdownOpen(false)}
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        <ArrowLeft size={16} />
+                                        Back to Home
+                                    </button>
+                                </Link>
+                            ) : (
+                                <Link href={userRole === 'admin' ? '/dashboard' : '/dashboard'}>
+                                    <button
+                                        onClick={() => setIsDropdownOpen(false)}
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        <Home size={16} />
+                                        Go to Dashboard
+                                    </button>
+                                </Link>
+                            )}
 
-                                            <button
-                                                onClick={handleSignOut}
-                                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                            >
-                                                <LogOut size={16} />
-                                                Sign Out
-                                            </button>
-                                        </div>
+                            <button
+                                onClick={handleSignOut}
+                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                                <LogOut size={16} />
+                                Sign Out
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

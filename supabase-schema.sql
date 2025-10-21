@@ -1,23 +1,21 @@
-create table public.users (
-  id uuid primary key references auth.users(id) on delete cascade,
-  full_name text,
-  role text check (role in ('job_seeker', 'admin')) default 'job_seeker',
-  status text default 'active', -- active, banned, deleted
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
 
 create table public.profiles (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references public.users(id) on delete cascade unique,
-  avatar_url text,
-  phone text,
-  location text,
-  role text check (role in ('job_seeker', 'admin')) default 'job_seeker',
-  job_preferences jsonb, -- { "salary": "100k+", "types": ["remote", "full-time"] }
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
+  id uuid not null default gen_random_uuid (),
+  user_id uuid null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  role text null default 'job_seeker'::text,
+  full_name text null,
+  is_blocked boolean null default false,
+  constraint profiles_pkey primary key (id),
+  constraint profiles_user_id_key unique (user_id),
+  constraint profiles_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint profiles_role_check check (
+    (
+      role = any (array['job_seeker'::text, 'admin'::text])
+    )
+  )
+) TABLESPACE pg_default;
 
 create table public.companies (
   id uuid primary key default gen_random_uuid(),
@@ -31,25 +29,34 @@ create table public.companies (
 );
 
 create table public.jobs (
-  id uuid primary key default gen_random_uuid(),
-  company_id uuid references public.companies(id) on delete set null,
+  id uuid not null default gen_random_uuid (),
+  company_id uuid null,
   title text not null,
-  description text,
-  location text,
-  department text,
-  employment_type text, -- full-time, part-time, contract
-  remote_type text, -- remote, hybrid, onsite
-  salary_range text,
-  application_url text, -- for external ATS
-  source_url text, -- original job board link
-  ats_type text, -- greenhouse, lever, workday...
-  external_job_id text, -- job_id from ATS
-  date_posted timestamptz,
-  scraped_at timestamptz,
-  status text default 'open', -- open, closed, hidden
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
+  description text null,
+  location text null,
+  department text null,
+  employment_type text null,
+  remote_type text null,
+  salary_range text null,
+  application_url text null,
+  source_url text null,
+  ats_type text null,
+  external_job_id text null,
+  date_posted timestamp with time zone null,
+  scraped_at timestamp with time zone null,
+  status text null default 'open'::text,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  experience_level text null,
+  job_category text null,
+  required_skills text null,
+  benefits text null,
+  visa_sponsorship text null,
+  equity_offered text null,
+  salary text null,
+  constraint jobs_pkey primary key (id),
+  constraint jobs_company_id_fkey foreign KEY (company_id) references companies (id) on delete set null
+) TABLESPACE pg_default;
 
 create table public.saved_jobs (
   id uuid primary key default gen_random_uuid(),
@@ -115,13 +122,9 @@ ADD CONSTRAINT unique_company_name UNIQUE (name);
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Insert into users table
-  INSERT INTO public.users (id, full_name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', NEW.email));
-
-  -- Insert into profiles table with role
-  INSERT INTO public.profiles (user_id, avatar_url, role)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'avatar_url', 'job_seeker');
+  -- Insert into profiles table with all user data (users table removed)
+  INSERT INTO public.profiles (user_id, full_name, avatar_url, role)
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', NEW.email), NEW.raw_user_meta_data->>'avatar_url', 'job_seeker');
 
   RETURN NEW;
 END;
@@ -133,7 +136,6 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Enable Row Level Security
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
@@ -145,9 +147,7 @@ ALTER TABLE public.job_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reported_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for users
-CREATE POLICY "Users can view own user data" ON public.users FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own user data" ON public.users FOR UPDATE USING (auth.uid() = id);
+-- Users table removed, no RLS policies needed for it
 
 -- RLS Policies for profiles
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = user_id);
@@ -156,10 +156,10 @@ CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING
 
 -- Allow admins to view and update all profiles
 CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+  EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role = 'admin')
 );
 CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+  EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role = 'admin')
 );
 
 -- RLS Policies for other tables (basic examples, adjust as needed)
@@ -176,10 +176,3 @@ CREATE POLICY "Users can manage own reported jobs" ON public.reported_jobs FOR A
 -- Allow anyone to view site content
 CREATE POLICY "Anyone can view site content" ON public.site_content FOR SELECT USING (true);
 
-ALTER TABLE public.jobs ADD COLUMN experience_level text;
-ALTER TABLE public.jobs ADD COLUMN job_category text;
-ALTER TABLE public.jobs ADD COLUMN required_skills text;
-ALTER TABLE public.jobs ADD COLUMN benefits text;
-ALTER TABLE public.jobs ADD COLUMN visa_sponsorship text;
-ALTER TABLE public.jobs ADD COLUMN equity_offered text;
-ALTER TABLE public.jobs ADD COLUMN salary text;

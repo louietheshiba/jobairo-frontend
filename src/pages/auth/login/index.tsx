@@ -17,8 +17,6 @@ const AuthPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  // Removed jobPreferences state as it's no longer needed
-
   const router = useRouter();
   const { user, userRole } = useAuth();
 
@@ -26,12 +24,11 @@ const AuthPage = () => {
   // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
-      const redirectUrl = sessionStorage.getItem('auth_redirect_url') || '/';
-      sessionStorage.removeItem('auth_redirect_url');
-      router.push(redirectUrl);
+      router.push('/');
     }
-  }, [user, router]);
+  }, [user, userRole, router]);
 
+// Google Authentication
   const handleGoogleAuth = async () => {
     try {
       setLoading(true);
@@ -51,17 +48,13 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
-
-
-
+  // User SignUp/SignIn with Email 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!isLogin && password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
     if (!isLogin && !acceptTerms) {
       setError('Please accept the terms and conditions');
       return;
@@ -77,17 +70,9 @@ const AuthPage = () => {
           password,
         });
         if (error) throw error;
-
-        // Wait a moment for userRole to be set, then redirect
-        setTimeout(() => {
-          const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
-            (userRole === 'admin' ? '/' : '/');
-          sessionStorage.removeItem('auth_redirect_url');
-          router.push(redirectUrl);
-        }, 500);
+        // After successful login, redirect will happen via useEffect
       } else {
-        // Sign up without job preferences
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -95,31 +80,13 @@ const AuthPage = () => {
           },
         });
         if (error) throw error;
-
-        console.log('Job preferences stored in user metadata for email confirmation');
-
-        // If user is created immediately (without email confirmation), redirect
-        if (data.user && data.user.email_confirmed_at) {
-          console.log('User confirmed immediately');
-          // Wait a moment for userRole to be set, then redirect
-          setTimeout(() => {
-            console.log('Signup redirect - userRole:', userRole); // Debug log
-            const redirectUrl = sessionStorage.getItem('auth_redirect_url') ||
-              (userRole === 'admin' ? '/' : '/');
-            console.log('Redirecting to:', redirectUrl); // Debug log
-            sessionStorage.removeItem('auth_redirect_url');
-            router.push(redirectUrl);
-          }, 500);
-        } else {
           console.log('Email confirmation required');
           setSuccess('Check your email for a verification link!');
-
-          // Clear the form after successful signup
           setEmail('');
           setPassword('');
           setConfirmPassword('');
           setAcceptTerms(false);
-        }
+        
       }
     } catch (error: any) {
       setError(error.message);
@@ -128,6 +95,7 @@ const AuthPage = () => {
     }
   };
 
+  //  Hanlde forgot password 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -262,12 +230,10 @@ const AuthPage = () => {
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col justify-center p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
         <div className="max-w-md w-full mx-auto py-8">
-          {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <JobAiroLogo />
           </div>
 
-          {/* Page Heading - Moved to top */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               {isLogin ? 'Sign in to your account' : 'Create your account'}
@@ -304,7 +270,6 @@ const AuthPage = () => {
             </div>
           )}
 
-          {/* Google Auth Button */}
           <button
             onClick={handleGoogleAuth}
             disabled={loading}
@@ -314,7 +279,6 @@ const AuthPage = () => {
             Continue with Google
           </button>
 
-          {/* Divider */}
           <div className="flex items-center">
             <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
             <div className="mx-4 text-sm text-gray-500 dark:text-gray-400">OR</div>

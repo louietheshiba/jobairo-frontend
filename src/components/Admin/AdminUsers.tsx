@@ -12,8 +12,12 @@ import {
   Square,
   Mail,
   Phone,
-  Calendar
+  Calendar,
+  X
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Select } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface User {
   id: string;
@@ -21,11 +25,8 @@ interface User {
   email: string;
   role: string;
   full_name?: string;
-  avatar_url?: string;
   created_at: string;
   last_sign_in_at?: string;
-  phone?: string;
-  location?: string;
   bio?: string;
   status: 'active' | 'inactive' | 'suspended';
 }
@@ -38,6 +39,7 @@ const AdminUsers = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -66,6 +68,9 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
+      // Get current user to exclude from list if needed
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
       // First get profiles data
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -76,16 +81,33 @@ const AdminUsers = () => {
       if (profilesError) throw profilesError;
 
       // Then get auth users data to get email addresses
+      // Note: This requires admin privileges in Supabase
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Auth admin error:', authError);
+        // Fallback: try to get current user email and show limited data
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const transformedUsers = (profilesData || []).map(profile => ({
+          ...profile,
+          email: profile.user_id === currentUser?.id ? currentUser?.email || 'No email' : 'Email not available',
+          last_sign_in_at: profile.user_id === currentUser?.id ? currentUser?.last_sign_in_at : null,
+          status: profile.user_id === currentUser?.id ?
+            (currentUser?.last_sign_in_at ?
+              (new Date(currentUser.last_sign_in_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 'active' : 'inactive') :
+              'inactive') :
+            'unknown' as const
+        }));
+        setUsers(transformedUsers);
+        return;
+      }
 
       // Combine profiles with auth user emails
       const transformedUsers = (profilesData || []).map(profile => {
         const authUser = authUsers.users.find(user => user.id === profile.user_id);
         return {
           ...profile,
-          email: authUser?.email || 'No email',
+          email: authUser?.email || 'Email not available',
           last_sign_in_at: authUser?.last_sign_in_at,
           status: authUser?.last_sign_in_at ?
             (new Date(authUser.last_sign_in_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 'active' : 'inactive') :
@@ -93,6 +115,7 @@ const AdminUsers = () => {
         };
       });
 
+      // Include current admin user in the list
       setUsers(transformedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -145,8 +168,38 @@ const AdminUsers = () => {
       // Refresh users
       await fetchUsers();
       setSelectedUsers([]);
+      toast.success(`${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''} ${action}d successfully!`);
     } catch (error) {
       console.error('Error performing bulk action:', error);
+      toast.error('Failed to perform bulk action. Please try again.');
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+  };
+
+  const handleSaveUser = async (updatedUser: Partial<User>) => {
+    if (!editingUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: updatedUser.full_name,
+          role: updatedUser.role,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingUser.id);
+
+      if (error) throw error;
+
+      setEditingUser(null);
+      await fetchUsers();
+      toast.success('User updated successfully! 🎉');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user. Please try again.');
     }
   };
 
@@ -156,13 +209,13 @@ const AdminUsers = () => {
 
       switch (action) {
         case 'activate':
-          updateData = { status: 'active' };
+          updateData = { is_blocked: false };
           break;
         case 'suspend':
-          updateData = { status: 'suspended' };
+          updateData = { is_blocked: true };
           break;
         case 'deactivate':
-          updateData = { status: 'inactive' };
+          updateData = { is_blocked: true };
           break;
       }
 
@@ -174,8 +227,10 @@ const AdminUsers = () => {
       if (error) throw error;
 
       await fetchUsers();
+      toast.success(`User ${action}d successfully!`);
     } catch (error) {
       console.error('Error performing user action:', error);
+      toast.error('Failed to perform action. Please try again.');
     }
   };
 
@@ -210,16 +265,7 @@ const AdminUsers = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-        <div className="flex space-x-4">
-          <button className="px-4 py-2 bg-[#10b981] text-white rounded-md hover:bg-[#047857] transition-colors">
-            <Plus className="h-4 w-4 mr-2 inline" />
-            Add User
-          </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <Upload className="h-4 w-4 mr-2 inline" />
-            Import CSV
-          </button>
-        </div>
+     
       </div>
 
       {/* Filters */}
@@ -227,39 +273,41 @@ const AdminUsers = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
+              <Search className="absolute left-3 top-3 w-5 text-gray-400 z-10" />
+              <Input
                 type="text"
                 placeholder="Search users by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-[#10b981] transition-colors"
+                className="pl-12 pr-4 py-3 border-1 border-gray-300 rounded-lg focus:ring-1 focus:ring-[#10b981] focus:border-[#10b981] focus:shadow-lg transition-all duration-200"
               />
             </div>
           </div>
           <div className="sm:w-48">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-[#10b981] bg-white transition-colors"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="employer">Employer</option>
-              <option value="job_seeker">Job Seeker</option>
-            </select>
+            <Select
+              value={{ value: roleFilter, label: roleFilter === 'all' ? 'All Roles' : roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1).replace('_', ' ') }}
+              onChange={(option: any) => setRoleFilter(option?.value || 'all')}
+              options={[
+                { value: 'all', label: 'All Roles' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'employer', label: 'Employer' },
+                { value: 'job_seeker', label: 'Job Seeker' }
+              ]}
+              placeholder="Select Role"
+            />
           </div>
           <div className="sm:w-48">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-[#10b981] bg-white transition-colors"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </select>
+            <Select
+              value={{ value: statusFilter, label: statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) }}
+              onChange={(option: any) => setStatusFilter(option?.value || 'all')}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' }
+              ]}
+              placeholder="Select Status"
+            />
           </div>
         </div>
       </div>
@@ -353,16 +401,10 @@ const AdminUsers = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        {user.avatar_url ? (
-                          <img className="h-10 w-10 rounded-full object-cover" src={user.avatar_url} alt="" />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
-                              {user.full_name ? user.full_name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}
-                            </span>
-                          </div>
-                        )}
+                      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          {user.full_name ? user.full_name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}
+                        </span>
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -372,12 +414,6 @@ const AdminUsers = () => {
                           <Mail className="h-3 w-3 mr-1" />
                           {user.email}
                         </div>
-                        {user.phone && (
-                          <div className="text-xs text-gray-400 flex items-center">
-                            <Phone className="h-3 w-3 mr-1" />
-                            {user.phone}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </td>
@@ -411,6 +447,7 @@ const AdminUsers = () => {
                       <button
                         className="text-[#10b981] hover:text-[#047857] p-1 rounded hover:bg-green-50 transition-colors"
                         title="Edit User"
+                        onClick={() => handleEditUser(user)}
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -446,6 +483,92 @@ const AdminUsers = () => {
           </table>
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-dark-25 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit User</h2>
+                <button
+                  onClick={() => setEditingUser(null)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const updatedUser = {
+                  full_name: (e.target as any).full_name.value,
+                  role: (e.target as any).role.value,
+                };
+                handleSaveUser(updatedUser);
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Full Name
+                    </label>
+                    <Input
+                      name="full_name"
+                      defaultValue={editingUser.full_name || ''}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Email
+                    </label>
+                    <Input
+                      type="email"
+                      value={editingUser.email}
+                      disabled
+                      className="w-full bg-gray-100"
+                    />
+                  </div>
+
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Role
+                    </label>
+                    <select
+                      name="role"
+                      defaultValue={editingUser.role}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10b981] focus:border-[#10b981] bg-white dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="job_seeker">Job Seeker</option>
+                      <option value="employer">Employer</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setEditingUser(null)}
+                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 dark:bg-dark-25 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm border border-transparent rounded-lg text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-lg transition-all duration-200"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {filteredUsers.length === 0 && (
         <div className="text-center py-12">
