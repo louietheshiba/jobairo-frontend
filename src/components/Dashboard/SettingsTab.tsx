@@ -52,9 +52,11 @@ const SettingsTab: React.FC = () => {
 
   const handleCancel = () => {
     // Reset form data to current profile data
-    setFormData({
-      full_name: profile.full_name,
-    });
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name,
+      });
+    }
   };
 
   const handleDeleteClick = () => {

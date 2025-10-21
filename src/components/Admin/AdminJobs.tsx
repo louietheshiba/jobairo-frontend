@@ -6,8 +6,6 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Upload,
-  Plus,
   CheckSquare,
   Square,
   X
@@ -466,7 +464,6 @@ const AdminJobs = () => {
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
                 const updatedJob = {
                   title: (e.target as any).title.value,
                   description: (e.target as any).description.value,

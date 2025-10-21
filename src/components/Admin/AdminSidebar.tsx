@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import {
   LayoutDashboard,
   Briefcase,
-  TrendingUp,
   Users,
   LogOut,
   ArrowLeft,

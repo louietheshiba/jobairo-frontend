@@ -38,7 +38,7 @@ const Select = <T,>({
         ),
       }}
       styles={{
-        control: (base, state) => ({
+        control: (base) => ({
           ...base,
           width: '100%',
           borderRadius: '12px',

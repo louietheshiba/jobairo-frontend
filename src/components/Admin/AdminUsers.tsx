@@ -6,12 +6,9 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Upload,
-  Plus,
   CheckSquare,
   Square,
   Mail,
-  Phone,
   Calendar,
   X
 } from 'lucide-react';
@@ -68,9 +65,6 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      // Get current user to exclude from list if needed
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-
       // First get profiles data
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -501,7 +495,6 @@ const AdminUsers = () => {
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
                 const updatedUser = {
                   full_name: (e.target as any).full_name.value,
                   role: (e.target as any).role.value,

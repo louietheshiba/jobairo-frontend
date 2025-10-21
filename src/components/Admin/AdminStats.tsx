@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Briefcase, Building, TrendingUp, BarChart3, PieChart, Activity } from 'lucide-react';
+import { Users, Briefcase, Building, TrendingUp, BarChart3, PieChart } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 
 const AdminStats = () => {

@@ -42,7 +42,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setUser(session?.user ?? null);
       }
     );
