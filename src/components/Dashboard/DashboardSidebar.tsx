@@ -1,6 +1,20 @@
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Heart, FileText, EyeOff, Search, Eye, Settings, LogOut, ArrowLeft, Sun, Moon } from 'lucide-react';
+import {
+  Heart,
+  FileText,
+  EyeOff,
+  Search,
+  Eye,
+  Settings,
+  LogOut,
+  ArrowLeft,
+  Sun,
+  Moon,
+  Menu,
+  X,
+} from 'lucide-react';
 import { useTheme } from '@/context/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/context/ProfileContext';
@@ -14,125 +28,97 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { signOut } = useAuth();
   const { profile } = useProfile();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
   };
 
   return (
-    <div className="w-64 bg-white shadow-lg dark:bg-dark-20 flex flex-col fixed left-0 top-0 h-screen z-10">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <Link href="/" className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Welcome {profile?.full_name || 'User'}!</p>
+    <>
+      {/* Mobile Toggle */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 rounded-md bg-gray-100 dark:bg-dark-30 hover:bg-gray-200 dark:hover:bg-dark-40"
+        >
+          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
 
-      <nav className="mt-6">
-        <div className="px-3 pb-10">
-
-          <button
-            onClick={() => onTabChange('saved')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'saved'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <Heart className="w-5 h-5 mr-3" />
-            Saved Jobs
-          </button>
-
-          <button
-            onClick={() => onTabChange('relevant')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'relevant'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <Search className="w-5 h-5 mr-3" />
-            Relevant Jobs
-          </button>
-
-          <button
-            onClick={() => onTabChange('applied')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'applied'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <FileText className="w-5 h-5 mr-3" />
-            Applied Jobs
-          </button>
-
-          <button
-            onClick={() => onTabChange('hidden')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'hidden'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <EyeOff className="w-5 h-5 mr-3" />
-            Hidden Jobs
-          </button>
-
-          <button
-            onClick={() => onTabChange('searches')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'searches'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <Search className="w-5 h-5 mr-3" />
-            Saved Searches
-          </button>
-
-          <button
-            onClick={() => onTabChange('viewed')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'viewed'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <Eye className="w-5 h-5 mr-3" />
-            Recently Viewed
-          </button>
-
-          <button
-            onClick={() => onTabChange('settings')}
-            className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${activeTab === 'settings'
-                ? 'bg-primary-10 text-white'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
-              }`}
-          >
-            <Settings className="w-5 h-5 mr-3" />
-            Settings
-          </button>
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-screen w-64 z-40 bg-white dark:bg-dark-20 shadow-lg transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-dark-30"
+                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              <Link
+                href="/"
+                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-dark-30"
+                title="Back to Home"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Welcome {profile?.full_name || 'User'}!
+            
+          </p>
         </div>
 
-        {/* Logout Button */}
-        <div className="mt-auto p-6 border-t border-gray-200 dark:border-gray-700">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 pb-10">
+          {[
+            { id: 'saved', label: 'Saved Jobs', icon: <Heart className="w-5 h-5 mr-3" /> },
+            { id: 'relevant', label: 'Relevant Jobs', icon: <Search className="w-5 h-5 mr-3" /> },
+            { id: 'applied', label: 'Applied Jobs', icon: <FileText className="w-5 h-5 mr-3" /> },
+            { id: 'hidden', label: 'Hidden Jobs', icon: <EyeOff className="w-5 h-5 mr-3" /> },
+            { id: 'searches', label: 'Saved Searches', icon: <Search className="w-5 h-5 mr-3" /> },
+            { id: 'viewed', label: 'Recently Viewed', icon: <Eye className="w-5 h-5 mr-3" /> },
+            { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5 mr-3" /> },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                onTabChange(item.id);
+                setIsOpen(false);
+              }}
+              className={`w-full flex items-center px-3 py-2 mt-1 text-left rounded-lg transition-colors ${
+                activeTab === item.id
+                  ? 'bg-primary-10 text-white'
+                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30'
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-3 py-2 text-left text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-30 rounded-lg transition-colors"
+            className="w-full flex items-center px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5 mr-3" />
             Logout
           </button>
         </div>
-      </nav>
-    </div>
+      </aside>
+    </>
   );
 };
 

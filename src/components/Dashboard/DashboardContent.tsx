@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import RelevantJobsTab from './RelevantJobsTab';
 import SavedJobsTab from './SavedJobsTab';
 import AppliedJobsTab from './AppliedJobsTab';
@@ -17,37 +17,56 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   activeTab,
   onCardClick,
 }) => {
-  // Force re-render when activeTab changes to ensure fresh data
+  /** 🔁 Emit events when the active tab changes */
   useEffect(() => {
-    // Dispatch a custom event to trigger stats refresh when switching tabs
-    window.dispatchEvent(new CustomEvent('statsRefresh'));
-    // Also dispatch tab change event to trigger specific tab data refresh
-    window.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: activeTab } }));
+    const emitTabChange = () => {
+      window.dispatchEvent(new CustomEvent('statsRefresh'));
+      window.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: activeTab } }));
+    };
+
+    emitTabChange();
   }, [activeTab]);
 
+  /** 🧠 Memoized content renderer (prevents unnecessary re-renders) */
+  const content = useMemo(() => {
+    switch (activeTab) {
+      case 'relevant':
+        return <RelevantJobsTab onCardClick={onCardClick} />;
+      case 'saved':
+        return <SavedJobsTab onCardClick={onCardClick} />;
+      case 'applied':
+        return <AppliedJobsTab onCardClick={onCardClick} />;
+      case 'hidden':
+        return <HiddenJobsTab />;
+      case 'searches':
+        return <SavedSearchesTab />;
+      case 'viewed':
+        return <RecentlyViewedTab />;
+      case 'settings':
+        return <SettingsTab />;
+      default:
+        return (
+          <div className="text-center text-gray-500 py-10">
+            Unknown tab selected
+          </div>
+        );
+    }
+  }, [activeTab, onCardClick]);
+
+  /** 🎨 Smooth transition container */
   return (
-    <div className="bg-white rounded-lg shadow-sm dark:bg-dark-20">
-      <div className="p-6">
-        {activeTab === 'relevant' && (
-          <RelevantJobsTab key={`relevant-${Date.now()}`} onCardClick={onCardClick} />
-        )}
-
-        {activeTab === 'saved' && (
-          <SavedJobsTab key={`saved-${Date.now()}`} onCardClick={onCardClick} />
-        )}
-
-        {activeTab === 'applied' && (
-          <AppliedJobsTab key={`applied-${Date.now()}`} onCardClick={onCardClick} />
-        )}
-
-        {activeTab === 'hidden' && <HiddenJobsTab key={`hidden-${Date.now()}`} />}
-
-        {activeTab === 'searches' && <SavedSearchesTab key={`searches-${Date.now()}`} />}
-
-        {activeTab === 'viewed' && <RecentlyViewedTab key={`viewed-${Date.now()}`} />}
-
-        {activeTab === 'settings' && <SettingsTab key={`settings-${Date.now()}`} />}
-      </div>
+    <div
+      className="
+        bg-white 
+        dark:bg-dark-20 
+        rounded-lg 
+        shadow-sm 
+        transition-all 
+        duration-300 
+        ease-in-out
+      "
+    >
+      <div className="p-6 animate-fadeIn">{content}</div>
     </div>
   );
 };

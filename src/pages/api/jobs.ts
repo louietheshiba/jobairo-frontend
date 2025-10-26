@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // First get total count without filters for pagination
     let countQuery = supabase
       .from('jobs')
-      .select('*', { count: 'exact', head: true })
+      .select('*, companies(name)', { count: 'exact', head: true })
       .eq('status', 'open');
 
     // Apply filters to count query
@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (company_name && company_name !== 'all') {
-      countQuery = countQuery.eq('company_name', company_name);
+      countQuery = countQuery.eq('companies.name', company_name);
     }
 
     if (job_type && job_type !== 'all') {
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('jobs')
       .select(`
         *,
-        company:companies(*)
+        companies(id, name)
       `)
       .eq('status', 'open')
       .order('date_posted', { ascending: false })
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       query = query.ilike('location', `%${location}%`);
     }
     if (company_name && company_name !== 'all') {
-      query = query.eq('company_name', company_name);
+      query = query.eq('companies.name', company_name);
     }
 
     if (job_type && job_type !== 'all') {

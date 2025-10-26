@@ -10,7 +10,7 @@ type IMainProps = {
 
 const Main = (props: IMainProps) => {
   return (
-    <div className="w-full bg-themeGray-5 font-roboto text-gray-700 antialiased dark:bg-dark-30">
+    <div className="w-full bg-themeGray-5 font-roboto text-gray-700 antialiased dark:bg-dark-25">
       {props.meta}
 
       <div className="mx-auto w-full">

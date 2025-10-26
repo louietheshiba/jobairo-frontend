@@ -5,29 +5,29 @@ import UserMenu from '../UserMenu';
 
 const HomeHeader = () => {
   return (
-    <div className="grid w-full grid-cols-1 gap-6 sm:gap-0 sm:grid-cols-3 items-center px-4 py-4 sm:px-6 lg:px-8">
-      {/* Spacer for left side */}
-      <div></div>
+    <header className="w-full px-4 py-3 sm:px-6 lg:px-8 bg-white dark:bg-dark-25 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Left Section (empty or future nav) */}
+        <div className="hidden sm:block w-1/3"></div>
 
-      {/* Centered Logo and Title (Original Design) */}
-      <div className="flex flex-col items-center gap-2.5">
-        <span className="text-black dark:text-white">
-          <JobAiroLogo />
-        </span>
-        <p className="text-center font-poppins text-xs font-medium text-gray-700 dark:text-gray-300 sm:text-sm uppercase">
-          A Simplistic Job Search Engine
-        </p>
-      </div>
+        {/* Center Section (Logo + Text) */}
+        <div className="flex flex-col items-center text-center">
+          <span className="text-black dark:text-white">
+            <JobAiroLogo />
+          </span>
+          <p className="text-xs sm:text-sm font-poppins font-medium text-gray-700 dark:text-gray-300 uppercase">
+            A Simplistic Job Search Engine
+          </p>
+        </div>
 
-      {/* User Menu and Theme Switcher (Right Side) */}
-      <div className="flex items-center justify-end gap-4">
-        <UserMenu />
-        <Switcher />
+        {/* Right Section (User + Switcher) */}
+        <div className="flex items-center justify-center sm:justify-end gap-3 sm:gap-4 w-full sm:w-1/3">
+          <UserMenu />
+          <Switcher />
+        </div>
       </div>
-    </div>
+    </header>
   );
 };
 
 export default HomeHeader;
-
-

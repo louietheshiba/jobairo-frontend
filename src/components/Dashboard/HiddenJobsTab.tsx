@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
 import type { Job } from '@/types/JobTypes';
+
 const HiddenJobsTab: React.FC = () => {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<(Job & { hiddenDate: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchHiddenJobs = async (showLoading = true) => {
-    if (!user) {
+  const fetchHiddenJobs = useCallback(async (showLoading = true) => {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
@@ -18,92 +19,84 @@ const HiddenJobsTab: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('hidden_jobs')
-        .select('job_id, created_at')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching hidden jobs:', error);
-        if (showLoading) setLoading(false);
-        return;
-      }
-
-      const jobIds = data.map(s => s.job_id);
-      if (jobIds.length === 0) {
-        setJobs([]);
-        if (showLoading) setLoading(false);
-        return;
-      }
-
-      const { data: jobsData, error: jobsError } = await supabase
-        .from('jobs')
-        .select('*')
-        .in('id', jobIds);
-
-      if (jobsError) {
-        console.error('Error fetching jobs:', jobsError);
-        if (showLoading) setLoading(false);
-        return;
-      }
-
-      const jobsWithDate = jobsData.map(job => {
-        const hidden = data.find(s => s.job_id === job.id);
-        return { ...job, hiddenDate: hidden?.created_at || '' };
-      });
-
-      setJobs(jobsWithDate);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchHiddenJobs();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Listen for tab change events to refresh data when switching to this tab
-  useEffect(() => {
-    const handleTabChange = (event: CustomEvent) => {
-      if (event.detail?.tab === 'hidden' && user) {
-        fetchHiddenJobs(false);
-      }
-    };
-
-    window.addEventListener('tabChanged', handleTabChange as EventListener);
-
-    return () => {
-      window.removeEventListener('tabChanged', handleTabChange as EventListener);
-    };
-  }, [user]);
-
-  const handleUnhide = async (jobId: string) => {
-    try {
-      const { error } = await supabase
-        .from('hidden_jobs')
-        .delete()
-        .eq('user_id', user?.id)
-        .eq('job_id', jobId);
+        .select('created_at, jobs(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setJobs(jobs.filter(j => j.id !== jobId));
-      toast.success('Job unhidden');
-      // Trigger stats refresh
+      const formattedJobs:any =
+        data?.map(item => ({
+          ...item.jobs,
+          hiddenDate: item.created_at,
+        })) || [];
+
+      setJobs(formattedJobs);
+    } catch (error) {
+      console.error('Error fetching hidden jobs:', error);
+      toast.error('Failed to fetch hidden jobs');
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) fetchHiddenJobs();
+    else setLoading(false);
+  }, [fetchHiddenJobs, user]);
+
+  useEffect(() => {
+    const handleTabChange = (event: CustomEvent) => {
+      if (event.detail?.tab === 'hidden') fetchHiddenJobs(false);
+    };
+    window.addEventListener('tabChanged', handleTabChange as EventListener);
+    return () => window.removeEventListener('tabChanged', handleTabChange as EventListener);
+  }, [fetchHiddenJobs]);
+
+  const handleUnhide = useCallback(
+    async (jobId: string) => {
+      try {
+        const { error } = await supabase
+          .from('hidden_jobs')
+          .delete()
+          .eq('user_id', user?.id)
+          .eq('job_id', jobId);
+
+        if (error) throw error;
+        setJobs(prev => prev.filter(j => j.id !== jobId));
+        toast.success('Job unhidden');
+        window.dispatchEvent(new CustomEvent('statsRefresh'));
+      } catch (error) {
+        console.error('Error unhiding job:', error);
+        toast.error('Failed to unhide job');
+      }
+    },
+    [user?.id]
+  );
+
+  const handleUnhideAll = useCallback(async () => {
+    if (!user || jobs.length === 0) return;
+    try {
+      const jobIds = jobs.map(job => job.id);
+      const { error } = await supabase
+        .from('hidden_jobs')
+        .delete()
+        .eq('user_id', user.id)
+        .in('job_id', jobIds);
+
+      if (error) throw error;
+      setJobs([]);
+      toast.success(`Unhidden ${jobIds.length} jobs`);
       window.dispatchEvent(new CustomEvent('statsRefresh'));
     } catch (error) {
-      console.error('Error unhiding job:', error);
-      toast.error('Failed to unhide job');
+      console.error('Error unhiding all jobs:', error);
+      toast.error('Failed to unhide all jobs');
     }
-  };
+  }, [user, jobs]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-10"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading hidden jobs...</p>
@@ -112,80 +105,72 @@ const HiddenJobsTab: React.FC = () => {
     );
   }
 
+  if (jobs.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No Hidden Jobs</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+          Hidden jobs will appear here once you hide them.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full">
+      <div className="flex flex-wrap items-center justify-between mb-8 gap-3">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Hidden Jobs</h3>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Jobs you've hidden from recommendations ({jobs.length})
+            Jobs you’ve hidden from recommendations ({jobs.length})
           </p>
         </div>
-        {jobs.length > 0 && (
-          <button
-            onClick={async () => {
-              if (!user || jobs.length === 0) return;
-
-              try {
-                const jobIds = jobs.map(job => job.id);
-                const { error } = await supabase
-                  .from('hidden_jobs')
-                  .delete()
-                  .eq('user_id', user.id)
-                  .in('job_id', jobIds);
-
-                if (error) throw error;
-
-                setJobs([]);
-                toast.success(`Unhidden ${jobIds.length} jobs`);
-                // Trigger stats refresh
-                window.dispatchEvent(new CustomEvent('statsRefresh'));
-              } catch (error) {
-                console.error('Error unhiding all jobs:', error);
-                toast.error('Failed to unhide all jobs');
-              }
-            }}
-            className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Unhide All
-          </button>
-        )}
+        <button
+          onClick={handleUnhideAll}
+          className="px-4 py-2 bg-primary-10 text-white text-sm font-medium rounded-md hover:bg-primary-15 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-10 focus:ring-offset-2 dark:focus:ring-offset-dark-20"
+        >
+          Unhide All
+        </button>
       </div>
 
-      {jobs.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400 text-lg">No hidden jobs yet</p>
-          <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Hidden jobs will appear here</p>
-        </div>
-      ) : (
-  <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4">
-          {jobs.map((job) => (
-            <div key={job.id} className="bg-white dark:bg-dark-20 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{job.title}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{job.company?.name} • {job.employment_type} • {job.salary_range}</p>
-                  <div className="inline-flex items-center px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-xs rounded-full">
-                    Hidden on {new Date(job.hiddenDate).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleUnhide(job.id)}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Unhide
-                </button>
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        {jobs.map(job => (
+          <div
+            key={job.id}
+            className="bg-white dark:bg-[#282828] rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 flex flex-col justify-between border border-gray-100 dark:border-white"
+          >
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">
+                {job.title}
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">
+                {job.company?.name ?? 'Unknown Company'} • {job.employment_type ?? 'N/A'} •{' '}
+                {job.salary_range ?? 'N/A'}
+              </p>
+              <span className="inline-flex items-center px-2 py-1 bg-primary-10/10 dark:bg-primary-10/20 text-primary-15 dark:text-primary-10 text-xs rounded-full">
+                Hidden on{' '}
+                {new Date(job.hiddenDate).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => handleUnhide(job.id)}
+                className="px-4 py-2 bg-primary-10 text-white text-sm font-medium rounded-md hover:bg-primary-15 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-10 focus:ring-offset-2 dark:focus:ring-offset-dark-20"
+              >
+                Unhide
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+      <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800">
         <p className="text-sm text-yellow-800 dark:text-yellow-200">
-          <strong>Note:</strong> Hidden jobs will be automatically deleted after 30 days.
+          <strong>Note:</strong> Hidden jobs are automatically deleted after 30 days.
         </p>
       </div>
     </div>

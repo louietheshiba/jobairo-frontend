@@ -12,13 +12,11 @@ const ResetPasswordPage = () => {
     const router = useRouter();
 
     useEffect(() => {
-        // Check if we have the required hash parameters for password reset
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
 
         if (accessToken && refreshToken) {
-            // Set the session with the tokens from the URL
             supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken,
@@ -28,32 +26,24 @@ const ResetPasswordPage = () => {
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (password !== confirmPassword) {
             setError('Passwords do not match');
             return;
         }
-
         if (password.length < 6) {
             setError('Password must be at least 6 characters long');
             return;
         }
-
         try {
             setLoading(true);
             setError('');
-
             const { error } = await supabase.auth.updateUser({
                 password: password
             });
-
             if (error) throw error;
-
             setSuccess(true);
-
-            // Redirect to login after a short delay
             setTimeout(() => {
-                router.push('/auth');
+                router.push('/auth/login');
             }, 2000);
 
         } catch (error: any) {
@@ -104,16 +94,15 @@ const ResetPasswordPage = () => {
 
     return (
         <>
-
             <div className="min-h-screen flex">
                 {/* Left Side - Branding */}
-                <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#319795] to-[#246463] text-white flex-col justify-center items-center p-12">
-                    <div className="max-w-md text-center">
+                <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex-col justify-center items-center p-12">
+                    <div className="max-w-md text-center ">
                         <div className="mb-8 mx-auto flex justify-center">
                             <JobAiroLogo />
                         </div>
                         <h1 className="text-4xl font-bold mb-4">
-                            'Welcome Back to JobAiro'
+                            Welcome Back to JobAiro
                         </h1>
                         <p className="text-xl opacity-90">
                             Continue your job search journey with us
@@ -147,7 +136,7 @@ const ResetPasswordPage = () => {
                 <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900">
                     <div className="max-w-md w-full space-y-8">
                         {/* Mobile Logo */}
-                        <div className="lg:hidden text-center mb-8">
+                        <div className="lg:hidden text-center mb-8 flex justify-center">
                             <JobAiroLogo />
                         </div>
 
@@ -202,7 +191,8 @@ const ResetPasswordPage = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#319795] hover:bg-[#246463] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#319795] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+
                             >
                                 {loading ? 'Updating Password...' : 'Update Password'}
                             </button>
@@ -210,8 +200,8 @@ const ResetPasswordPage = () => {
 
                         <div className="text-center">
                             <button
-                                onClick={() => router.push('/auth')}
-                                className="text-[#319795] hover:text-[#246463] dark:text-[#319795] font-medium"
+                                onClick={() => router.push('/auth/login')}
+                                className="text-[#10b981] hover:text-[#047857] dark:text-[#047857] font-medium"
                             >
                                 ← Back to Login
                             </button>

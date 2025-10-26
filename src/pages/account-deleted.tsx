@@ -5,7 +5,7 @@ const AccountDeletedPage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Left Side - Branding - Fixed */}
-      <div className="hidden lg:flex justify-center  lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex flex-col justify-center items-center p-12">
+      <div className="hidden lg:flex  lg:fixed lg:inset-y-0 lg:left-0 lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white  flex-col justify-center items-center p-12">
         <div className="max-w-md text-center">
           <div className="mb-8 mx-auto flex justify-center">
             <JobAiroLogo />

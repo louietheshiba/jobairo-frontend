@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 import { activityTracker } from '@/utils/activityTracker';
 import { useRouter } from 'next/router';
+import type { User, Session } from '@supabase/supabase-js';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -12,52 +12,79 @@ export const useAuth = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
+    let mounted = true;
 
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-          
-        setUserRole(data?.role ?? 'job_seeker');
-        activityTracker.setUserId(session.user.id);
-      } else {
+    const loadSession = async () => {
+      // 🔹 Try local cache first (avoid network delay)
+      const cached = sessionStorage.getItem('userSession');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setSession(parsed.session);
+        setUser(parsed.user);
+        setUserRole(parsed.role);
+        setLoading(false);
+      }
+
+      // 🔹 Always verify with Supabase (async)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
         setUser(null);
         setUserRole(null);
+        setLoading(false);
+        return;
       }
+
+      if (!mounted) return;
+
+      setSession(session);
+      setUser(session.user);
+
+      // 🔹 Fetch profile once
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const role = data?.role ?? 'job_seeker';
+      setUserRole(role);
+      activityTracker.setUserId(session.user.id);
+
+      // Cache for faster reload
+      sessionStorage.setItem('userSession', JSON.stringify({ user: session.user, session, role }));
+
       setLoading(false);
     };
 
-    getSession();
+    loadSession();
 
-    // 👇 Listen for login/logout/token refresh
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
+    // 🔹 Listen for auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        setUser(session.user);
+        setSession(session);
         supabase
           .from('profiles')
-          .select('*')
+          .select('role')
           .eq('user_id', session.user.id)
           .single()
           .then(({ data }) => {
-            setUserRole(data?.role ?? 'job_seeker');
+            const role = data?.role ?? 'job_seeker';
+            setUserRole(role);
             activityTracker.setUserId(session.user.id);
+            sessionStorage.setItem('userSession', JSON.stringify({ user: session.user, session, role }));
           });
       } else {
         setUser(null);
+        setSession(null);
         setUserRole(null);
+        sessionStorage.removeItem('userSession');
       }
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      mounted = false;
+      listener.subscription.unsubscribe();
     };
   }, []);
 
@@ -67,11 +94,5 @@ export const useAuth = () => {
     router.push('/auth/login');
   };
 
-  return {
-    user,
-    session,
-    userRole,
-    loading,
-    signOut,
-  };
+  return { user, session, userRole, loading, signOut };
 };

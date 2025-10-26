@@ -76,7 +76,7 @@ const DropDownButton = React.forwardRef<HTMLButtonElement, DropDownButtonProps>(
       <div className="relative inline-block" ref={dropdownRef}>
         <button
           ref={ref}
-          className={`flex w-full rounded  font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
+          className={`flex w-full rounded  font-poppins text-xs font-medium sm:text-sm  justify-between${
             className || ''
           }`}
           onClick={toggleDropdown}
@@ -87,7 +87,7 @@ const DropDownButton = React.forwardRef<HTMLButtonElement, DropDownButtonProps>(
         </button>
 
         {isOpen && options && options?.length > 0 && (
-          <div className="absolute left-0 z-[99999] mt-2  max-h-[200px] w-auto min-w-full overflow-y-auto rounded-md bg-white shadow-lg ring-1 ring-gray-200 dark:bg-dark-30 dark:ring-dark-15">
+          <div className="absolute left-0 z-[99999] mt-2  max-h-[200px] w-full min-w-full overflow-y-auto rounded-md bg-white shadow-lg ring-1 ring-gray-200 dark:bg-dark-30 dark:ring-dark-15">
             <ul className="py-1">
               {options?.map((option) => (
                 <li

@@ -49,5 +49,5 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ]
+, "src/components/Admin/jobs/JobRow.tsx", "src/components/Admin/jobs/EditJobModal.tsx"  ]
 }

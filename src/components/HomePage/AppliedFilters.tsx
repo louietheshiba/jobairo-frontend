@@ -21,32 +21,25 @@ const Chip = ({
 const AppliedFilters = ({ filterData, setFilters }: AppliedFiltersProps) => {
   const handleDelete = (label: string) => {
     const updatedFilters: any = { ...filterData };
-    // Handle location filters
     if (label.startsWith('Location:')) {
       const locationLabel = label.replace('Location: ', '');
       updatedFilters.locations = updatedFilters.locations.filter((loc: any) => loc.label !== locationLabel);
     }
-    // Handle job type filter
     else if (label.startsWith('Job Type:')) {
       updatedFilters.jobType = '';
     }
-    // Handle company filter
     else if (label.startsWith('Company:')) {
       updatedFilters.company = '';
     }
-    // Handle education filter
     else if (label.startsWith('Education:')) {
       updatedFilters.education = '';
     }
-    // Handle experience level filter
     else if (label.startsWith('Experience Level:')) {
       updatedFilters.experienceLevel = '';
     }
-    // Handle salary range filter
     else if (label.startsWith('Salary Range:')) {
       updatedFilters.salaryRange = null;
     }
-    // Handle work schedule filter
     else if (label.startsWith('Work Setting:')) {
       const workSettingLabel = label.replace('Work Setting: ', '');
       updatedFilters.workSchedule = updatedFilters.workSchedule.filter((ws: any) => ws.label !== workSettingLabel);

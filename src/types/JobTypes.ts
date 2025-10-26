@@ -35,6 +35,10 @@ export type Job = {
     size?: string;
     industry?: string;
   };
+  companies?: {
+    id: string;
+    name: string;
+  };
 };
 
 export type JobDetailsModalProps = {

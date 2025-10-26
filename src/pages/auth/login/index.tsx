@@ -28,7 +28,7 @@ const AuthPage = () => {
     }
   }, [user, userRole, router]);
 
-// Google Authentication
+  // Google Authentication
   const handleGoogleAuth = async () => {
     try {
       setLoading(true);
@@ -80,13 +80,13 @@ const AuthPage = () => {
           },
         });
         if (error) throw error;
-          console.log('Email confirmation required');
-          setSuccess('Check your email for a verification link!');
-          setEmail('');
-          setPassword('');
-          setConfirmPassword('');
-          setAcceptTerms(false);
-        
+        console.log('Email confirmation required');
+        setSuccess('Check your email for a verification link!');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setAcceptTerms(false);
+
       }
     } catch (error: any) {
       setError(error.message);
@@ -98,7 +98,7 @@ const AuthPage = () => {
   //  Hanlde forgot password 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       setError('');
@@ -108,7 +108,7 @@ const AuthPage = () => {
       });
 
       if (error) throw error;
-      
+
       setSuccess('Password reset email sent! Check your inbox.');
     } catch (error: any) {
       setError(error.message);
@@ -230,7 +230,7 @@ const AuthPage = () => {
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col justify-center p-8 bg-white dark:bg-dark-20 min-h-screen overflow-y-auto overflow-x-hidden">
         <div className="max-w-md w-full mx-auto py-8">
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-8 flex justify-center">
             <JobAiroLogo />
           </div>
 
@@ -258,143 +258,143 @@ const AuthPage = () => {
 
           <div className="space-y-6">
 
-          {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/50 dark:border-red-800">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md dark:bg-green-900/50 dark:border-green-800">
-              {success}
-            </div>
-          )}
-
-          <button
-            onClick={handleGoogleAuth}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-25 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700"
-          >
-            <FcGoogle size={20} />
-            Continue with Google
-          </button>
-
-          <div className="flex items-center">
-            <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
-            <div className="mx-4 text-sm text-gray-500 dark:text-gray-400">OR</div>
-            <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
-          </div>
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailAuth} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
-                placeholder={isLogin ? "Enter your password" : "Create a password"}
-                required
-                minLength={6}
-              />
-            </div>
-
-            {!isLogin && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
-                  placeholder="Confirm your password"
-                  required
-                />
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/50 dark:border-red-800">
+                {error}
               </div>
             )}
 
-
-            {isLogin && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-white">
-                    Remember me
-                  </label>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="flex items-center">
-                <input
-                  id="accept-terms"
-                  type="checkbox"
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
-                  required
-                />
-                <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-900 dark:text-white">
-                  I accept the{' '}
-                  <a href="/terms" className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]">
-                    Terms and Conditions
-                  </a>{' '}
-                  and{' '}
-                  <a href="/privacy" className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]">
-                    Privacy Policy
-                  </a>
-                </label>
+            {success && (
+              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md dark:bg-green-900/50 dark:border-green-800">
+                {success}
               </div>
             )}
 
             <button
-              type="submit"
+              onClick={handleGoogleAuth}
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d4aa] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-25 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700"
             >
-              {loading 
-                ? (isLogin ? 'Signing in...' : 'Creating account...') 
-                : (isLogin ? 'Sign in' : 'Create account')
-              }
+              <FcGoogle size={20} />
+              Continue with Google
             </button>
-          </form>
+
+            <div className="flex items-center">
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
+              <div className="mx-4 text-sm text-gray-500 dark:text-gray-400">OR</div>
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
+            </div>
+
+            {/* Email/Password Form */}
+            <form onSubmit={handleEmailAuth} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                  placeholder={isLogin ? "Enter your password" : "Create a password"}
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              {!isLogin && (
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#00d4aa] focus:border-[#00d4aa] dark:bg-dark-25 dark:border-gray-600 dark:text-white"
+                    placeholder="Confirm your password"
+                    required
+                  />
+                </div>
+              )}
+
+
+              {isLogin && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
+                    />
+                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-white">
+                      Remember me
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="flex items-center">
+                  <input
+                    id="accept-terms"
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className="h-4 w-4 text-[#10b981] focus:ring-[#10b981] border-gray-300 rounded"
+                    required
+                  />
+                  <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-900 dark:text-white">
+                    I accept the{' '}
+                    <a href="/terms" className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]">
+                      Terms and Conditions
+                    </a>{' '}
+                    and{' '}
+                    <a href="/privacy" className="text-[#10b981] hover:text-[#00b894] dark:text-[#10b981]">
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] text-sm font-medium text-white bg-gradient-to-r from-[#10b981] to-[#047857] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                {loading
+                  ? (isLogin ? 'Signing in...' : 'Creating account...')
+                  : (isLogin ? 'Sign in' : 'Create account')
+                }
+              </button>
+            </form>
           </div>
         </div>
       </div>

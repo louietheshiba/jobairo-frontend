@@ -59,7 +59,7 @@ const DropDownRangebutton = React.forwardRef<
       <div className="relative inline-block" ref={dropdownRef}>
         <button
           ref={ref}
-          className={`flex w-full items-center justify-between  rounded px-2 py-0.5 font-poppins text-xs font-medium sm:w-auto sm:text-sm ${
+          className={`flex w-full items-center justify-between  rounded px-2 py-0.5 font-poppins text-xs font-medium  sm:text-sm ${
             className || ''
           }`}
           onClick={toggleDropdown}
