@@ -24,33 +24,13 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [totalJobs, setTotalJobs] = useState(0);
-
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [viewedJobIds, setViewedJobIds] = useState<string[]>([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const limit = 20;
-
-  const getDateFilterISO = (label: string) => {
-    const now = new Date();
-    let days = 0;
-    switch (label) {
-      case '24hrs': days = 1; break;
-      case '2 days': days = 2; break;
-      case '4 days': days = 4; break;
-      case '7 days': days = 7; break;
-      case '30 days': days = 30; break;
-      case '60 days': days = 60; break;
-      case '90 days': days = 90; break;
-      default: return null;
-    }
-    const fromDate = new Date(now.setDate(now.getDate() - days));
-    return fromDate.toISOString();
-  };
-
   const fetchJobs = useCallback(
     async (loadMore = false) => {
       try {
@@ -63,53 +43,106 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
             *,
             companies!inner (
               id,
-              name
+              name,
+              logo_url,
+              website,
+              industry
             )
           `, { count: 'exact' })
           .eq('status', 'open');
 
-        if (filters.position?.trim())
-          query = query.ilike('title', `%${filters.position}%`);
-
-        if (filters.jobType)
-          query = query.eq('employment_type', filters.jobType);
-
-        if (filters.company)
-          query = query.ilike('companies.name', `%${filters.company}%`);
-
-        if (filters.locations?.length > 0 && filters.locations[0]?.value)
+        if (filters.position?.trim()) query = query.ilike('title', `%${filters.position}%`);
+        if (filters.company) query = query.ilike('companies.name', `%${filters.company}%`);
+        if (filters.jobType) query = query.eq('employment_type', filters.jobType);
+        if (filters.education) query = query.eq('education', filters.education);
+        if (filters.experienceLevel) query = query.eq('experience_level', filters.experienceLevel);
+        if (filters.locations?.length && filters.locations[0]?.value)
           query = query.ilike('location', `%${filters.locations[0].value}%`);
-
-        if (filters.workSchedule?.length > 0 && filters.workSchedule[0]?.value)
+        if (filters.workSchedule?.length && filters.workSchedule[0]?.value)
           query = query.ilike('remote_type', `%${filters.workSchedule[0].value}%`);
 
-        if (filters.education)
-          query = query.eq('education', filters.education);
+        if (filters.datePosted && filters.datePosted !== 'Date Posted' && filters.datePosted !== 'No Date Filter') {
+          const now = new Date();
+          const oneDay = 24 * 60 * 60 * 1000;
 
-        if (filters.experienceLevel)
-          query = query.eq('experience_level', filters.experienceLevel);
+          const addRange = (daysFrom: number, daysTo: number | null = null) => {
+            const fromDate = new Date(now.getTime() - daysFrom * oneDay);
+            if (daysTo) {
+              const toDate = new Date(now.getTime() - daysTo * oneDay);
+              query = query.gte('created_at', fromDate.toISOString()).lt('created_at', toDate.toISOString());
+            } else {
+              query = query.gte('created_at', fromDate.toISOString());
+            }
+          };
 
-        if (filters.salaryRange && Array.isArray(filters.salaryRange)) {
-          const [min, max] = filters.salaryRange;
-          if (min && max) {
-            query = query.or(`salary.ilike.%${min.toString().slice(0, 3)}%,salary.ilike.%${max.toString().slice(0, 3)}%`);
-          } else if (min) {
-            query = query.ilike('salary', `%${min.toString().slice(0, 3)}%`);
-          } else if (max) {
-            query = query.ilike('salary', `%${max.toString().slice(0, 3)}%`);
+          switch (filters.datePosted) {
+            case '24hrs': addRange(1); break;
+            case '2 days': addRange(2, 1); break;
+            case '4 days': addRange(4, 2); break;
+            case '7 days': addRange(7, 4); break;
+            case '30 days': addRange(30, 7); break;
+            case '60 days': addRange(60, 30); break;
+            case '90 days': addRange(90, 60); break;
           }
         }
 
+        if (filters.salaryRange && Array.isArray(filters.salaryRange)) {
+          const [minFilter, maxFilter] = filters.salaryRange;
 
-        if (filters.datePosted && filters.datePosted !== 'Date Posted') {
-          const fromDate = getDateFilterISO(filters.datePosted);
-          if (fromDate) query = query.gte('created_at', fromDate);
+          const { data: allJobs, error } = await supabase
+            .from('jobs')
+            .select(`
+      *,
+      companies!inner (
+        id,
+        name,
+        logo_url,
+        website,
+        industry
+      )
+    `)
+            .eq('status', 'open');
+
+          if (error) throw error;
+
+          const parseSalaryRange = (salary: string): [number, number] | null => {
+            if (!salary) return null;
+            const match:any = salary.match(/\$?([\d,]+)\s*(?:to|-)\s*\$?([\d,]+)/i);
+            if (!match) return null;
+            const min = parseInt(match[1].replace(/,/g, ''), 10);
+            const max = parseInt(match[2].replace(/,/g, ''), 10);
+            return [min, max];
+          };
+
+          const filtered = (allJobs || []).filter(job => {
+            const range = parseSalaryRange(job.salary || '');
+            if (!range) return false;
+
+            const [min, max] = range;
+
+            if (minFilter && maxFilter) return max >= minFilter && min <= maxFilter;
+            if (minFilter) return max >= minFilter;
+            if (maxFilter) return min <= maxFilter;
+
+            return true;
+          });
+
+          setJobs(filtered);
+          setTotalJobs(filtered.length);
+          setHasMore(false);
+          setLoading(false);
+          return;
         }
+
 
         if (filters.relevance === 'Most Recent')
           query = query.order('created_at', { ascending: false });
         else if (filters.relevance === 'Oldest')
           query = query.order('created_at', { ascending: true });
+        else if (filters.relevance === 'Highest Salary')
+          query = query.order('salary', { ascending: false, nullsFirst: false });
+        else if (filters.relevance === 'Least Experience')
+          query = query.order('experience_level', { ascending: true });
 
         query = query.range(from, to);
 
@@ -138,7 +171,6 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
         supabase.from('applied_jobs').select('job_id').eq('user_id', user.id),
         supabase.from('job_views').select('job_id').eq('user_id', user.id),
       ]);
-
       if (saved.data) setSavedJobIds(saved.data.map(j => j.job_id));
       if (applied.data) setAppliedJobIds(applied.data.map(j => j.job_id));
       if (viewed.data) setViewedJobIds(viewed.data.map(j => j.job_id));
@@ -146,6 +178,7 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     fetchUserJobs();
   }, [user]);
 
+  /** Marked Jobs Filter */
   const filteredJobs = jobs.filter(job => {
     if (filters.markedJobs.includes('Exclude Saved jobs') && savedJobIds.includes(job.id))
       return false;
@@ -168,6 +201,12 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     if (page > 0) fetchJobs(true);
   }, [page]);
 
+  useEffect(() => {
+    const refreshHandler = () => fetchJobs(false);
+    window.addEventListener('refreshJobs', refreshHandler);
+    return () => window.removeEventListener('refreshJobs', refreshHandler);
+  }, [fetchJobs]);
+
   const handleCardClick = (job: Job) => {
     setSelectedJob(job);
     setIsModalOpen(true);
@@ -181,11 +220,9 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
     <div className="px-[15px] pb-5 pt-3 sm:pb-[20px] sm:pt-[15px]">
       <div className="mx-auto w-full max-w-[1200px] flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              {loading ? 'Loading jobs...' : `${filteredJobs.length} of ${totalJobs} open jobs`}
-            </h2>
-          </div>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+            {loading ? 'Loading jobs...' : `${filteredJobs.length} of ${totalJobs} open jobs`}
+          </h2>
 
           <div className="flex items-center gap-1">
             <FilterDropDownbutton
@@ -233,16 +270,8 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
             dataLength={filteredJobs.length}
             next={loadMore}
             hasMore={hasMore}
-            loader={
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-b-[#10b981]"></div>
-              </div>
-            }
-            endMessage={
-              <div className="text-center py-4 text-gray-500 text-sm">
-                All open jobs loaded ({totalJobs} total)
-              </div>
-            }
+            loader={<div className="flex justify-center py-4"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-b-[#10b981]"></div></div>}
+            endMessage={<div className="text-center py-4 text-gray-500 text-sm">All open jobs loaded ({totalJobs} total)</div>}
           >
             <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-4 mt-4">
               {filteredJobs.map(job => (
@@ -256,9 +285,7 @@ const JobList = ({ filters, handleChange }: JobListProps) => {
             </div>
           </InfiniteScroll>
         ) : (
-          <div className="text-center py-12 text-gray-500">
-            No open jobs found for selected filters
-          </div>
+          <div className="text-center py-12 text-gray-500">No open jobs found for selected filters</div>
         )}
       </div>
 

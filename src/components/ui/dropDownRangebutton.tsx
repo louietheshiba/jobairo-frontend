@@ -1,5 +1,4 @@
 import * as React from 'react';
-
 import DropDownIcon from '../Icons/DropDownIcon';
 import { Button } from './button';
 import RangePicker from './rangePicker';
@@ -8,14 +7,11 @@ interface DropDownRangebuttonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onChange'> {
   iconColor?: string;
   defaultOpen?: boolean;
-  onApply: (range: number[]) => void;
-  selectedRange: number[] | null;
+  onApply: (range: [number, number]) => void;
+  selectedRange: [number, number] | null;
 }
 
-const DropDownRangebutton = React.forwardRef<
-  HTMLButtonElement,
-  DropDownRangebuttonProps
->(
+const DropDownRangebutton = React.forwardRef<HTMLButtonElement, DropDownRangebuttonProps>(
   (
     {
       className,
@@ -29,12 +25,13 @@ const DropDownRangebutton = React.forwardRef<
     ref
   ) => {
     const [isOpen, setIsOpen] = React.useState(defaultOpen);
-    const [priceRange, setPriceRange] = React.useState<number[]>(
-      selectedRange || [0, 1000]
+    const [salaryRange, setSalaryRange] = React.useState<[number, number]>(
+      selectedRange || [0, 500000]
     );
 
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
+    // ✅ Close when clicked outside
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         if (
@@ -45,51 +42,58 @@ const DropDownRangebutton = React.forwardRef<
         }
       };
       document.addEventListener('mousedown', handleClickOutside);
-      return () =>
-        document.removeEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const toggleDropdown = () => setIsOpen((prev) => !prev);
-
+    // ✅ Reset when selected range changes externally
     React.useEffect(() => {
-      setPriceRange(selectedRange || [0, 1000]);
+      setSalaryRange(selectedRange || [0, 500000]);
     }, [selectedRange]);
 
     return (
       <div className="relative inline-block" ref={dropdownRef}>
+        {/* Button that toggles dropdown */}
         <button
           ref={ref}
-          className={`flex w-full items-center justify-between  rounded px-2 py-0.5 font-poppins text-xs font-medium  sm:text-sm ${
+          className={`flex w-full items-center justify-between rounded px-2 py-1 font-poppins text-xs sm:text-sm font-medium ${
             className || ''
           }`}
-          onClick={toggleDropdown}
+          onClick={() => setIsOpen((prev) => !prev)}
           {...props}
         >
-          <p className="mb-0.5">{children}</p>
+          <p className="mb-0.5">
+            {children}
+            {selectedRange
+              ? `: $${selectedRange[0].toLocaleString()} - $${selectedRange[1].toLocaleString()}`
+              : ''}
+          </p>
           <DropDownIcon color={iconColor} />
         </button>
 
+        {/* Dropdown Content */}
         {isOpen && (
-          <div className="absolute right-0 z-[99999] mt-2 max-h-[300px] w-[320px] overflow-y-auto rounded-md bg-white shadow-lg ring-1 ring-gray-200 dark:bg-dark-30 dark:ring-dark-15 sm:right-auto sm:w-[380px]">
+          <div className="absolute  z-[99999] mt-2 w-[300px] rounded-md bg-white shadow-lg ring-1 ring-gray-200 dark:bg-dark-30 dark:ring-dark-15 sm:w-[380px]">
             <div className="p-4">
-              <h1 className="mb-4 whitespace-nowrap text-base font-semibold dark:text-white">
+              <h1 className="mb-4 text-base font-semibold dark:text-white">
                 Salary Range
               </h1>
+
+              {/* ✅ Range Slider */}
               <RangePicker
                 min={0}
-                max={1000}
-                step={10}
-                selectedValue={
-                  priceRange?.sort((a, b) => a - b) as [number, number]
-                }
-                onChange={(values) => setPriceRange(values)}
+                max={500000}
+                step={1000}
+                selectedValue={salaryRange.sort((a, b) => a - b) as [number, number]}
+                onChange={(values) => setSalaryRange(values as [number, number])}
               />
+
+              {/* ✅ Apply Button */}
               <Button
                 onClick={() => {
                   setIsOpen(false);
-                  onApply(priceRange);
+                  onApply(salaryRange);
                 }}
-                className="mt-2 !border-primary-10 !bg-primary-10 !py-2 text-sm !text-white hover:!border-primary-15 hover:!bg-primary-15 hover:text-primary-15"
+                className="mt-3 w-full bg-[#10b981] text-white hover:bg-[#059669] transition-all py-2 rounded-md text-sm"
               >
                 Apply
               </Button>
@@ -101,6 +105,5 @@ const DropDownRangebutton = React.forwardRef<
   }
 );
 
-DropDownRangebutton.displayName = 'DropDownButton';
-
+DropDownRangebutton.displayName = 'DropDownRangebutton';
 export { DropDownRangebutton };

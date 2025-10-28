@@ -57,7 +57,7 @@ const ResetPasswordPage = () => {
         return (
             <div className="min-h-screen flex">
                 {/* Left Side - Branding */}
-                <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#319795] to-[#246463] text-white flex-col justify-center items-center p-12">
+                <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#10b981] to-[#047857] text-white flex-col justify-center items-center p-12">
                     <div className="max-w-md text-center">
                         <div className="mb-8 mx-auto flex justify-center">
                             <JobAiroLogo />

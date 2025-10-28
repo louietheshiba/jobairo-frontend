@@ -18,21 +18,25 @@ import { activityTracker } from "@/utils/activityTracker";
 import type { JobDetailsModalProps } from "@/types/JobTypes";
 import Modal from "../ui/modal";
 
-const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
-  isOpen,
-  job,
-  onClose,
-}) => {
+const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, job, onClose }) => {
   const { user } = useAuth();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
-  // ✅ Always define hooks at top level (no conditionals)
   const [isSaved, setIsSaved] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const hasChecked = useRef(false);
 
-  /** ✅ Fetch job status only once per job/user */
+  // ✅ Reset when a new job opens
+  useEffect(() => {
+    if (!job) return;
+    hasChecked.current = false;
+    setIsSaved(false);
+    setIsApplied(false);
+    setIsHidden(false);
+  }, [job]);
+
+  // ✅ Fetch job status when modal opens
   useEffect(() => {
     if (!user || !job || hasChecked.current) return;
     hasChecked.current = true;
@@ -40,33 +44,16 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
     const fetchJobStatus = async () => {
       try {
         const [saved, applied, hidden] = await Promise.allSettled([
-          supabase
-            .from("saved_jobs")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("job_id", job.id)
-            .single(),
-          supabase
-            .from("applied_jobs")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("job_id", job.id)
-            .single(),
-          supabase
-            .from("hidden_jobs")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("job_id", job.id)
-            .single(),
+          supabase.from("saved_jobs").select("id").eq("user_id", user.id).eq("job_id", job.id).single(),
+          supabase.from("applied_jobs").select("id").eq("user_id", user.id).eq("job_id", job.id).single(),
+          supabase.from("hidden_jobs").select("id").eq("user_id", user.id).eq("job_id", job.id).single(),
         ]);
 
         if (saved.status === "fulfilled" && saved.value.data) setIsSaved(true);
-        if (applied.status === "fulfilled" && applied.value.data)
-          setIsApplied(true);
-        if (hidden.status === "fulfilled" && hidden.value.data)
-          setIsHidden(true);
+        if (applied.status === "fulfilled" && applied.value.data) setIsApplied(true);
+        if (hidden.status === "fulfilled" && hidden.value.data) setIsHidden(true);
 
-        // Record job view
+        // Record view
         await supabase.from("job_views").upsert({
           user_id: user.id,
           job_id: job.id,
@@ -75,71 +62,40 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
 
         activityTracker.trackActivity(job.id, "view", {
           title: job.title,
-          location: job.location,
           company: job.company?.name,
-          category: job.job_category,
-          employmentType: job.employment_type,
         });
-
         window.dispatchEvent(new CustomEvent("statsRefresh"));
-        window.dispatchEvent(new CustomEvent("jobViewed"));
-      } catch (error) {
-        console.error("Status check failed:", error);
+      } catch (err) {
+        console.error("Error fetching job status:", err);
       }
     };
 
     fetchJobStatus();
   }, [user, job]);
 
-  /** ✅ Generalized Toggle Function (Save / Apply / Hide) */
+  // ✅ Handle Save / Apply / Hide
   const toggleJobStatus = useCallback(
-    async (
-      table: string,
-      current: boolean,
-      setFn: React.Dispatch<React.SetStateAction<boolean>>,
-      action: "save" | "apply" | "hide"
-    ) => {
-      if (!user) {
-        toast.error("Please login first");
-        return;
-      }
+    async (table: string, current: boolean, setFn: any, action: "save" | "apply" | "hide") => {
+      if (!user) return toast.error("Please login first");
 
-      const optimisticState = !current;
-      setFn(optimisticState);
+      const newState = !current;
+      setFn(newState);
 
       try {
-        if (optimisticState) {
+        if (newState) {
           await supabase.from(table).insert({ user_id: user.id, job_id: job.id });
           toast.success(
             action === "save"
               ? "Job saved 🎉"
               : action === "apply"
               ? "Marked as applied 🎉"
-              : "Job hidden successfully"
+              : "Job hidden"
           );
-
-          activityTracker.trackActivity(job.id, action, {
-            title: job.title,
-            location: job.location,
-            company: job.company?.name,
-            category: job.job_category,
-            employmentType: job.employment_type,
-          });
-
-          window.dispatchEvent(new CustomEvent("statsRefresh"));
-          window.dispatchEvent(
-            new CustomEvent(`job${action[0].toUpperCase() + action.slice(1)}`, {
-              detail: { jobId: job.id },
-            })
-          );
-
+          activityTracker.trackActivity(job.id, action, { title: job.title });
+          window.dispatchEvent(new CustomEvent("refreshJobs"));
           if (action === "hide") onClose();
         } else {
-          await supabase
-            .from(table)
-            .delete()
-            .eq("user_id", user.id)
-            .eq("job_id", job.id);
+          await supabase.from(table).delete().eq("user_id", user.id).eq("job_id", job.id);
           toast(
             action === "save"
               ? "Job unsaved"
@@ -147,35 +103,29 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
               ? "Application unmarked"
               : "Job unhidden"
           );
-          window.dispatchEvent(new CustomEvent("statsRefresh"));
+          window.dispatchEvent(new CustomEvent("refreshJobs"));
         }
       } catch (err) {
-        console.error(`Error updating ${action} status:`, err);
-        setFn(!optimisticState);
+        console.error(`Error updating ${action}:`, err);
+        setFn(!newState);
         toast.error("Action failed, please try again");
       }
     },
     [user, job, onClose]
   );
 
-  /** ✅ Share Handler */
-  const handleShare = useCallback(() => {
-    if (!job) return;
+  // ✅ Apply + Share handlers
+  const handleApplyNow = () => {
+    if (!job?.application_url) return toast.error("Application link not available");
+    window.open(job.application_url, "_blank");
+  };
+
+  const handleShare = () => {
     const url = `${window.location.origin}/jobs/${job.id}`;
     navigator.clipboard.writeText(url);
     toast.success("Job link copied 📋");
-  }, [job]);
+  };
 
-  /** ✅ Apply Handler */
-  const handleApplyNow = useCallback(() => {
-    if (!job?.application_url) {
-      toast.error("Application URL not available");
-      return;
-    }
-    window.open(job.application_url, "_blank");
-  }, [job]);
-
-  /** ✅ Safe render check (no hooks below this) */
   if (!isOpen || !job) return null;
 
   return (
@@ -187,63 +137,59 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
       isCloseIcon={false}
     >
       {/* ===== Header Section ===== */}
-      <div className="relative bg-[#10b981] text-white px-8 py-6">
-        <div className="flex justify-between items-start">
-          <div className="flex-1 pr-4">
-            <h1 className="text-[20px] font-bold mb-2 leading-tight">{job.title}</h1>
+      <div className="bg-[#10b981] text-white px-8 py-6 flex justify-between items-start">
+        <div className="flex-1 pr-4">
+          <h1 className="text-[20px] font-bold mb-2 leading-tight">{job.title}</h1>
 
-            {job.company?.name && (
-              <button
-                onClick={() =>
-                  job.company?.website && window.open(job.company.website, "_blank")
-                }
-                className="text-xl font-semibold hover:underline flex items-center gap-2 hover:scale-105 transition-all"
-              >
-                {job.company.name}
-                <ExternalLink size={16} />
-              </button>
+          {job.company?.name && (
+            <button
+              onClick={() => job.company?.website && window.open(job.company.website, "_blank")}
+              className="text-lg font-semibold flex items-center gap-2 hover:underline hover:scale-105 transition-all"
+            >
+              {job.company.name}
+              <ExternalLink size={16} />
+            </button>
+          )}
+
+          <div className="flex gap-3 flex-wrap mt-3">
+            {job.location && (
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-white text-black shadow">
+                <MapPin size={16} /> {job.location}
+              </span>
             )}
-
-            <div className="flex gap-3 flex-wrap mt-3">
-              {job.location && (
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-white text-black shadow">
-                  <MapPin size={16} /> {job.location}
-                </span>
-              )}
-              {job.employment_type && (
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-white text-black shadow">
-                  <Briefcase size={16} /> {job.employment_type}
-                </span>
-              )}
-              {job.salary_range && (
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-gradient-to-r from-[#10b981] to-[#047857] text-white shadow">
-                  {job.salary_range}
-                </span>
-              )}
-            </div>
+            {job.employment_type && (
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-white text-black shadow">
+                <Briefcase size={16} /> {job.employment_type}
+              </span>
+            )}
+            {job.salary && (
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-sm font-medium bg-gradient-to-r from-[#10b981] to-[#047857] text-white shadow">
+                ${job.salary.toLocaleString()}
+              </span>
+            )}
           </div>
-
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 hover:scale-105 transition-all"
-          >
-            <X size={20} />
-          </button>
         </div>
+
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* ===== Action Buttons ===== */}
-      <div className="bg-white dark:bg-dark-25 px-8 py-6 border-b border-gray-200 dark:border-dark-15 flex flex-wrap gap-3 items-center">
+      <div className="bg-white dark:bg-dark-25 px-8 py-5 border-b border-gray-200 dark:border-dark-15 flex flex-wrap gap-3 items-center">
         <button
           onClick={handleApplyNow}
-          className="bg-[#10b981] text-white py-1 px-6 text-sm font-semibold rounded-lg shadow hover:shadow-lg hover:-translate-y-0.5 transition-all"
+          className="bg-[#10b981] text-white py-1.5 px-6 text-sm font-semibold rounded-lg shadow hover:-translate-y-0.5 transition-all"
         >
           Apply Now
         </button>
 
         <button
           onClick={() => toggleJobStatus("saved_jobs", isSaved, setIsSaved, "save")}
-          className={`flex items-center py-1 px-6 text-sm font-semibold rounded-lg transition-all duration-300 ${
+          className={`flex items-center py-1.5 px-6 text-sm font-semibold rounded-lg transition-all ${
             isSaved
               ? "bg-[#10b981] text-white"
               : "border border-[#10b981] text-[#10b981] hover:bg-[#10b981] hover:text-white"
@@ -254,10 +200,8 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
         </button>
 
         <button
-          onClick={() =>
-            toggleJobStatus("applied_jobs", isApplied, setIsApplied, "apply")
-          }
-          className={`flex items-center py-1 px-6 text-sm font-semibold rounded-lg transition-all duration-300 ${
+          onClick={() => toggleJobStatus("applied_jobs", isApplied, setIsApplied, "apply")}
+          className={`flex items-center py-1.5 px-6 text-sm font-semibold rounded-lg transition-all ${
             isApplied
               ? "bg-[#10b981] text-white"
               : "border border-[#10b981] text-[#10b981] hover:bg-[#10b981] hover:text-white"
@@ -269,17 +213,15 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
 
         <button
           onClick={handleShare}
-          className="p-3 text-gray-500 hover:text-[#10b981] dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 transition-all"
+          className="p-3 text-gray-500 hover:text-[#10b981] dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20"
           title="Share job"
         >
           <Share2 size={20} />
         </button>
 
         <button
-          onClick={() =>
-            toggleJobStatus("hidden_jobs", isHidden, setIsHidden, "hide")
-          }
-          className="p-3 text-gray-500 hover:text-red-500 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20 transition-all"
+          onClick={() => toggleJobStatus("hidden_jobs", isHidden, setIsHidden, "hide")}
+          className="p-3 text-gray-500 hover:text-red-500 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-20"
           title={isHidden ? "Unhide job" : "Hide job"}
         >
           <EyeOff size={20} />
@@ -287,16 +229,16 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
       </div>
 
       {/* ===== Job Description ===== */}
-      <div className="max-h-[calc(100dvh-300px)] overflow-y-auto px-8 py-6">
+      <div className="max-h-[calc(100vh-300px)] overflow-y-auto px-8 py-6">
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
           Posted{" "}
           {Math.floor(
-            (Date.now() - new Date(job.created_at).getTime()) /
-              (1000 * 60 * 60 * 24)
+            (Date.now() - new Date(job.created_at).getTime()) / (1000 * 60 * 60 * 24)
           )}{" "}
           days ago
         </p>
 
+        {/* Company Info */}
         {job.company && (
           <div className="bg-[#10b981]/10 rounded-xl p-6 mb-6 border border-[#10b981]/20">
             <div className="flex items-start gap-4">
@@ -313,7 +255,6 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                   </span>
                 )}
               </div>
-
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   About {job.company.name}
@@ -337,6 +278,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
           </div>
         )}
 
+        {/* Description */}
         {job.description && (
           <div>
             <div className="flex items-center justify-between mb-4">

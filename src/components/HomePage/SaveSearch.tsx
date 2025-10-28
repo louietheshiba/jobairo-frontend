@@ -17,7 +17,6 @@ import { DropDownRangebutton } from '../ui/dropDownRangebutton';
 import { Select } from '../ui/select';
 import AppliedFilters from './AppliedFilters';
 
-// ✅ Hook to detect Tailwind's dark mode class
 const useIsDark = () => {
   const [isDark, setIsDark] = useState(
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
