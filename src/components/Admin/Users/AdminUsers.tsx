@@ -4,7 +4,6 @@ import { supabase } from '@/utils/supabase';
 import toast from 'react-hot-toast';
 import { User } from '../../../utils/userTypes';
 import UserFilters from './UserFilters';
-import BulkActionsBar from './BulkActionsBar';
 import UserTable from './UserTable';
 import EditUserModal from './EditUserModal';
 import AddUserModal from './AddUserModal';

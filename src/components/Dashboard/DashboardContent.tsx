@@ -55,18 +55,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   /** 🎨 Smooth transition container */
   return (
-    <div
-      className="
-        bg-white 
-        dark:bg-dark-20 
-        rounded-lg 
-        shadow-sm 
-        transition-all 
-        duration-300 
-        ease-in-out
-      "
-    >
-      <div className="p-6 animate-fadeIn">{content}</div>
+    <div className="animate-fadeIn">
+      {content}
     </div>
   );
 };

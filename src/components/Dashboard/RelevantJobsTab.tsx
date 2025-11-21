@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/utils/supabase';
 import JobListCard from '@/components/ui/jobListCard';
+import JobTabs from './JobTabs';
 import type { Job } from '@/types/JobTypes';
 import toast from 'react-hot-toast';
 import { activityTracker } from '@/utils/activityTracker';
@@ -14,11 +15,89 @@ interface RelevantJobsTabProps {
 const CACHE_KEY = 'relevantJobsCache';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Dummy job data to match the design
+const DUMMY_JOBS: Job[] = [
+  {
+    id: 'dummy-1',
+    title: 'Senior Product Designer',
+    description: 'We are looking for an experienced Senior Product Designer to join our team. You will be responsible for creating intuitive, user-centered designs that solve complex problems.',
+    location: 'Seattle, WA',
+    employment_type: 'full-time',
+    remote_type: 'hybrid',
+    salary_range: '$140k - $180k',
+    department: 'Design Systems',
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    application_url: 'https://careers.microsoft.com',
+    companies: {
+      id: 'ms',
+      name: 'Microsoft',
+      logo: null,
+      website: 'https://microsoft.com',
+    },
+  },
+  {
+    id: 'dummy-2',
+    title: 'iOS Developer',
+    description: 'Join our iOS team to build cutting-edge mobile applications. You will work on innovative features that impact millions of users worldwide.',
+    location: 'Cupertino, CA',
+    employment_type: 'full-time',
+    remote_type: 'on-site',
+    salary_range: '$160k - $220k',
+    department: 'SwiftUI',
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    application_url: 'https://jobs.apple.com',
+    companies: {
+      id: 'apple',
+      name: 'Apple',
+      logo: null,
+      website: 'https://apple.com',
+    },
+  },
+  {
+    id: 'dummy-3',
+    title: 'Senior Frontend Engineer',
+    description: 'Build beautiful, responsive web applications using modern frameworks. Work with a talented team to create exceptional user experiences.',
+    location: 'San Francisco, CA',
+    employment_type: 'full-time',
+    remote_type: 'remote',
+    salary_range: '$150k - $200k',
+    department: 'Engineering',
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    application_url: 'https://example.com',
+    companies: {
+      id: 'google',
+      name: 'Google',
+      logo: null,
+      website: 'https://google.com',
+    },
+  },
+  {
+    id: 'dummy-4',
+    title: 'Product Manager',
+    description: 'Lead product strategy and execution for our flagship products. Collaborate with engineering, design, and business teams.',
+    location: 'New York, NY',
+    employment_type: 'full-time',
+    remote_type: 'hybrid',
+    salary_range: '$140k - $190k',
+    department: 'Product',
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    application_url: 'https://example.com',
+    companies: {
+      id: 'meta',
+      name: 'Meta',
+      logo: null,
+      website: 'https://meta.com',
+    },
+  },
+];
+
 const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, onCardClick }) => {
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>(initialJobs || []);
+  const [jobs, setJobs] = useState<Job[]>(DUMMY_JOBS); // Use dummy data
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [activeFilter, setActiveFilter] = useState('recommended');
   const [personalized, setPersonalized] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Set to false to show immediately
   const [refreshing, setRefreshing] = useState(false);
 
   // ✅ Load from cache first for instant render
@@ -87,13 +166,13 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
     [user]
   );
 
-  // ✅ Fetch when component mounts
+  // ✅ Fetch when component mounts (disabled for dummy data)
   useEffect(() => {
-    if (!initialJobs || initialJobs.length === 0) {
-      const timer = setTimeout(() => fetchRelevantJobs(), 200);
-      return () => clearTimeout(timer);
+    // Using dummy data for now, so skip the fetch
+    if (initialJobs && initialJobs.length > 0) {
+      setJobs(initialJobs);
     }
-  }, [user?.id, initialJobs, fetchRelevantJobs]);
+  }, [initialJobs]);
 
   // ✅ Listen for tab change (to refresh)
   useEffect(() => {
@@ -135,16 +214,39 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
     };
   }, []);
 
-  const getReason = (i: number) => {
-    const reasons = [
-      'Based on your saved jobs and interests',
-      'Similar to jobs you viewed recently',
-      'Popular in your preferred locations',
-      'Matching your skills and job type',
-      'Trending in your industry',
-    ];
-    return reasons[i % reasons.length];
-  };
+  // Handle filter changes
+  const handleFilterChange = useCallback((filter: string) => {
+    setActiveFilter(filter);
+    
+    let filtered = [...jobs];
+    
+    switch (filter) {
+      case 'latest':
+        filtered = filtered.sort((a, b) => 
+          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+        );
+        break;
+      case 'remote':
+        filtered = filtered.filter(job => 
+          job.remote_type?.toLowerCase().includes('remote')
+        );
+        break;
+      case 'high-match':
+        // Keep the recommended order (already sorted by relevance)
+        break;
+      case 'recommended':
+      default:
+        // Keep original order
+        break;
+    }
+    
+    setFilteredJobs(filtered);
+  }, [jobs]);
+
+  // Update filtered jobs when jobs change
+  useEffect(() => {
+    handleFilterChange(activeFilter);
+  }, [jobs, activeFilter, handleFilterChange]);
 
   // ✅ UI Rendering
   if (loading)
@@ -157,78 +259,34 @@ const RelevantJobsTab: React.FC<RelevantJobsTabProps> = ({ jobs: initialJobs, on
 
   return (
     <div className="w-full">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recommended Jobs</h3>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Personalized job recommendations based on your preferences
-          </p>
-          {personalized === false && (
-            <div className="mt-2 inline-flex items-center gap-2 text-sm text-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-lg">
-              <svg
-                className="w-4 h-4 text-yellow-700 dark:text-yellow-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v2m0 4h.01M21 12A9 9 0 1112 3a9 9 0 019 9z"
-                />
-              </svg>
-              <span>Showing recent jobs — start saving or applying to personalize!</span>
-            </div>
-          )}
-        </div>
-        <button
-          onClick={() => fetchRelevantJobs(true)}
-          disabled={refreshing}
-          className="inline-flex items-center px-4 py-2 bg-[#10b981] text-white text-sm font-medium rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:ring-offset-2 disabled:opacity-50"
-        >
-          {refreshing ? (
-            <div className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2" />
-          ) : (
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          )}
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
+      {/* Tab Filters */}
+      <JobTabs activeFilter={activeFilter} onFilterChange={handleFilterChange} />
 
       {/* Jobs Grid */}
-      {jobs.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No recommendations yet
+      {filteredJobs.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            No jobs found
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Update your preferences in settings to get personalized recommendations.
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Try adjusting your filters or update your preferences to get personalized recommendations.
           </p>
           <button
-            onClick={() => (window.location.href = '/')}
-            className="px-4 py-2 bg-[#10b981] text-white rounded-[10px] shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 transition-all duration-300"
+            onClick={() => fetchRelevantJobs(true)}
+            className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-medium shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300"
           >
-            Update Preferences
+            Refresh Jobs
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {jobs.map((job, i) => (
-            <div key={job.id} className="relative">
-              <JobListCard item={job} onClick={onCardClick} />
-              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-xs text-blue-700 dark:text-blue-300">💡 {getReason(i)}</p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredJobs.map((job) => (
+            <JobListCard key={job.id} item={job} onClick={onCardClick} />
           ))}
         </div>
       )}

@@ -94,7 +94,10 @@ const AdminJobs = () => {
     const form = e.currentTarget;
     const name = (form.elements.namedItem('name') as HTMLInputElement).value;
 
-    if (!name.trim()) return toast.error('Company name is required');
+    if (!name.trim()) {
+      toast.error('Company name is required');
+      return;
+    }
     const { error } = await supabase.from('companies').insert([{ name }]);
     if (error) {
       toast.error('Failed to add company');

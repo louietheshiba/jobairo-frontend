@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Meta } from '@/layouts/Meta';
 import JobDetailsModal from '@/components/Modals/JobDetail';
 import DashboardSidebar from '@/components/Dashboard/DashboardSidebar';
+import DashboardHeader from "@/components/Dashboard/DashboardHeader";
 import DashboardStats from '@/components/Dashboard/DashboardStats';
 import DashboardContent from '@/components/Dashboard/DashboardContent';
 import { ProfileProvider } from '@/context/ProfileContext';
@@ -21,20 +22,24 @@ import { ArrowLeft } from 'lucide-react';
 const Dashboard = () => {
   const router = useRouter();
   const { user, userRole, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('saved');
-  const [adminActiveTab, setAdminActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("relevant");
+  const [adminActiveTab, setAdminActiveTab] = useState("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) router.push('/auth/login');
+    if (!loading && !user) router.push("/auth/login");
   }, [user, loading, router]);
 
   useEffect(() => {
     if (user && !loading) {
-      const timer = setTimeout(() => window.dispatchEvent(new CustomEvent('statsRefresh')), 200);
+      const timer = setTimeout(
+        () => window.dispatchEvent(new CustomEvent("statsRefresh")),
+        200
+      );
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [user, loading]);
 
   const handleCardClick = (job: Job) => {
@@ -89,25 +94,29 @@ const Dashboard = () => {
       <ProfileProvider>
         <Container>
           <Meta title="Dashboard - Job Airo" description="Job Airo Dashboard" />
-          <div className="min-h-screen flex flex-col md:flex-row dark:bg-black font-poppins">
-            <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-            <main className="flex-1 md:ml-64 p-6 sm:p-8 overflow-y-auto">
-              <div className="mb-6 flex items-center justify-between">
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[#065f46] bg-[#ecfdf5] hover:bg-[#d1fae5]"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Home
-                </Link>
-              </div>
+          {/* Header */}
+          <DashboardHeader />
 
+          <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 dark:bg-black font-poppins pt-20">
+            <DashboardSidebar
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+
+            <main className="flex-1 md:ml-72 p-6 sm:p-8 overflow-y-auto">
               <DashboardStats />
-              <DashboardContent activeTab={activeTab} onCardClick={handleCardClick} />
+              <DashboardContent
+                activeTab={activeTab}
+                onCardClick={handleCardClick}
+              />
             </main>
 
-            <JobDetailsModal isOpen={isModalOpen} onClose={handleCloseModal} job={selectedJob} />
+            <JobDetailsModal
+              isOpen={isModalOpen}
+              onClose={handleCloseModal}
+              job={selectedJob}
+            />
           </div>
         </Container>
       </ProfileProvider>
