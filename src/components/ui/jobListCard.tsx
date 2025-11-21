@@ -166,17 +166,25 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative flex flex-col gap-5 rounded-3xl bg-white p-8 border-2 border-gray-200
+      className="group relative flex flex-col gap-5 rounded-2xl bg-white p-8 border-2 border-gray-200
         shadow-sm transition-all duration-300 
-        hover:shadow-lg hover:border-[#10b981] dark:hover:border-[#10b981]
+        hover:shadow-lg hover:border-t-8 hover:border-t-[#10b981] hover:border-[#10b981] dark:hover:border-[#10b981]
         cursor-pointer dark:bg-dark-20 dark:border-gray-700"
       style={{ minHeight: 320 }}
     >
       {/* --- Header with Logo --- */}
       <div className="flex items-start gap-4">
         {/* Company Logo */}
-        <div className={`flex-shrink-0 w-16 h-16 rounded-2xl ${getCompanyColor(item?.companies?.name)} flex items-center justify-center`}>
-          <span className={`${getTextColor(item?.companies?.name)} font-bold text-xl`}>
+        <div
+          className={`flex-shrink-0 w-16 h-16 rounded-2xl ${getCompanyColor(
+            item?.companies?.name
+          )} flex items-center justify-center`}
+        >
+          <span
+            className={`${getTextColor(
+              item?.companies?.name
+            )} font-bold text-xl`}
+          >
             {getCompanyInitials(item?.companies?.name)}
           </span>
         </div>
@@ -186,7 +194,7 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <p className="text-base text-gray-500 dark:text-gray-400 mb-2">
-                {item?.companies?.name || 'Company'}
+                {item?.companies?.name || "Company"}
               </p>
               <h2 className="font-bold text-2xl text-gray-900 dark:text-white leading-tight line-clamp-2">
                 {item?.title}
@@ -202,8 +210,8 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
               <Bookmark
                 className={`w-5 h-5 transition-all duration-300 ${
                   isSaved
-                    ? 'fill-[#10b981] stroke-[#10b981]'
-                    : 'stroke-gray-400 fill-none hover:stroke-[#10b981] hover:scale-110'
+                    ? "fill-[#10b981] stroke-[#10b981]"
+                    : "stroke-gray-400 fill-none hover:stroke-[#10b981] hover:scale-110"
                 }`}
               />
             </button>
@@ -216,14 +224,16 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
           <span className="text-red-500">📍</span>
           <span className="font-medium">
-            {getDisplayLabelFromLocation(item?.location) || 'Remote'}
+            {getDisplayLabelFromLocation(item?.location) || "Remote"}
           </span>
         </div>
         {item?.employment_type && (
           <>
             <div className="flex items-center gap-2">
               <span>🏢</span>
-              <span className="text-gray-600 dark:text-gray-400 font-medium capitalize">{item.employment_type.replace('-', ' ')}</span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium capitalize">
+                {item.employment_type.replace("-", " ")}
+              </span>
             </div>
           </>
         )}
@@ -231,7 +241,9 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
           <>
             <div className="flex items-center gap-2">
               <span>🏡</span>
-              <span className="text-gray-600 dark:text-gray-400 font-medium capitalize">{item.remote_type}</span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium capitalize">
+                {item.remote_type}
+              </span>
             </div>
           </>
         )}
@@ -245,12 +257,12 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
           </span>
         )}
         {/* Mock skill tags based on title */}
-        {item?.title?.toLowerCase().includes('senior') && (
+        {item?.title?.toLowerCase().includes("senior") && (
           <span className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
             Figma
           </span>
         )}
-        {item?.title?.toLowerCase().includes('design') && (
+        {item?.title?.toLowerCase().includes("design") && (
           <span className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
             Design Systems
           </span>
@@ -267,15 +279,25 @@ const JobListCard: React.FC<JobListCardProps> = React.memo(({
       )}
 
       {/* --- Quick Apply Button --- */}
-      <div className="absolute bottom-8 left-8 right-8 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+      <div className="absolute bottom-8  right-8 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
         <button
           onClick={handleQuickApply}
-          className="w-full rounded-2xl bg-[#10b981] py-4 px-6 font-semibold text-white text-lg
+          className="w-fit rounded-2xl bg-[#10b981] py-4 px-6 font-semibold text-white text-lg
             shadow-md hover:bg-[#059669] transition-all duration-200 flex items-center justify-center gap-3"
         >
           Quick Apply
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </button>
       </div>

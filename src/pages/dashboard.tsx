@@ -98,13 +98,15 @@ const Dashboard = () => {
           {/* Header */}
           <DashboardHeader />
 
-          <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 dark:bg-black font-poppins pt-20">
-            <DashboardSidebar
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-[24px] font-poppins pt-20 px-8 ">
+            <div className="border border-gray-200 rounded-2xl">
+              <DashboardSidebar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
+            </div>
 
-            <main className="flex-1 md:ml-72 p-6 sm:p-8 overflow-y-auto">
+            <main className="col-span-4 p-6 sm:p-8 overflow-y-auto border border-gray-200 rounded-2xl">
               <DashboardStats />
               <DashboardContent
                 activeTab={activeTab}

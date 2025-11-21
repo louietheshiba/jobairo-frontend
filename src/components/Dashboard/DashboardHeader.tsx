@@ -39,34 +39,36 @@ const DashboardHeader: React.FC = () => {
             <span className="text-2xl font-bold text-[#10b981]">JobAiro</span>
           </Link>
 
-          {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center gap-12">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`relative py-2 text-base font-medium transition-colors ${
-                  item.active
-                    ? 'text-gray-900 dark:text-white font-semibold'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                {item.label}
-                {item.active && (
-                  <div className="absolute -bottom-[21px] left-0 right-0 h-1 bg-[#10b981] rounded-t-full"></div>
-                )}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-12">
+            {/* Navigation - Desktop */}
+            <nav className="hidden md:flex items-center gap-12">
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={` relative py-2 text-base font-medium transition-colors ${
+                    item.active
+                      ? "text-gray-900 dark:text-white font-semibold"
+                      : "text-gray-600 dark:text-gray-400 hover:text-[#10b981] dark:hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                  {item.active && (
+                    <div className="absolute -bottom-[10px] left-0 right-0 h-1 bg-[#10b981] rounded-t-full"></div>
+                  )}
+                </Link>
+              ))}
+            </nav>
 
-          {/* User Avatar */}
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="w-12 h-12 rounded-full bg-[#10b981] flex items-center justify-center text-white font-bold text-base shadow-sm hover:bg-[#059669] transition-colors hover:shadow-md"
-            title={profile?.full_name || user?.email || 'Profile'}
-          >
-            {getInitials()}
-          </button>
+            {/* User Avatar */}
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="w-12 h-12 rounded-full bg-[#10b981] flex items-center justify-center text-white font-bold text-base shadow-sm hover:bg-[#059669] transition-colors hover:shadow-md"
+              title={profile?.full_name || user?.email || "Profile"}
+            >
+              {getInitials()}
+            </button>
+          </div>
         </div>
       </div>
     </header>

@@ -43,28 +43,28 @@ const DashboardStats: React.FC = () => {
 
   const cardData = [
     {
-      label: 'Jobs Viewed',
+      label: "Jobs Viewed",
       value: 127,
       percentage: 12,
-      bgGradient: 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
+      bgGradient: "bg-[#f8fafc]",
     },
     {
-      label: 'Applications Sent',
+      label: "Applications Sent",
       value: 23,
       percentage: 8,
-      bgGradient: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
+      bgGradient: "bg-[#f8fafc]",
     },
     {
-      label: 'Profile Views',
+      label: "Profile Views",
       value: 89,
       percentage: 34,
-      bgGradient: 'from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
+      bgGradient: "bg-[#f8fafc]",
     },
     {
-      label: 'Response Rate',
-      value: '18%',
+      label: "Response Rate",
+      value: "18%",
       percentage: 3,
-      bgGradient: 'from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20',
+      bgGradient: "bg-[#f8fafc]",
       showImprovement: true,
     },
   ];
@@ -80,39 +80,48 @@ const DashboardStats: React.FC = () => {
             Welcome back, {getFirstName()}! 👋
           </h1>
           <p className="text-green-50 text-lg">
-            You have <span className="font-semibold text-white">5</span> new job matches based on your profile
+            You have <span className="font-semibold text-white">5</span> new job
+            matches based on your profile
           </p>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {cardData.map(({ label, value, percentage, bgGradient, showImprovement }) => (
-          <div
-            key={label}
-            className={`bg-gradient-to-br ${bgGradient} p-6 rounded-xl border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
-          >
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</span>
-              </div>
-              <div className="flex items-end justify-between mt-auto">
-                <div>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{value}</p>
-                  <div className="flex items-center gap-1 text-sm">
-                    <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="font-semibold text-green-600 dark:text-green-400">
-                      {percentage > 0 ? '+' : ''}{percentage}%
-                    </span>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      {showImprovement ? 'improvement' : 'this week'}
-                    </span>
+        {cardData.map(
+          ({ label, value, percentage, bgGradient, showImprovement }) => (
+            <div
+              key={label}
+              className={`relative overflow-hidden ${bgGradient} p-6 rounded-3xl border border-gray-100 dark:border-gray-800 hover:shadow-lg hover:border-[#10b981] transition-all duration-300 hover:-translate-y-1`}
+            >
+              <div className="bg-[#22c55e] opacity-20 h-[120px] w-[120px] rounded-full absolute -top-[50px] -right-[50px]"></div>
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    {label}
+                  </span>
+                </div>
+                <div className="flex items-end justify-between mt-auto">
+                  <div>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      {value}
+                    </p>
+                    <div className="flex items-center gap-1 text-sm">
+                      <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        {percentage > 0 ? "+" : ""}
+                        {percentage}%
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
+                        {showImprovement ? "improvement" : "this week"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
     </div>
   );

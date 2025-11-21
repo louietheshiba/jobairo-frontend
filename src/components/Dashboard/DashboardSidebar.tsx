@@ -78,25 +78,20 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
   return (
     <>
       {/* Mobile Toggle */}
-      <div className="md:hidden fixed top-24 left-4 z-50">
+      {/* <div className="md:hidden fixed top-24 left-4 z-50">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 rounded-lg bg-white dark:bg-dark-30 shadow-md hover:shadow-lg transition-shadow"
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
-      </div>
+      </div> */}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed top-20 left-0 h-[calc(100vh-5rem)] w-72 z-40 bg-white dark:bg-dark-20 border-r border-gray-100 dark:border-gray-800 transform transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}
-      >
+      <aside>
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+        {/* <div className="p-6 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Menu</h2>
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-30 transition-colors"
@@ -105,7 +100,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -118,26 +113,32 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
               }}
               className={`w-full flex items-center justify-between px-4 py-3.5 text-left rounded-2xl transition-all group ${
                 activeTab === item.id
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                  : 'text-gray-600 hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400'
+                  ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                  : "text-gray-600 hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400 hover:border-l-4 hover:border-green-500"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`transition-colors ${
-                  activeTab === item.id 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : 'text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400'
-                }`}>
+              <div className="flex items-center justify-between gap-5">
+                <div
+                  className={`transition-colors ${
+                    activeTab === item.id
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400"
+                  }`}
+                >
                   {item.icon}
                 </div>
-                <span className="font-semibold text-base">{item.label}</span>
+                <span className="hover:font-semibold text-base">
+                  {item.label}
+                </span>
               </div>
               {item.count !== null && item.count > 0 && (
-                <span className={`min-w-[32px] h-8 px-3 flex items-center justify-center text-sm font-bold rounded-full ${
-                  activeTab === item.id 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-green-600 text-white group-hover:bg-green-600 group-hover:text-white'
-                }`}>
+                <span
+                  className={`min-w-[32px] h-8 px-3 flex items-center justify-center text-sm  rounded-full ${
+                    activeTab === item.id
+                      ? "bg-green-600 text-white"
+                      : "bg-green-600 text-white group-hover:bg-green-600 group-hover:text-white"
+                  }`}
+                >
                   {item.count}
                 </span>
               )}
@@ -149,13 +150,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
         <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
           <button
             onClick={() => {
-              onTabChange('settings');
+              onTabChange("settings");
               setIsOpen(false);
             }}
             className={`w-full flex items-center gap-3 px-4 py-3.5 text-left rounded-2xl transition-colors group ${
-              activeTab === 'settings'
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                : 'text-gray-600 hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400'
+              activeTab === "settings"
+                ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                : "text-gray-600 hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400"
             }`}
           >
             <Settings className="w-5 h-5" />
